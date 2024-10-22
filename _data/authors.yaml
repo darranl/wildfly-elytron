@@ -33,7 +33,7 @@ szaldana:
 piyush-palta:
   name: "Piyush Palta"
   emailhash: "1fe80158e423117f4c183179e0c32cb1"
-  bio: "https://github.com/piyush-palta"  
+  bio: "https://github.com/piyush-palta"
 araskar:
   name: "Ashpan Raskar"
   emailhash: "9fa88b105a019dccd6ab8db410e67123"
@@ -42,11 +42,10 @@ baranowb:
   name: "Bartosz Baranowski"
   emailhash: "63a1027f6f22d9bbbb10fcd469c78136"
   bio: "https://github.com/baranowb"
-cam-rod:
-  name: "Cameron Rodriguez"
-  emailhash: "aba64bbfde66646d5b5bc40d23b7e0de"
-  bio: "https://github.com/cam-rod"
-prarthonapaul: 
+jessicarod7:
+  name: "Jessica Rodriguez"
+  bio: "https://github.com/jessicarod7"
+prarthonapaul:
   name: "Prarthona Paul"
   emailhash: "6ed81e314d6074bbf734abe812f33b05"
   bio: "https://github.com/PrarthonaPaul"
@@ -54,7 +53,7 @@ theashiot:
   name: "Ashwin Mehendale"
   emailhash: "e792a4261507d430e9ac7d1f8abcdcc1"
   bio: "https://github.com/theashiot"
-ivassile: 
+ivassile:
   name: "Ilia Vassilev"
   emailhash: "a1dabbcc0e293c751d7ebf6d1feccd11"
   bio: "https://github.com/ivassile"

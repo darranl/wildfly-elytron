@@ -4,7 +4,7 @@ title: 'Using Custom Principals with Elytron'
 date: 2023-04-25
 tags: custom-principal principal principal-transformer
 synopsis: How to make accessing user information simpler, with new support for custom principals in WildFly Elytron.
-author: cam-rod
+author: jessicarod7
 ---
 
 :toc: macro
