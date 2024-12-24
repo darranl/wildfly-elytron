@@ -30,8 +30,8 @@ We have a lot of new things we'd like to work on and areas that we'd like to exp
 
 ==== Perspective from a current intern on the WildFly Elytron team
 
-Our intern, Cameron Rodriguez, also chimed in with his own perspective on some of his personal wins and
-challenges during his first 8 months on the WildFly Elytron team.
+Our intern, Jessica Rodriguez, also chimed in with her own perspective on some of her personal wins and
+challenges during her first 8 months on the WildFly Elytron team.
 
 [quote]
 ____
