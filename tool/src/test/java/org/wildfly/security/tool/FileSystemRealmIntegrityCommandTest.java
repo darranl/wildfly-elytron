@@ -55,7 +55,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 
-/** @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a> */
+/** @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a> */
 public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
 
     private static final String RELATIVE_BASE_DIR = "./target/test-classes/filesystem-integrity/";

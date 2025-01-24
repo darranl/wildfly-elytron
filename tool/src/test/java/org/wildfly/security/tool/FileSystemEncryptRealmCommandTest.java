@@ -45,7 +45,7 @@ import org.wildfly.security.evidence.PasswordGuessEvidence;
 
 /**
  * @author <a href="mailto:araskar@redhat.com">Ashpan Raskar</a>
- * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ * @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a>
  */
 public class FileSystemEncryptRealmCommandTest extends AbstractCommandTest {
 

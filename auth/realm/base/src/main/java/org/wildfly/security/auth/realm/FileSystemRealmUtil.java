@@ -32,7 +32,7 @@ import org.wildfly.security.credential.Credential;
  * A utility class to utilize methods from the {@code FileSystemSecurityRealm} class for the Elytron Tool.
  *
  * @author <a href="mailto:araskar@redhat.com">Ashpan Raskar</a>
- * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ * @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a>
  */
 public class FileSystemRealmUtil {
 
