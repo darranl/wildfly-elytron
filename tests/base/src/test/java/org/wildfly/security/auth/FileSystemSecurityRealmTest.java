@@ -833,6 +833,7 @@ public class FileSystemSecurityRealmTest {
         try {
             existingIdentity.verifyEvidence(new PasswordGuessEvidence(actualPassword));
         } catch (Exception e) {
+            e.printStackTrace();
             assertTrue(e.getCause().getMessage().contains("unable to decrypt identity"));
         }
         existingIdentity.dispose();
