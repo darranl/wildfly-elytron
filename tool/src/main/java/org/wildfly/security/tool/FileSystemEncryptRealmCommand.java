@@ -83,7 +83,7 @@ import org.wildfly.security.tool.help.UsageSection;
  * security-domain in WildFly.
  *
  * @author <a href="mailto:araskar@redhat.com">Ashpan Raskar</a>
- * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ * @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a>
  */
 
 class FileSystemEncryptRealmCommand extends Command {

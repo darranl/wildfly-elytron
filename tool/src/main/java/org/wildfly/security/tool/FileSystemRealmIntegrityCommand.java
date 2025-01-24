@@ -89,7 +89,7 @@ import org.wildfly.security.tool.help.UsageSection;
  * any identities use a schema which doesn't support integrity checking ({@code urn:elytron:identity:1.1} or earlier),
  * they are also updated.
  *
- * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ * @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a>
  */
 public class FileSystemRealmIntegrityCommand extends Command {
     static final String FILE_SYSTEM_REALM_INTEGRITY_COMMAND = "filesystem-realm-integrity";
