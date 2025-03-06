@@ -101,6 +101,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
             @Override
             public void evaluateRequest(HttpServerRequest request) throws HttpAuthenticationException {
                 singleSignOnSession = getSingleSignOnSession(request);
+                System.out.println("XXX evaluateRequest SSO Session - " + singleSignOnSession.getId());
                 if (singleSignOnSession.logout()) {
                     singleSignOnSession.close();
                     return;
@@ -167,6 +168,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
 
                     @Override
                     public void authenticationComplete(HttpServerMechanismsResponder responder) {
+                        System.out.println("XXX authenticationComplete - " + singleSignOnSession.getId());
                         request.authenticationComplete(response -> {
                             try {
                                 String id = singleSignOnSession.getId();
@@ -189,6 +191,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
 
                     @Override
                     public void authenticationComplete(HttpServerMechanismsResponder responder, Runnable logoutHandler) {
+                        System.out.println("XXX authenticationComplete - " + singleSignOnSession.getId());
                         request.authenticationComplete(response -> {
                             try {
                                 String id = singleSignOnSession.getId();
@@ -274,6 +277,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
                         }
                         Principal principal = delegate.getAuthorizationPrincipal();
                         if (principal != null) {
+
                             callbacks[i] = new CachedIdentityAuthorizeCallback(principal, singleSignOnSession) {
                                 @Override
                                 public void setAuthorized(SecurityIdentity securityIdentity) {

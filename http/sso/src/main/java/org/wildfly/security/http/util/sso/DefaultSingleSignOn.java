@@ -72,10 +72,12 @@ public class DefaultSingleSignOn implements SingleSignOn {
 
     @Override
     public void setIdentity(SecurityIdentity identity) {
-        // Only set cached identity if it has not already been set
+        // Only set cached identity if it has not already been set, or if the supplied identity
+        // is for a different Principal.
         synchronized (this.entry) {
             CachedIdentity cached = this.entry.getCachedIdentity();
-            if (cached.getSecurityIdentity() == null) {
+            if (cached.getSecurityIdentity() == null ||
+                !cached.getSecurityIdentity().getPrincipal().equals(identity.getPrincipal())) {
                 this.entry.setCachedIdentity(new CachedIdentity(cached.getMechanismName(), cached.isProgrammatic(), identity));
             }
         }
