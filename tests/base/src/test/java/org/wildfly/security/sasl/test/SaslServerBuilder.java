@@ -127,6 +127,8 @@ public class SaslServerBuilder {
     private ScheduledExecutorService scheduledExecutorService;
     private Supplier<Provider[]> providerSupplier;
 
+    private Supplier<MechanismConfigurationSelector> mechanismConfigurationSelectorSupplier;
+
     public SaslServerBuilder(Class<? extends SaslServerFactory> serverFactoryClass, String mechanismName) {
         this.serverFactoryClass = serverFactoryClass;
         this.mechanismName = mechanismName;
@@ -162,6 +164,7 @@ public class SaslServerBuilder {
         if (keepDomain) {
             copy.securityDomain = securityDomain;
         }
+        copy.mechanismConfigurationSelectorSupplier = mechanismConfigurationSelectorSupplier;
         return copy;
     }
 
@@ -365,6 +368,12 @@ public class SaslServerBuilder {
         return this;
     }
 
+    public SaslServerBuilder setMechanismConfigurationSelectorSupplier(Supplier<MechanismConfigurationSelector> mechanismConfigurationSelectorSupplier) {
+        Assert.assertNotNull("mechanismConfigurationSupplier", mechanismConfigurationSelectorSupplier);
+        this.mechanismConfigurationSelectorSupplier = mechanismConfigurationSelectorSupplier;
+        return this;
+    }
+
     public SaslServer build() throws IOException {
         if (securityDomain == null) {
             securityDomain = createSecurityDomain(hashEncoding, hashCharset);
@@ -406,11 +415,16 @@ public class SaslServerBuilder {
         if (scheduledExecutorService != null) {
             builder.setScheduledExecutorService(scheduledExecutorService);
         }
-        final MechanismConfiguration.Builder mechBuilder = MechanismConfiguration.builder();
-        for (MechanismRealmConfiguration realmConfiguration : mechanismRealms.values()) {
-            mechBuilder.addMechanismRealm(realmConfiguration);
+        if (mechanismConfigurationSelectorSupplier == null) {
+            final MechanismConfiguration.Builder mechBuilder = MechanismConfiguration.builder();
+            for (MechanismRealmConfiguration realmConfiguration : mechanismRealms.values()) {
+                mechBuilder.addMechanismRealm(realmConfiguration);
+            }
+            builder.setMechanismConfigurationSelector(MechanismConfigurationSelector.constantSelector(mechBuilder.build()));
+        } else {
+            builder.setMechanismConfigurationSelector(mechanismConfigurationSelectorSupplier.get());
         }
-        builder.setMechanismConfigurationSelector(MechanismConfigurationSelector.constantSelector(mechBuilder.build()));
+
         final SaslServer server = builder.build().createMechanism(mechanismName);
         if (!dontAssertBuiltServer) {
             Assert.assertNotNull(server);
