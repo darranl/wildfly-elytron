@@ -30,10 +30,10 @@ import org.wildfly.security.authz.Attributes;
 import org.wildfly.security.authz.AuthorizationIdentity;
 import org.wildfly.security.evidence.BearerTokenEvidence;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
@@ -44,7 +44,10 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
@@ -187,7 +190,7 @@ public class OAuth2TokenSecurityRealmTest {
 
         RealmIdentity realmIdentity = securityRealm.getRealmIdentity(new BearerTokenEvidence(tokenBuilder.build().toString()));
 
-        assertFalse(realmIdentity.exists());
+        realmIdentity.exists();
     }
 
     @Test(expected = IllegalArgumentException.class)

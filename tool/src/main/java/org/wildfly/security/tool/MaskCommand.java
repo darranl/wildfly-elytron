@@ -23,11 +23,18 @@ import java.security.SecureRandom;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.wildfly.security.tool.help.DescriptionSection;
+import org.wildfly.security.tool.help.HelpCommand;
+import org.wildfly.security.tool.help.OptionsSection;
+import org.wildfly.security.tool.help.UsageSection;
 import org.wildfly.security.util.PasswordBasedEncryptionUtil;
 
+import static org.wildfly.security.tool.Params.DEBUG_PARAM;
+import static org.wildfly.security.tool.Params.HELP_PARAM;
+import static org.wildfly.security.tool.Params.ITERATION_PARAM;
+import static org.wildfly.security.tool.Params.SALT_PARAM;
 import static org.wildfly.security.util.PasswordUtil.generateSecureRandomString;
 
 /**
@@ -42,12 +49,7 @@ class MaskCommand extends Command {
      * Command string
      */
     public static final String MASK_COMMAND = "mask";
-
-    static final String SALT_PARAM = "salt";
-    static final String ITERATION_PARAM = "iteration";
     static final String SECRET_PARAM = "secret";
-    static final String HELP_PARAM = "help";
-    static final String DEBUG_PARAM = "debug";
 
     private final int defaultIterationCount = 10000;
 
@@ -159,12 +161,14 @@ class MaskCommand extends Command {
      */
     @Override
     public void help() {
-        HelpFormatter help = new HelpFormatter();
-        help.setWidth(WIDTH);
-        help.printHelp(ElytronToolMessages.msg.cmdHelp(getToolCommand(), MASK_COMMAND),
-                ElytronToolMessages.msg.cmdMaskHelpHeader().concat(ElytronToolMessages.msg.cmdLineActionsHelpHeader()),
-                options,
-                "",
-                true);
+        OptionsSection optionsSection = new OptionsSection(ElytronToolMessages.msg.cmdLineActionsHelpHeader(), options);
+        UsageSection usageSection = new UsageSection(MASK_COMMAND, null);
+        DescriptionSection descriptionSection = new DescriptionSection(ElytronToolMessages.msg.cmdMaskHelpHeader());
+        HelpCommand helpCommand = HelpCommand.HelpCommandBuilder.builder()
+                .description(descriptionSection)
+                .usage(usageSection)
+                .options(optionsSection)
+                .build();
+        helpCommand.printHelp();
     }
 }

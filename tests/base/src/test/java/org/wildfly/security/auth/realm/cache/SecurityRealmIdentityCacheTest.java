@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.wildfly.security.auth.server.ServerUtils.ELYTRON_PASSWORD_PROVIDERS;
 
 import java.security.Principal;
 import java.security.Security;
@@ -35,6 +34,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.wildfly.security.auth.principal.NamePrincipal;
@@ -75,6 +75,11 @@ public class SecurityRealmIdentityCacheTest {
     @BeforeClass
     public static void onBefore() {
         Security.addProvider(WildFlyElytronPasswordProvider.getInstance());
+    }
+
+    @AfterClass
+    public static void onAfter() {
+        Security.removeProvider(WildFlyElytronPasswordProvider.getInstance().getName());
     }
 
     @Test
@@ -307,7 +312,7 @@ public class SecurityRealmIdentityCacheTest {
             public SupportLevel getEvidenceVerifySupport(Class<? extends Evidence> evidenceType, String algorithmName) throws RealmUnavailableException {
                 return getEvidenceVerifySupport(evidenceType, algorithmName);
             }
-        }, cache, ELYTRON_PASSWORD_PROVIDERS) {
+        }, cache) {
         };
     }
 
@@ -327,7 +332,7 @@ public class SecurityRealmIdentityCacheTest {
         try {
             credentials = Collections.singletonList(
                     new PasswordCredential(
-                            PasswordFactory.getInstance(ClearPassword.ALGORITHM_CLEAR, ELYTRON_PASSWORD_PROVIDERS).generatePassword(
+                            PasswordFactory.getInstance(ClearPassword.ALGORITHM_CLEAR).generatePassword(
                                     new ClearPasswordSpec(password.toCharArray()))));
         } catch (Exception e) {
             throw new RuntimeException(e);

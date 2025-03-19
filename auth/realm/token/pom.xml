@@ -85,8 +85,8 @@
 
         <!--Test scope-->
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>jakarta.json</artifactId>
             <scope>test</scope>
         </dependency>
 

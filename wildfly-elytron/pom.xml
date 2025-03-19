@@ -287,6 +287,10 @@
         </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-dynamic-ssl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-encryption</artifactId>
         </dependency>
         <dependency>
@@ -345,11 +349,6 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-jose-util</artifactId>
         </dependency>
-        <!-- Do not include JWT as it defines a CDI Extension -->
-        <!--<dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-jwt</artifactId>
-        </dependency>-->
         <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-keystore</artifactId>
@@ -468,6 +467,10 @@
         </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-ssh-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-util</artifactId>
         </dependency>
         <dependency>
@@ -527,14 +530,14 @@
                     <plugin>
                         <groupId>com.github.siom79.japicmp</groupId>
                         <artifactId>japicmp-maven-plugin</artifactId>
-                        <version>0.13.0</version>
+                        <version>0.20.0</version>
                         <inherited>false</inherited>
                         <configuration>
                             <oldVersion>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron</artifactId>
-                                    <version>1.20.4.Final</version> <!-- When updating to next release, clear all exclusions. -->
+                                    <version>2.6.2.Final</version> <!-- When updating to next release, clear all exclusions. -->
                                     <type>jar</type>
                                 </dependency>
                             </oldVersion>
@@ -602,6 +605,11 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-digest</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.wildfly.security</groupId>
+                                    <artifactId>wildfly-elytron-dynamic-ssl</artifactId>
                                     <version>${project.version}</version>
                                 </dependency>
                                 <dependency>

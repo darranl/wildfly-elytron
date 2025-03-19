@@ -895,19 +895,17 @@ public final class ServerAuthenticationContext implements AutoCloseable {
                         // external method (e.g.: EXTERNAL SASL and TLS) where only authorization is necessary. We delay authentication
                         // until we receive an authorization request.
                         // In the future, we may want to support external methods other than TLS peer authentication
-                        if (stateRef.get().canVerifyEvidence()) {
-                            if (peerCerts != null) {
-                                log.tracef("Authentication ID is null but SSL peer certificates are available. Trying to authenticate peer");
-                                // if SASL mechanism is used with skip-certificate-verification property then do not verifyEvidence against the security realm
-                                if (saslSkipCertificateVerification) {
-                                    // Since evidence verification is being skipped here, ensure evidence decoding still takes place
-                                    X509PeerCertificateChainEvidence evidence = new X509PeerCertificateChainEvidence(peerCerts);
-                                    setDecodedEvidencePrincipal(evidence);
-                                    stateRef.get().setPrincipal(evidence.getDecodedPrincipal(), false);
-                                }
-                                else {
-                                    verifyEvidence(new X509PeerCertificateChainEvidence(peerCerts));
-                                }
+                        if (stateRef.get().canVerifyEvidence() && peerCerts != null) {
+                            log.tracef("Authentication ID is null but SSL peer certificates are available. Trying to authenticate peer");
+                            // if SASL mechanism is used with skip-certificate-verification property then do not verifyEvidence against the security realm
+                            if (saslSkipCertificateVerification) {
+                                // Since evidence verification is being skipped here, ensure evidence decoding still takes place
+                                X509PeerCertificateChainEvidence evidence = new X509PeerCertificateChainEvidence(peerCerts);
+                                setDecodedEvidencePrincipal(evidence);
+                                stateRef.get().setPrincipal(evidence.getDecodedPrincipal(), false);
+                            }
+                            else {
+                                verifyEvidence(new X509PeerCertificateChainEvidence(peerCerts));
                             }
                         }
                     }
@@ -1124,20 +1122,18 @@ public final class ServerAuthenticationContext implements AutoCloseable {
                     CachedIdentityAuthorizeCallback authorizeCallback = (CachedIdentityAuthorizeCallback) callback;
                     authorizeCallback.setSecurityDomain(stateRef.get().getSecurityDomain());
                     SecurityIdentity authorizedIdentity = null;
-                    Principal principal = null;
-                    SecurityIdentity identity = authorizeCallback.getIdentity();
-                    if (identity != null && importIdentity(identity)) {
+                    Principal principal = authorizeCallback.getAuthorizationPrincipal();
+                    SecurityIdentity identity;
+                    if (principal == null && (identity = authorizeCallback.getIdentity()) != null && importIdentity(identity)) {
                         authorizedIdentity = getAuthorizedIdentity();
-                    } else {
+                    } else if (principal == null) {
                         principal = authorizeCallback.getPrincipal();
-                        if (principal == null) {
-                            principal = authorizeCallback.getAuthorizationPrincipal();
-                        }
-                        if (principal != null) {
-                            setAuthenticationPrincipal(principal);
-                            if (authorize()) {
-                                authorizedIdentity = getAuthorizedIdentity();
-                            }
+                    }
+
+                    if (principal != null) {
+                        setAuthenticationPrincipal(principal);
+                        if (authorize()) {
+                            authorizedIdentity = getAuthorizedIdentity();
                         }
                     }
                     log.tracef("Handling CachedIdentityAuthorizeCallback: principal = %s  authorizedIdentity = %s", principal, authorizedIdentity);

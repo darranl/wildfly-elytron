@@ -19,11 +19,15 @@
 package org.wildfly.security.http.oidc;
 
 import static org.wildfly.security.http.oidc.ElytronMessages.log;
+import static org.wildfly.security.jose.jwk.JWKUtil.BASE64_URL;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -34,6 +38,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.jose4j.jws.AlgorithmIdentifiers;
+import org.wildfly.common.iteration.ByteIterator;
 import org.wildfly.security.jose.util.JsonSerialization;
 
 /**
@@ -45,6 +50,13 @@ import org.wildfly.security.jose.util.JsonSerialization;
 public class Oidc {
 
     public static final String ACCEPT = "Accept";
+    public static final String ADAPTER_STATE_COOKIE_PATH = "adapter-state-cookie-path";
+    public static final String ALLOW_ANY_HOSTNAME = "allow-any-hostname";
+    public static final String ALWAYS_REFRESH_TOKEN = "always-refresh-token";
+    public static final String AUTH_SERVER_URL = "auth-server-url";
+    public static final String AUTHENTICATION_REQUEST_FORMAT = "authentication-request-format";
+    public static final String AUTODETECT_BEARER_ONLY = "autodetect-bearer-only";
+    public static final String BEARER_ONLY = "bearer-only";
     public static final String OIDC_NAME = "OIDC";
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String HTML_CONTENT_TYPE = "text/html";
@@ -54,17 +66,31 @@ public class Oidc {
     public static final String KEYCLOAK_REALMS_PATH = "realms/";
     public static final String JSON_CONFIG_CONTEXT_PARAM = "org.wildfly.security.http.oidc.json.config";
     static final String ACCOUNT_PATH = "account";
+    public static final String CORS_MAX_AGE = "cors-max-age";
+    public static final String CORS_ALLOWED_HEADERS = "cors-allowed-headers";
+    public static final String CORS_ALLOWED_METHODS = "cors-allowed-methods";
+    public static final String CORS_EXPOSED_HEADERS = "cors-exposed-headers";
+    public static final String CONNECTION_POOL_SIZE = "connection-pool-size";
     public static final String CLIENTS_MANAGEMENT_REGISTER_NODE_PATH = "clients-managements/register-node";
     public static final String CLIENTS_MANAGEMENT_UNREGISTER_NODE_PATH = "clients-managements/unregister-node";
+    public static final String CREDENTIALS = "credentials";
+    public static final String DISABLE_TRUST_MANAGER = "disable-trust-manager";
     public static final String SLASH = "/";
     public static final String OIDC_CLIENT_CONTEXT_KEY = OidcClientContext.class.getName();
     public static final String CLIENT_ID = "client_id";
+    public static final String CLIENT_ID_JSON_VALUE = "client-id";
+    public static final String CLIENT_KEYSTORE = "client-keystore";
+    public static final String CLIENT_KEYSTORE_PASSWORD = "client-keystore-password";
+    public static final String CLIENT_KEY_PASSWORD = "client-key-password";
     public static final String CODE = "code";
+    public static final String ENABLE_CORS = "enable-cors";
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
+    public static final String EXPOSE_TOKEN = "expose-token";
     public static final String FACES_REQUEST = "Faces-Request";
     public static final String GRANT_TYPE = "grant_type";
     public static final String INVALID_TOKEN = "invalid_token";
+    public static final String ISSUER = "iss";
     public static final String LOGIN_HINT = "login_hint";
     public static final String DOMAIN_HINT = "domain_hint";
     public static final String MAX_AGE = "max_age";
@@ -72,7 +98,17 @@ public class Oidc {
     public static final String OPTIONS = "OPTIONS";
     public static final String PARTIAL = "partial/";
     public static final String PASSWORD = "password";
+    public static final String PRINCIPAL_ATTRIBUTE = "principal-attribute";
     public static final String PROMPT = "prompt";
+    public static final String PROXY_URL = "proxy-url";
+    public static final String PUBLIC_CLIENT = "public-client";
+    public static final String REALM = "realm";
+    public static final String REALM_PUBLIC_KEY = "realm-public-key";
+    public static final String REGISTER_NODE_AT_STARTUP = "register-node-at-startup";
+    public static final String REGISTER_NODE_PERIOD = "register-node-period";
+    public static final String REQUEST = "request";
+    public static final String REQUEST_URI = "request_uri";
+    public static final String RESOURCE = "resource";
     public static final String SCOPE = "scope";
     public static final String UI_LOCALES = "ui_locales";
     public static final String USERNAME = "username";
@@ -80,13 +116,16 @@ public class Oidc {
     public static final String REDIRECT_URI = "redirect_uri";
     public static final String REFRESH_TOKEN = "refresh_token";
     public static final String RESPONSE_TYPE = "response_type";
+    public static final String SESSION_RANDOM_VALUE="session_random_value";
     public static final String SESSION_STATE = "session_state";
     public static final String SOAP_ACTION = "SOAPAction";
+    public static final String SSL_REQUIRED = "ssl-required";
     public static final String STALE_TOKEN = "Stale token";
     public static final String STATE = "state";
     public static final int INVALID_ISSUED_FOR_CLAIM = -1;
     public static final int INVALID_AT_HASH_CLAIM = -2;
     public static final int INVALID_TYPE_CLAIM = -3;
+    public static final int INVALID_SESSION_RANDOM_VALUE = -4;
     static final String OIDC_CLIENT_CONFIG_RESOLVER = "oidc.config.resolver";
     static final String OIDC_CONFIG_FILE_LOCATION = "oidc.config.file";
     static final String OIDC_JSON_FILE = "/WEB-INF/oidc.json";
@@ -113,8 +152,34 @@ public class Oidc {
     static final String KEYCLOAK_QUERY_BEARER_TOKEN = "k_query_bearer_token";
     static final String DEFAULT_TOKEN_SIGNATURE_ALGORITHM = "RS256";
     public static final String DISABLE_TYP_CLAIM_VALIDATION_PROPERTY_NAME = "wildfly.elytron.oidc.disable.typ.claim.validation";
+    public static final String ALLOW_QUERY_PARAMS_PROPERTY_NAME = "wildfly.elytron.oidc.allow.query.params";
+    public static final String TOKEN_MINIMUM_TIME_TO_LIVE = "token-minimum-time-to-live";
+    public static final String TOKEN_SIGNATURE_ALGORITHM = "token-signature-algorithm";
+    public static final String TOKEN_STORE = "token-store";
+    public static final String TRUSTSTORE = "truststore";
+    public static final String TRUSTSTORE_PASSWORD = "truststore-password";
+    public static final String TURN_OFF_CHANGE_SESSION_ID_ON_LOGIN = "turn-off-change-session-id-on-login";
+    public static final String USE_RESOURCE_ROLE_MAPPINGS = "use-resource-role-mappings";
+    public static final String USE_REALM_ROLE_MAPPINGS = "use-realm-role-mappings";
     public static final String X_REQUESTED_WITH = "X-Requested-With";
     public static final String XML_HTTP_REQUEST = "XMLHttpRequest";
+    public static final String MIN_TIME_BETWEEN_JWKS_REQUESTS = "min-time-between-jwks-requests";
+    public static final String PUBLIC_KEY_CACHE_TTL = "public-key-cache-ttl";
+    public static final String IGNORE_OAUTH_QUERY_PARAMETER = "ignore-oauth-query-parameter";
+    public static final String VERIFY_TOKEN_AUDIENCE = "verify-token-audience";
+    public static final String REQUEST_OBJECT_SIGNING_ALGORITHM = "request-object-signing-algorithm";
+    public static final String REQUEST_OBJECT_ENCRYPTION_ALG_VALUE = "request-object-encryption-alg-value";
+    public static final String REQUEST_OBJECT_ENCRYPTION_ENC_VALUE = "request-object-encryption-enc-value";
+    public static final String REQUEST_OBJECT_SIGNING_KEYSTORE_FILE = "request-object-signing-keystore-file";
+    public static final String REQUEST_OBJECT_SIGNING_KEYSTORE_PASSWORD = "request-object-signing-keystore-password";
+    public static final String REQUEST_OBJECT_SIGNING_KEY_PASSWORD = "request-object-signing-key-password";
+    public static final String REQUEST_OBJECT_SIGNING_KEY_ALIAS = "request-object-signing-key-alias";
+    public static final String REQUEST_OBJECT_SIGNING_KEYSTORE_TYPE = "request-object-signing-keystore-type";
+    public static final String REDIRECT_REWRITE_RULES = "redirect-rewrite-rules";
+    public static final String ENABLE_PKCE = "enable-pkce";
+    public static final String CONFIDENTIAL_PORT = "confidential-port";
+    public static final String ENABLE_BASIC_AUTH = "enable-basic-auth";
+    public static final String PROVIDER_URL = "provider-url";
 
     /**
      * Bearer token pattern.
@@ -197,6 +262,27 @@ public class Oidc {
     public enum TokenStore {
         SESSION,
         COOKIE
+    }
+
+    public enum AuthenticationRequestFormat {
+        OAUTH2("oauth2"),
+        REQUEST("request"),
+        REQUEST_URI("request_uri");
+
+        private final String value;
+
+        AuthenticationRequestFormat(String value) {
+            this.value = value;
+        }
+
+        /**
+         * Get the string value for this authentication format.
+         *
+         * @return the string value for this authentication format
+         */
+        public String getValue() {
+            return value;
+        }
     }
 
     public enum ClientCredentialsProviderType {
@@ -366,4 +452,14 @@ public class Oidc {
         return true;
     }
 
+    protected static String getCryptographicValue(final String src) {
+        try {
+            MessageDigest md = MessageDigest.getInstance(SHA256);
+            md.update(src.getBytes(StandardCharsets.UTF_8));
+            return ByteIterator.ofBytes(md.digest())
+                    .base64Encode(BASE64_URL, false).drainToString();
+        } catch (NoSuchAlgorithmException e) {
+            throw log.noSuchAlgorithm(e.getMessage());
+        }
+    }
 }

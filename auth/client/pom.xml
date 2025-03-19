@@ -62,6 +62,10 @@
         </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-mechanism-gssapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-password-impl</artifactId>
         </dependency>
         <dependency>
@@ -74,9 +78,8 @@
         </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert</artifactId>
+            <artifactId>wildfly-elytron-ssh-util</artifactId>
         </dependency>
-                                
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging-annotations</artifactId>
@@ -114,32 +117,6 @@
             <!-- scope is compile ELY-1153 -->
         </dependency>
 
-        <dependency>
-            <groupId>org.kohsuke.metainf-services</groupId>
-            <artifactId>metainf-services</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client -->
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.spec.javax.xml.ws</groupId>
-            <artifactId>jboss-jaxws-api_2.2_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.xml.ws}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.ws</groupId>
-            <artifactId>jbossws-spi</artifactId>
-            <version>${version.org.jboss.ws.jbossws-spi}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.kohsuke.metainf-services</groupId>
             <artifactId>metainf-services</artifactId>

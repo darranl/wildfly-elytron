@@ -46,6 +46,7 @@ import static org.wildfly.security.http.util.sso.ElytronMessages.log;
  * <p>The single sign-one capabilities provided by this factory is based on a HTTP Cookie to track SSO sessions and also an {@link IdentityCache} providing
  * a storage (eg.: using a shared or distributable cache/map) for these sessions and related data.
  *
+ *  @deprecated  Only inner class SingleSignOnConfiguration is deprecated.
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
  * @author Paul Ferraro
  */
@@ -171,8 +172,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
                                 String id = singleSignOnSession.getId();
                                 if (id != null) {
                                     HttpServerCookie cookie = getCookie(request);
-
-                                    if (cookie == null) {
+                                    if (cookie == null || !id.equals(cookie.getValue())) {
                                         response.setResponseCookie(createCookie(id, -1));
                                     }
                                 }
@@ -194,7 +194,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
                                 if (id != null) {
                                     HttpServerCookie cookie = getCookie(request);
 
-                                    if (cookie == null) {
+                                    if (cookie == null || !id.equals(cookie.getValue())) {
                                         response.setResponseCookie(createCookie(id, -1));
                                     }
                                 }
@@ -273,6 +273,7 @@ public class SingleSignOnServerMechanismFactory implements HttpServerAuthenticat
                         }
                         Principal principal = delegate.getAuthorizationPrincipal();
                         if (principal != null) {
+
                             callbacks[i] = new CachedIdentityAuthorizeCallback(principal, singleSignOnSession) {
                                 @Override
                                 public void setAuthorized(SecurityIdentity securityIdentity) {

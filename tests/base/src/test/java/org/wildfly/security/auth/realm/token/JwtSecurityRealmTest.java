@@ -22,6 +22,10 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.PlainHeader;
 import com.nimbusds.jose.PlainObject;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,9 +39,6 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -336,6 +337,7 @@ public class JwtSecurityRealmTest {
 
     @Test
     public void testUnsecuredJkuEndpoint() throws Exception {
+        checkIdentityDoesNotExist("1", 50832);
         BearerTokenEvidence evidence = new BearerTokenEvidence(createJwt(keyPair1, 60, -1, "1", new URI("https://localhost:50832")));
 
         X509TrustManager tm = getTrustManager();
@@ -434,6 +436,7 @@ public class JwtSecurityRealmTest {
 
     @Test
     public void testInvalidJku() throws Exception {
+        checkIdentityDoesNotExist("1", 80);
         BearerTokenEvidence evidence = new BearerTokenEvidence(createJwt(keyPair1, 60, -1, "1", new URI("https://localhost:80")));
 
         X509TrustManager tm = getTrustManager();
@@ -454,6 +457,7 @@ public class JwtSecurityRealmTest {
 
     @Test
     public void testInvalidKid() throws Exception {
+        checkIdentityDoesNotExist("badkid", 50831);
         BearerTokenEvidence evidence = new BearerTokenEvidence(createJwt(keyPair1, 60, -1, "badkid", new URI("https://localhost:50831")));
 
         X509TrustManager tm = getTrustManager();
@@ -832,4 +836,20 @@ public class JwtSecurityRealmTest {
         };
     }
 
+    private void checkIdentityDoesNotExist(String kid, int port) throws Exception {
+        BearerTokenEvidence evidence = new BearerTokenEvidence(createJwt(keyPair1, 60, -1, kid, new URI("https://localhost:" + port)));
+
+        X509TrustManager tm = getTrustManager();
+        SSLContext sslContext = new SSLContextBuilder().setTrustManager(tm).setClientMode(true).setSessionTimeout(10).build().create();
+
+        TokenSecurityRealm securityRealm = TokenSecurityRealm.builder()
+                .principalClaimName("sub")
+                .validator(JwtValidator.builder()
+                        .issuer("elytron-oauth2-realm")
+                        .audience("my-app-valid")
+                        .useSslContext(sslContext).useSslHostnameVerifier((a,b) -> true).build())
+                .build();
+
+        assertIdentityNotExist(securityRealm, evidence);
+    }
 }

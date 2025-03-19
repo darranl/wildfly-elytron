@@ -76,6 +76,12 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Password for credential store")
     String cmdLineCredentialStorePassword();
 
+    @Message(id = NONE, value = "Password for KeyStore. Can also be provided by console prompt.")
+    String cmdLineKeyStorePassword();
+
+    @Message(id = NONE, value = "Name of an environment variable from which to resolve the KeyStore password.")
+    String cmdLineKeyStorePasswordEnv();
+
     @Message(id = NONE, value = "Salt to apply for final masked password of the credential store")
     String cmdLineSaltDesc();
 
@@ -99,25 +105,25 @@ public interface ElytronToolMessages extends BasicLogger {
             "Provider must be installed through java.security file or through service loader from properly packaged jar file on classpath.")
     String cmdLineCustomCredentialStoreProviderDesc();
 
-    @Message(id = NONE, value = "Create credential store (Action)")
+    @Message(id = NONE, value = "* Create credential store")
     String cmdLineCreateCredentialStoreDesc();
 
     @Message(id = NONE, value = "Credential store type")
     String cmdLineCredentialStoreTypeDesc();
 
-    @Message(id = NONE, value = "Add new alias to the credential store (Action)")
+    @Message(id = NONE, value = "* Add new alias to the credential store")
     String cmdLineAddAliasDesc();
 
-    @Message(id = NONE, value = "Remove alias from the credential store (Action)")
+    @Message(id = NONE, value = "* Remove alias from the credential store")
     String cmdLineRemoveAliasDesc();
 
-    @Message(id = NONE, value = "Check if alias exists within the credential store (Action)")
+    @Message(id = NONE, value = "* Check if alias exists within the credential store")
     String cmdLineCheckAliasDesc();
 
-    @Message(id = NONE, value = "Display all aliases (Action)")
+    @Message(id = NONE, value = "* Display all aliases")
     String cmdLineAliasesDesc();
 
-    @Message(id = NONE, value = "Display all types of stored credentials for given alias (Action)")
+    @Message(id = NONE, value = "* Display all types of stored credentials for given alias")
     String cmdLineAliasTypes();
 
     @Message(id = NONE, value = "Generate private and public key pair and store them as a KeyPairCredential")
@@ -153,7 +159,7 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Print summary, especially command how to create this credential store")
     String cmdLinePrintSummary();
 
-    @Message(id = NONE, value = "Get help with usage of this command (Action)")
+    @Message(id = NONE, value = "* Get help with usage of this command")
     String cmdLineHelp();
 
     @Message(id = NONE, value = "Alias \"%s\" exists")
@@ -275,7 +281,7 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "CLI command to add new credential store:%n")
     String cliCommandToNewCredentialStore();
 
-    @Message(id = NONE, value = "Bulk conversion with options listed in description file. All options have no default value and should be set in the file. (Action)%n" +
+    @Message(id = NONE, value = "* Bulk conversion with options listed in description file. All options have no default value and should be set in the file.%n" +
                                 "All options are required with the exceptions:%n" +
                                 " - \"properties\" option%n - \"type\" option (defaults to \"KeyStoreCredentialStore\")%n - \"credential-store-provider\" option%n - \"other-providers\" option%n" +
                                 " - \"salt\" and \"iteration\" options can be omitted when plain-text password is used%n" +
@@ -400,7 +406,7 @@ public interface ElytronToolMessages extends BasicLogger {
     String longOptionDescription(String option, String longOption);
 
     // filesystem-realm command
-    @Message(id = NONE, value = "'FileSystemRealm' command is used to convert legacy properties files and scripts to an Elytron FileSystemRealm.")
+    @Message(id = NONE, value = "\"filesystem-realm\" command is used to convert legacy properties files and scripts to an Elytron FileSystemRealm.")
     String cmdFileSystemRealmHelpHeader();
 
     @Message(id = NONE, value = "The relative or absolute path to the users file.")
@@ -417,6 +423,26 @@ public interface ElytronToolMessages extends BasicLogger {
 
     @Message(id = NONE, value = "Whether or not the credential store should be dynamically created if it doesn't exist. Set to true by default.")
     String cmdFileSystemEncryptCreateCredentialStoreDesc();
+
+    @Message(id = NONE, value = "The relative or absolute path to the KeyStore file that contains the key pair. Only %n" +
+            "applicable if the filesystem realm has integrity verification enabled.")
+    String cmdFileSystemEncryptKeyStoreDesc();
+
+    @Message(id = NONE, value = "The type of KeyStore to be used. Optional, only applicable if the filesystem %n" +
+            "realm has integrity verification enabled.")
+    String cmdFileSystemEncryptKeyStoreTypeDesc();
+
+    @Message(id = NONE, value = "The alias of the key pair to be used, within the KeyStore. Set to integrity-key by default, only %n" +
+            "applicable if the filesystem realm has integrity verification enabled.")
+    String cmdFileSystemEncryptKeyPairAliasDesc();
+
+    @Message(id = NONE, value = "Password for KeyStore. Can also be provided by console prompt. Only applicable if %n" +
+            "the filesystem realm has integrity verification enabled.")
+    String cmdFileSystemEncryptKeyStorePassword();
+
+    @Message(id = NONE, value = "Name of an environment variable from which to resolve the KeyStore password. Only %n" +
+            "applicable if the filesystem realm has integrity verification enabled.")
+    String cmdFileSystemEncryptKeyStorePasswordEnv();
 
     @Message(id = NONE, value = "Input Realm location not specified.")
     MissingArgumentException inputLocationNotSpecified();
@@ -463,7 +489,7 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Name of the security-domain to be configured.")
     String cmdFileSystemRealmSecurityDomainNameDesc();
 
-    @Message(id = NONE, value = "Bulk conversion with options listed in description file. Optional options have default values, required options do not. (Action) %n" +
+    @Message(id = NONE, value = "* Bulk conversion with options listed in description file. Optional options have default values, required options do not.%n" +
             "The options fileSystemRealmName and securityDomainName are optional. %n" +
             "These optional options have default values of: converted-properties-filesystem-realm and converted-properties-security-domain. %n" +
             "Values are required for the following options: users-file, roles-file, and output-location. %n" +
@@ -472,24 +498,90 @@ public interface ElytronToolMessages extends BasicLogger {
             "Blocks of options must be separated by a blank line.")
     String cmdFileSystemRealmBulkConvertDesc();
 
-    @Message(id = NONE, value = "Bulk conversion with options listed in description file. Optional options have default values, required options do not. (Action) %n" +
-            "The options realm-name, hash-encoding, levels, secret-key, create, and populate are optional. %n" +
+    @Message(id = NONE, value = "* Bulk conversion with options listed in description file. Optional options have default values, required options do not. %n" +
+            "The options realm-name, hash-encoding, levels, secret-key, create, populate, keystore, type, password, password-env, and key-pair are optional. %n" +
             "Values are required for the following options: input-location, output-location, and credential-store. %n" +
-            "The default values of realm-name, hash-encoding, levels, secret-key, create, and populate are encrypted-filesystem-realm, BASE64, 2, key, true, and true respectively. %n" +
+            "The default values of realm-name, hash-encoding, hash-charset, levels, secret-key, create, and populate are encrypted-filesystem-realm, BASE64, UTF-8, 2, key, true, and true respectively. %n" +
             "If one or more these required values are not set, the corresponding block is skipped. %n" +
+            "If keystore is provided, then either password or password-env are required. %n" +
             "Each option must be specified in the following format: <option>:<value>. The order of options does not matter. %n" +
             "Blocks of options must be separated by a blank line.")
     String cmdFileSystemRealmEncryptBulkConvertDesc();
 
+    @Message(id = NONE, value = "* Bulk conversion with options listed in description file. " +
+            "Optional options have defaults and can be skipped ([type, default_or_NULL]), required options do not (<type>). %n" +
+            "One of either password or password-env is required. %n" +
+            "Blocks of options must be separated by a blank line; order is not important. Syntax: %n" +
+            "input-location:<directory>%n" + "output-location:[directory,NULL]%n" + "realm-name:[name,filesystem-realm-with-integrity]%n" +
+            "keystore:<file>%n" + "type:[name,NULL]%n" + "password:[password,NULL]%n" + "password-env:[name,NULL]%n" +
+            "key-pair:[name,integrity-key]%n" + "credential-store:[file,NULL]%n" + "secret-key:[name,NULL]%n" +
+            "levels:[number,2]%n" + "hash-encoding:[name,BASE64]%n" + "hash-charset:[name,UTF-8]%n" + "encoded:[bool,true]")
+    String cmdFileSystemRealmIntegrityBulkConvertDesc();
+
     // filesystem-realm encrypt command
-    @Message(id = NONE, value = "'FileSystemRealmEncrypt' command is used to convert un-encrypted FileSystemSecurityRealm(s) to encrypted FileSystemSecurityRealm(s) with a SecretKey.")
+    @Message(id = NONE, value = "\"filesystem-realm-encrypt\" command is used to convert non-empty, un-encrypted FileSystemSecurityRealm(s) to encrypted FileSystemSecurityRealm(s) with a SecretKey.")
     String cmdFileSystemEncryptHelpHeader();
 
-    @Message(id = NONE, value = "The populate parameter was set to false and the Secret Key did not exist in the Credential Store.")
-    MissingOptionException cmdFileSystemPopulateUnspecified();
+    @Message(id = NONE, value = "Secret Key was not found in the Credential Store at %s, and populate option was not set. Skipping descriptor file block number %d.")
+    String cmdFileSystemEncryptionNoSecretKey(String credentialStorePath, Integer blockNumber);
 
-    @Message(id = NONE, value = "Unable to locate Secret Key with Credential Store located at %s. Skipping realm located at %s.")
-    String cmdFileSystemEncryptionNoSecretKey(String credentialStore, String realmLocation);
+    @Message(id = NONE, value = "The directory where the new filesystem realm resides. If not provided, realm will be upgraded in-place (with backup), %n" +
+            "and realm-name option will not be used in file path.")
+    String cmdFileSystemRealmIntegrityOutputLocationDesc();
+
+    @Message(id = NONE, value = "The name of the new filesystem-realm. Will be appended to output-location path (if output-location is provided). %n" +
+            "When not set, nothing is appended to the path, and `filesystem-realm-with-integrity` is used for the WildFly resource name.%n")
+    String cmdFileSystemRealmIntegrityNewRealmDesc();
+
+    @Message(id = NONE, value = "The relative or absolute path to the KeyStore file that contains the key pair.")
+    String cmdFileSystemRealmIntegrityKeyStoreDesc();
+
+    @Message(id = NONE, value = "The type of KeyStore to be used. Optional.")
+    String cmdFileSystemRealmIntegrityKeyStoreTypeDesc();
+
+    @Message(id = NONE, value = "The alias of the key pair to be used, within the KeyStore. Set to integrity-key by default.")
+    String cmdFileSystemRealmIntegrityKeyPairAliasDesc();
+
+    @Message(id = NONE, value = "The relative or absolute path to the secret-key-credential-store file. Only %n" +
+            "applicable if the filesystem realm is encrypted.")
+    String cmdFileSystemRealmIntegrityCredentialStoreDesc();
+
+    @Message(id = NONE, value = "The alias of the secret key stored in the credential store file. Set to key by default, only %n" +
+            "applicable if the filesystem realm is encrypted.")
+    String cmdFileSystemRealmIntegritySecretKeyDesc();
+
+    @Message(id = NONE, value = "The number of levels used in the input filesystem realm. Set to 2 by default.")
+    String cmdFileSystemRealmIntegrityLevelsDesc();
+
+    @Message(id = NONE, value = "The hash encoding used in the input filesystem realm. Set to BASE64 by default.%n" +
+            "Regardless of setting, the output realm will always be BASE64-encoded.")
+    String cmdFileSystemRealmIntegrityHashEncodingDesc();
+
+    @Message(id = NONE, value = "The character set used to convert the password string to a byte array. Defaults to UTF-8.")
+    String cmdFileSystemRealmIntegrityHashCharsetDesc();
+
+    @Message(id = NONE, value = "Indicates if the original realm used Base32-encoded identities as file names.%n" +
+            "Set to true by default. Regardless of setting, the output realm will always use Base32-encoding in file names.")
+    String cmdFileSystemRealmIntegrityEncodedDesc();
+
+    @Message(id = NONE, value = "Both --bulk-convert and at least one other realm configuration option was specified. %n" +
+            "The bulk-convert option may only be used with --help, --debug, --silent, and --summary options.")
+    MissingOptionException mutuallyExclusiveOptionsIntegritySpecified();
+
+    @Message(id = NONE, value = "'FileSystem Realm Integrity' command is used to sign existing, non-empty FileSystem Security Realms with a key pair, for future integrity validation.")
+    String cmdFileSystemIntegrityHelpHeader();
+
+    @Message(id = NONE, value = "KeyStore password: ")
+    String keyStorePasswordPrompt();
+
+    @Message(id = NONE, value = "KeyStore path not specified.")
+    MissingArgumentException keyStorePathNotSpecified();
+
+    @Message(id = NONE, value = "KeyStore does not exist.")
+    MissingArgumentException keyStoreDoesNotExist();
+
+    @Message(id = NONE, value = "Encoded option must be set to 'true' or 'false'.")
+    IllegalArgumentException encodedMustBeBoolean();
 
     @Message(id = NONE, value = "Suppresses all output except errors and prompts.")
     String cmdFileSystemRealmSilentDesc();
@@ -509,7 +601,8 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Both --bulk-convert and one or more of --users-file, --roles-file, and/or --output-location were specified. Please only use --bulk-convert or all of --users-file, --roles-file, and --output-location.")
     MissingOptionException mutuallyExclusiveOptionsSpecified();
 
-    @Message(id = NONE, value = "Both --bulk-convert and one or more of --old-realm-name, --new-realm-name, --input-location, --output-location, --credential-store, and/or --secret-key were specified. Please only use --bulk-convert or all of the other others.")
+    @Message(id = NONE, value = "Both --bulk-convert and one or more of --old-realm-name, --new-realm-name, --input-location, --output-location, --credential-store, --secret-key, --keystore, --type, " +
+            "--key-pair, --password and/or --password-env were specified. Please only use --bulk-convert or all of the other others.")
     MissingOptionException mutuallyExclusiveOptionsEncryptSpecified();
 
     @Message(id = NONE, value = "No value found for %s.")
@@ -517,6 +610,10 @@ public interface ElytronToolMessages extends BasicLogger {
 
     @Message(id = NONE, value = "Could not find the specified file %s.")
     FileNotFoundException fileNotFound(String file);
+
+    @Message(id = NONE, value = "Could not copy input filesystem realm at %s for in-place upgrade.%n" +
+            "Output filesystem will be placed at %s")
+    String unableToUpgradeInPlace(String inputPath, String newOutputPath);
 
     @Message(id = NONE, value = "Skipping descriptor file block number %d due to %s.")
     String skippingDescriptorBlock(Integer blockNumber, String reason);
@@ -531,16 +628,48 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing output realm location.")
     String skippingDescriptorBlockOutputLocation(Integer blockNumber);
 
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing KeyStore path.")
+    String skippingDescriptorBlockKeyStorePath(Integer blockName);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing KeyStore password.")
+    String skippingDescriptorBlockPassword(Integer blockName);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to invalid KeyStore path.")
+    String skippingDescriptorBlockInvalidKeyStorePath(Integer blockNumber);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to failure to load KeyStore.")
+    String skippingDescriptorBlockKeyStoreNotLoaded(Integer blockNumber);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to failure to load key pair.")
+    String skippingDescriptorBlockKeyPairFail(Integer blockNumber);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing private key.")
+    String skippingDescriptorBlockMissingPrivateKey(Integer blockNumber);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing public key.")
+    String skippingDescriptorBlockMissingPublicKey(Integer blockNumber);
+
     @Message(id = NONE, value = "Skipping descriptor file block number %d due to missing new filesystem realm name.")
     String skippingDescriptorBlockFilesystemRealmName(Integer blockNumber);
+
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to no identities present in filesystem realm.%n" +
+            "Keys for this realm can be added via the management client.")
+    String skippingDescriptorBlockEmptyRealm(Integer blockNumber);
 
     @Message(id = NONE, value = "Creating encrypted realm for: %s")
     String fileSystemRealmEncryptCreatingRealm(String realmName);
 
+    @Message(id = NONE, value = "Creating filesystem realm with integrity verification for: %s")
+    String fileSystemRealmIntegrityCreatingRealm(String realmName);
+
+    @Message(id = NONE, value = "In-place upgrade for descriptor block %d: filesystem realm backed up at %s%n" +
+            "Realm name will not be used in output realm path.")
+    String fileSystemRealmIntegrityInPlaceBackup(Integer blockNumber, String backupLocation);
+
     @Message(id = NONE, value = "Should file %s be overwritten? (y/n) ")
     String shouldFileBeOverwritten(String file);
 
-    @Message(id = NONE, value = "\nSome of the parameters below are mutually exclusive actions which are marked with (Action) in the description.")
+    @Message(id = NONE, value = "Some of the parameters below are mutually exclusive actions which are marked with * in the description.")
     String cmdLineActionsHelpHeader();
 
     @Message(id = NONE, value = "Key size (bits).")
@@ -597,14 +726,25 @@ public interface ElytronToolMessages extends BasicLogger {
     @Message(id = NONE, value = "Found credential store and alias, using pre-existing key")
     String existingCredentialStore();
 
-    @Message(id = NONE, value = "Could not find credential store and secret key alias, skipping block")
-    String skippingBlockMissingCredentialStore();
+    @Message(id = NONE, value = "Skipping descriptor file block number %d due to failure to load Credential Store.")
+    String skippingDescriptorBlockCredentialStoreNotLoaded(Integer blockNumber);
+
+    @Message(id = NONE, value = "Credential Store at %s does not support SecretKey. Skipping descriptor file block number %d.")
+    String skippingDescriptorBlockSecretKeyUnsupported(String credentialStorePath, Integer blockNumber);
+
+    @Message(id = NONE, value = "Exception was thrown while populating Credential Store at %s. Skipping descriptor file block number %d.")
+    String skippingDescriptorBlockUnableToPopulateCredentialStore(String credentialStorePath, Integer blockNumber);
 
     @Message(id = NONE, value = "No Credential Store location or Secret Key Alias specified.")
     MissingOptionException missingCredentialStoreSecretKey();
 
+    @Message(id = NONE, value = "To get list of options for a specific command, please specify the command by using ./elytron-tool.sh [command] --help")
+    String generalHelpOptionsOpening();
+
+    @Message(id = NONE, value = "A tool that assists with Elytron configuration")
+    String cmdElytronToolDescription();
+
     // Numeric Errors
     @Message(id = 35, value = "Only one of '%s' and '%s' can be specified at the same time")
     IllegalArgumentException mutuallyExclusiveOptions(String first, String second);
-
 }
