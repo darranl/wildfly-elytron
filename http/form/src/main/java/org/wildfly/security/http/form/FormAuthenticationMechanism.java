@@ -340,7 +340,7 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
             if (appendPort(scheme, port)) {
                 sb.append(':').append(port);
             }
-            sb.append(requestURI.getPath());
+            sb.append(requestURI.getRawPath());
             if(requestURI.getRawQuery() != null) {
                 sb.append("?");
                 sb.append(requestURI.getRawQuery());
