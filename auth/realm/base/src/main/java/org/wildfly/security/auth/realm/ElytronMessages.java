@@ -146,4 +146,23 @@ interface ElytronMessages extends BasicLogger {
     @LogMessage(level = Logger.Level.DEBUG)
     @Message(id = 13004, value = "JAAS logout failed for principal %s")
     void debugInfoJaasLogoutFailure(Principal principal, @Cause Throwable cause);
+
+    @Message(id = 13013, value = "Unable to create identity")
+    RealmUnavailableException unableToCreateIdentity();
+
+    @Message(id = 13014, value = "No such identity")
+    RealmUnavailableException noSuchIdentity();
+
+    @Message(id = 13015, value = "The delegate SecurityRealm does not implement ModifiableSecurityRealm")
+    RealmUnavailableException notModifiableRealm();
+
+    @Message(id = 13016, value = "This BruteForceRealmWrapper has already been built")
+    IllegalStateException bruteForceWrapperAlreadyBuilt();
+
+    @Message(id = 13017, value = "Class '%s' is not an interface, only interfaces can be proxied")
+    IllegalStateException notAnInterface(String className);
+
+    @Message(id = 13018, value = "Wrapped SecurityRealm '%s' does not implement interface '%s'")
+    IllegalStateException doesNotImplementRequiredInterface(String className, String interfaceName);
+
 }
