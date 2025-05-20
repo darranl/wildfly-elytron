@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.MessageDigest;
 import java.util.Arrays;
 
 import javax.security.auth.x500.X500Principal;
@@ -191,7 +192,7 @@ public abstract class GeneralName implements ASN1Encodable {
         }
 
         public boolean equals(final OtherName other) {
-            return other != null && Arrays.equals(encodedName, other.getName());
+            return other != null && MessageDigest.isEqual(encodedName, other.getName());
         }
 
         public int hashCode() {
@@ -355,7 +356,7 @@ public abstract class GeneralName implements ASN1Encodable {
         }
 
         public boolean equals(final X400Address other) {
-            return other != null && Arrays.equals(encodedName, other.getName());
+            return other != null && MessageDigest.isEqual(encodedName, other.getName());
         }
 
         public int hashCode() {
@@ -475,7 +476,7 @@ public abstract class GeneralName implements ASN1Encodable {
         }
 
         public boolean equals(final EDIPartyName other) {
-            return other != null && Arrays.equals(encodedName, other.getName());
+            return other != null && MessageDigest.isEqual(encodedName, other.getName());
         }
 
         public int hashCode() {
@@ -600,7 +601,7 @@ public abstract class GeneralName implements ASN1Encodable {
                     }
                     return true;
                 } else {
-                    return Arrays.equals(address, other.getName());
+                    return MessageDigest.isEqual(address, other.getName());
                 }
             }
             return false;

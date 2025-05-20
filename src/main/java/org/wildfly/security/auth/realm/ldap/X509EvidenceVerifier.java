@@ -36,7 +36,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
@@ -203,7 +202,7 @@ class X509EvidenceVerifier implements EvidenceVerifier {
             final int size = attribute.size();
             try {
                 for (int i = 0; i < size; i++) {
-                    if (Arrays.equals(certificate.getEncoded(), (byte[]) attribute.get(i))) {
+                    if (MessageDigest.isEqual(certificate.getEncoded(), (byte[]) attribute.get(i))) {
                         return true;
                     }
                 }
