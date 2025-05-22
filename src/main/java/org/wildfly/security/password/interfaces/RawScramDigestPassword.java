@@ -20,6 +20,7 @@ package org.wildfly.security.password.interfaces;
 
 import static org.wildfly.common.math.HashMath.multiHashOrdered;
 
+import java.security.MessageDigest;
 import java.util.Arrays;
 
 class RawScramDigestPassword extends RawPassword implements ScramDigestPassword {
@@ -62,6 +63,7 @@ class RawScramDigestPassword extends RawPassword implements ScramDigestPassword 
             return false;
         }
         RawScramDigestPassword other = (RawScramDigestPassword) obj;
-        return iterationCount == other.iterationCount && getAlgorithm().equals(other.getAlgorithm()) && Arrays.equals(digest, other.digest) && Arrays.equals(salt, other.salt);
+        return iterationCount == other.iterationCount && getAlgorithm().equals(other.getAlgorithm())
+                && MessageDigest.isEqual(digest, other.digest) && MessageDigest.isEqual(salt, other.salt);
     }
 }

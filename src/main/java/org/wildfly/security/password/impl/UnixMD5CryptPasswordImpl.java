@@ -123,7 +123,7 @@ final class UnixMD5CryptPasswordImpl extends AbstractPasswordImpl implements Uni
         } catch (NoSuchAlgorithmException e) {
             throw log.invalidKeyCannotVerifyPassword(e);
         }
-        return Arrays.equals(getHash(), test);
+        return MessageDigest.isEqual(getHash(), test);
     }
 
     @Override
@@ -239,7 +239,7 @@ final class UnixMD5CryptPasswordImpl extends AbstractPasswordImpl implements Uni
             return false;
         }
         UnixMD5CryptPasswordImpl other = (UnixMD5CryptPasswordImpl) obj;
-        return Arrays.equals(hash, other.hash) && Arrays.equals(salt, other.salt);
+        return MessageDigest.isEqual(hash, other.hash) && MessageDigest.isEqual(salt, other.salt);
     }
 
     private void readObject(ObjectInputStream ignored) throws NotSerializableException {
