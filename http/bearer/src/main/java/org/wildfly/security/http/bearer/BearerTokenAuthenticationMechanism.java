@@ -26,6 +26,7 @@ import static org.wildfly.security.http.HttpConstants.WWW_AUTHENTICATE;
 import static org.wildfly.security.mechanism._private.ElytronMessages.httpBearer;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ import org.wildfly.security.evidence.BearerTokenEvidence;
 import org.wildfly.security.http.HttpAuthenticationException;
 import org.wildfly.security.http.HttpConstants;
 import org.wildfly.security.http.HttpServerAuthenticationMechanism;
+import org.wildfly.security.http.HttpServerCookie;
 import org.wildfly.security.http.HttpServerRequest;
 import org.wildfly.security.http.HttpServerResponse;
 import org.wildfly.security.mechanism._private.MechanismUtil;
@@ -68,9 +70,13 @@ final class BearerTokenAuthenticationMechanism implements HttpServerAuthenticati
     private static final Pattern BEARER_TOKEN_PATTERN = Pattern.compile("^Bearer *([^ ]+) *$", Pattern.CASE_INSENSITIVE);
 
     private final CallbackHandler callbackHandler;
+    private final boolean enableCookieFallback;
+    private final String tokenCookie;
 
-    BearerTokenAuthenticationMechanism(CallbackHandler callbackHandler) {
+    BearerTokenAuthenticationMechanism(CallbackHandler callbackHandler, boolean enableCookieFallback, String tokenCookie) {
         this.callbackHandler = callbackHandler;
+        this.enableCookieFallback = enableCookieFallback;
+        this.tokenCookie = tokenCookie;
     }
 
     @Override
@@ -81,6 +87,19 @@ final class BearerTokenAuthenticationMechanism implements HttpServerAuthenticati
     @Override
     public void evaluateRequest(HttpServerRequest request) throws HttpAuthenticationException {
         List<String> authorizationValues = request.getRequestHeaderValues(HttpConstants.AUTHORIZATION);
+
+        // Fallback: read token from cookies, if no authorization-header present
+        if (enableCookieFallback && (authorizationValues == null || authorizationValues.isEmpty())) {
+            List<HttpServerCookie> cookies = request.getCookies(); // Cookie handling
+            if (cookies != null) {
+                for (HttpServerCookie cookie : cookies) {
+                    if (tokenCookie.equals(cookie.getName())) {
+                        authorizationValues = Collections.singletonList("Bearer " + cookie.getValue());
+                        break;
+                    }
+                }
+            }
+        }
 
         if (authorizationValues != null) {
             Matcher matcher;

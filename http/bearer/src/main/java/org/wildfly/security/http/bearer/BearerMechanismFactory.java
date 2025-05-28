@@ -19,10 +19,12 @@
 package org.wildfly.security.http.bearer;
 
 import static org.wildfly.common.Assert.checkNotNullParam;
+import static org.wildfly.security.http.HttpConstants.AUTHORIZATION;
 import static org.wildfly.security.http.HttpConstants.BEARER_TOKEN;
 
 import java.security.Provider;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.security.auth.callback.CallbackHandler;
 
@@ -68,7 +70,11 @@ public class BearerMechanismFactory implements HttpServerAuthenticationMechanism
         checkNotNullParam("callbackHandler", callbackHandler);
 
         if (BEARER_TOKEN.equals(mechanismName)) {
-            return new BearerTokenAuthenticationMechanism(callbackHandler);
+            // Extract enableCookieFallback from properties
+            boolean enableCookieFallback = Boolean.parseBoolean((String) properties.get("enableCookieFallback"));
+            // Extract cookie-name (Default: "Authorization")
+            String tokenCookieName = Optional.ofNullable(properties.get("token-cookie-name")).map(Object::toString).orElse(AUTHORIZATION);
+            return new BearerTokenAuthenticationMechanism(callbackHandler, enableCookieFallback, tokenCookieName);
         }
 
         return null;
