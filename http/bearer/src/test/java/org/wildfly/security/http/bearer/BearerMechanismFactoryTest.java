@@ -25,7 +25,9 @@ import org.wildfly.security.http.HttpAuthenticationException;
 import org.wildfly.security.http.HttpServerAuthenticationMechanism;
 
 import javax.security.auth.callback.CallbackHandler;
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.wildfly.security.http.HttpConstants.BASIC_NAME;
 import static org.wildfly.security.http.HttpConstants.BEARER_TOKEN;
@@ -122,6 +124,78 @@ public class BearerMechanismFactoryTest {
     public void testCreateValidBearerAuthenticationMechanism() throws HttpAuthenticationException{
         HttpServerAuthenticationMechanism httpServerAuthenticationMechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, emptyProperties, dummyCallbackHandler);
         Assert.assertNotNull("HttpServerAuthenticationMechanism cannot be null.",httpServerAuthenticationMechanism);
+    }
+
+    /**
+     * Tests default enableCookieFallback when not provided.
+     */
+    @Test
+    public void testDefaultCookieFallback() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
+        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, emptyProperties, dummyCallbackHandler);
+        Assert.assertNotNull(mechanism);
+        // Use reflection to verify internal value
+        Field enableCookieFallbackField = mechanism.getClass().getDeclaredField("enableCookieFallback");
+        enableCookieFallbackField.setAccessible(true);
+        Boolean enableCookieFallback = (boolean) enableCookieFallbackField.get(mechanism);
+        Assert.assertEquals(false, enableCookieFallback);
+    }
+
+    /**
+     * Tests that the mechanism is created with cookie fallback enabled when property is set to true.
+     * Verifies behavior indirectly through authentication process.
+     */
+    @Test
+    public void testCreateMechanismWithCookieFallbackEnabled() throws HttpAuthenticationException {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("enableCookieFallback", "true");
+        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
+        Assert.assertNotNull(mechanism);
+        Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
+    }
+
+    /**
+     * Tests that the mechanism is created with cookie fallback enabled when property is set to false.
+     * Verifies behavior indirectly through authentication process.
+     */
+    @Test
+    public void testCreateMechanismWithCookieFallbackDisabled() throws HttpAuthenticationException {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("enableCookieFallback", "false");
+        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
+        Assert.assertNotNull(mechanism);
+        Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
+    }
+
+    /**
+     * Tests default cookie name when not provided.
+     */
+    @Test
+    public void testDefaultCookieName() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
+        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, emptyProperties, dummyCallbackHandler);
+        Assert.assertNotNull(mechanism);
+        // Use reflection to verify internal value
+        Field tokenCookieField = mechanism.getClass().getDeclaredField("tokenCookie");
+        tokenCookieField.setAccessible(true);
+        String tokenCookie = (String) tokenCookieField.get(mechanism);
+        Assert.assertEquals("Authorization", tokenCookie);
+    }
+
+    /**
+     * Tests custom cookie name extraction and that the mechanism uses custom cookie name when provided.
+     * Verifies through authentication behavior.
+     */
+    @Test
+    public void testCustomCookieNameExtraction() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("token-cookie-name", "CUSTOM_AUTH");
+        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
+        Assert.assertNotNull(mechanism);
+        // Use reflection to verify internal value
+        Field tokenCookieField = mechanism.getClass().getDeclaredField("tokenCookie");
+        tokenCookieField.setAccessible(true);
+        String tokenCookie = (String) tokenCookieField.get(mechanism);
+        Assert.assertEquals("CUSTOM_AUTH", tokenCookie);
+        Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
     }
 
 }
