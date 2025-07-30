@@ -18,6 +18,9 @@
 
 package org.wildfly.security.jose.jwk;
 
+import static org.wildfly.security.jose.jwk.JWKParser.isKeyTypeSupported;
+import static org.wildfly.security.jose.jwk.JWKParser.toPublicKey;
+
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +37,8 @@ public class JsonWebKeySetUtil {
     public static Map<String, PublicKey> getKeysForUse(JsonWebKeySet keySet, JWK.Use requestedUse) {
         Map<String, PublicKey> result = new HashMap<>();
         for (JWK jwk : keySet.getKeys()) {
-            JWKParser parser = JWKParser.create(jwk);
-            if (jwk.getPublicKeyUse().equals(requestedUse.asString()) && parser.isKeyTypeSupported(jwk.getKeyType())) {
-                result.put(jwk.getKeyId(), parser.toPublicKey());
+            if (jwk.getPublicKeyUse().equals(requestedUse.asString()) && isKeyTypeSupported(jwk.getKeyType())) {
+                result.put(jwk.getKeyId(), toPublicKey(jwk));
             }
         }
         return result;
