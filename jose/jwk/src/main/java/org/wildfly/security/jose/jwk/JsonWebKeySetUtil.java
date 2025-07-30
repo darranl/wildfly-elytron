@@ -24,6 +24,7 @@ import static org.wildfly.security.jose.jwk.JWKParser.toPublicKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Utility methods for JSON Web Key Sets.
@@ -34,14 +35,44 @@ import java.util.Map;
  */
 public class JsonWebKeySetUtil {
 
-    public static Map<String, PublicKey> getKeysForUse(JsonWebKeySet keySet, JWK.Use requestedUse) {
+    public static Map<String, PublicKey> getKeys(JsonWebKeySet keySet, Predicate<JWK> keyPredicate) {
         Map<String, PublicKey> result = new HashMap<>();
         for (JWK jwk : keySet.getKeys()) {
-            if (jwk.getPublicKeyUse().equals(requestedUse.asString()) && isKeyTypeSupported(jwk.getKeyType())) {
+            if (keyPredicate.test(jwk)) {
                 result.put(jwk.getKeyId(), toPublicKey(jwk));
             }
         }
         return result;
     }
 
+    /*
+     * Key Filtering Predicates.
+     */
+
+    public static Predicate<JWK> SUPPORTED_KEY_TYPE = j -> isKeyTypeSupported(j.getKeyType());
+
+    public static Predicate<JWK> usePredicate(JWK.Use requestedUse) {
+        return j -> j.getPublicKeyUse() != null && j.getPublicKeyUse().equals(requestedUse.asString());
+    }
+
+    public static Predicate<JWK> keyOpsPredicate(JWK.KeyOp requestedKeyOp) {
+        return j -> {
+            String[] keyOps = j.getKeyOps();
+            if (keyOps != null) {
+                for (String keyOp : keyOps) {
+                    if (keyOp.equals(requestedKeyOp.asString())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        };
+    }
+
+    public static Predicate<JWK> FOR_SIGNATURE_VALIDATION = SUPPORTED_KEY_TYPE.and(
+        usePredicate(JWK.Use.SIG).or(keyOpsPredicate(JWK.KeyOp.VERIFY)));
+
+    public static Predicate<JWK> FOR_ENCRYPTION = SUPPORTED_KEY_TYPE.and(
+        usePredicate(JWK.Use.ENC).or(keyOpsPredicate(JWK.KeyOp.ENCRYPT)));
 }
