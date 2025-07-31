@@ -21,6 +21,8 @@ package org.wildfly.security.http.oidc;
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.wildfly.security.http.oidc.ElytronMessages.log;
 import static org.wildfly.security.http.oidc.Oidc.JSON_CONTENT_TYPE;
+import static org.wildfly.security.jose.jwk.JsonWebKeySetUtil.FOR_ENCRYPTION;
+import static org.wildfly.security.jose.jwk.JsonWebKeySetUtil.getKeys;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -28,9 +30,7 @@ import java.util.Map;
 import java.util.List;
 
 import org.apache.http.client.methods.HttpGet;
-import org.wildfly.security.jose.jwk.JWK;
 import org.wildfly.security.jose.jwk.JsonWebKeySet;
-import org.wildfly.security.jose.jwk.JsonWebKeySetUtil;
 
 /**
  * A public key locator that dynamically obtains the public key used for encryption
@@ -97,7 +97,7 @@ class JWKEncPublicKeyLocator implements PublicKeyLocator {
         request.addHeader(ACCEPT, JSON_CONTENT_TYPE);
         try {
             JsonWebKeySet jwks = Oidc.sendJsonHttpRequest(config, request, JsonWebKeySet.class);
-            Map<String, PublicKey> publicKeys = JsonWebKeySetUtil.getKeysForUse(jwks, JWK.Use.ENC);
+            Map<String, PublicKey> publicKeys = getKeys(jwks, FOR_ENCRYPTION);
 
             if (log.isDebugEnabled()) {
                 log.debug("Public keys successfully retrieved for client " +  config.getResourceName() + ". New kids: " + publicKeys.keySet());
