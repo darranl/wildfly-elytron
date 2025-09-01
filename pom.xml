@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>35</version>
+        <version>50</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -132,7 +132,7 @@
             </resource>
         </resources>
 
-        <plugins>        
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -155,8 +155,8 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>        
-        
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -211,13 +211,13 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <plugin>
                 <groupId>com.github.ferstl</groupId>
                 <artifactId>depgraph-maven-plugin</artifactId>
                 <version>3.2.2</version>
             </plugin>
-            
+
         </plugins>
 
         <pluginManagement>
@@ -350,7 +350,7 @@
                                 <goal>aggregate</goal>
                             </goals>
                             <configuration>
-                                <destDir>api-javadoc</destDir>                                
+                                <destDir>api-javadoc</destDir>
                                 <sourceFileIncludes>
                                     <include>org/wildfly/security/*.java</include>
                                     <include>org/wildfly/security/asn1/*.java</include>
