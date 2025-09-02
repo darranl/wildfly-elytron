@@ -36,6 +36,7 @@
 
     <name>WildFly Elytron Parent</name>
     <description>WildFly Security</description>
+    <url>https://wildfly-security.github.io/wildfly-elytron/</url>
 
     <issueManagement>
         <system>Jira</system>
@@ -49,13 +50,28 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <name>Darran Lofthouse</name>
+            <email>darran.lofthouse@jboss.com</email>
+            <organization>WildFly</organization>
+            <organizationUrl>https://www.wildfly.org/</organizationUrl>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</connection>
+        <developerConnection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</developerConnection>
         <url>https://github.com/wildfly-security/wildfly-elytron</url>
     </scm>
 
     <properties>
         <jdk.min.version>11</jdk.min.version>
+
+        <!-- Nexus Settings -->
+        <nexus.repository.staging>wildfly-staging</nexus.repository.staging>
+        <nexus.staging.tag>wildfly-elytron-${project.version}</nexus.staging.tag>
+        <nexus.repository.release>wildfly-security</nexus.repository.release>
 
         <version.com.fasterxml.jackson>2.13.4</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}.2</version.com.fasterxml.jackson.databind>
