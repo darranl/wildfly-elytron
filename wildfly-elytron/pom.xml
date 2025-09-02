@@ -996,7 +996,6 @@
                                 </goals>
                                 <configuration>
                                     <classifier>javadoc</classifier>
-                                    <classesDirectory>${project.basedir}/javadoc</classesDirectory>
                                 </configuration>
                             </execution>
                         </executions>
