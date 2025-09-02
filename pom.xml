@@ -68,6 +68,11 @@
     <properties>
         <jdk.min.version>11</jdk.min.version>
 
+        <!-- Nexus Settings -->
+        <nexus.repository.staging>wildfly-staging</nexus.repository.staging>
+        <nexus.staging.tag>wildfly-elytron-${project.version}</nexus.staging.tag>
+        <nexus.repository.release>wildfly-security</nexus.repository.release>
+
         <version.com.fasterxml.jackson>2.13.4</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}.2</version.com.fasterxml.jackson.databind>
         <version.commons-cli>1.4</version.commons-cli>
