@@ -17,14 +17,12 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
         <artifactId>wildfly-elytron-parent</artifactId>
-        <version>1.15.27.CR1-SNAPSHOT</version>
+        <version>1.15.27.Alpha1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -49,7 +47,8 @@
     <scm>
         <connection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</connection>
         <url>https://github.com/wildfly-security/wildfly-elytron</url>
-    </scm>
+      <tag>1.15.27.Alpha1</tag>
+  </scm>
 
     <build>
         <resources>
@@ -175,8 +174,7 @@
                                 </excludes>
                             </artifactSet>
                             <transformers>
-                                <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                         </configuration>
                     </execution>
@@ -206,7 +204,7 @@
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <useFile/>
+                        <useFile />
                         <excludes>**/*$logger.java,**/*$bundle.java</excludes>
                     </configuration>
                     <dependencies>
