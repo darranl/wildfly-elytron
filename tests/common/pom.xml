@@ -24,9 +24,28 @@
                 <version>${version.jar.plugin}</version>
                 <executions>
                     <execution>
+                        <id>create-test-jar</id>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>create-empty-source-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-empty-javadoc-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
