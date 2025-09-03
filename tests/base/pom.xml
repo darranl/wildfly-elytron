@@ -239,9 +239,28 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>create-test-jar</id>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>create-empty-source-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-empty-javadoc-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -500,7 +519,7 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-sasl-scram</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-x500</artifactId>
@@ -517,7 +536,7 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-x500-principal</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>
@@ -836,7 +855,7 @@
                                 <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
                                 <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
                                 <overrideCompatibilityChangeParameters>
-                                    <overrideCompatibilityChangeParameter> allowing new method in interface if default impl provided 
+                                    <overrideCompatibilityChangeParameter> allowing new method in interface if default impl provided
                                         <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
                                         <binaryCompatible>true</binaryCompatible>
                                         <sourceCompatible>true</sourceCompatible>
