@@ -23,6 +23,8 @@ public class RsaJwk {
     private String alg;
     private String n;
     private String e;
+    private String use;
+    private String[] keyOps;
 
     public RsaJwk() {
     }
@@ -69,6 +71,24 @@ public class RsaJwk {
 
     public RsaJwk setE(String e) {
         this.e = e;
+        return this;
+    }
+
+    public String getUse() {
+        return use;
+    }
+
+    public RsaJwk setUse(String use) {
+        this.use = use;
+        return this;
+    }
+
+    public String[] getKeyOps() {
+        return keyOps;
+    }
+
+    public RsaJwk setKeyOps(String[] keyOps) {
+        this.keyOps = keyOps;
         return this;
     }
 }

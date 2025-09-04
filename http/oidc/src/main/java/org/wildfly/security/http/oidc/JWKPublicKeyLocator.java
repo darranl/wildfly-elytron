@@ -19,15 +19,15 @@
 package org.wildfly.security.http.oidc;
 
 import static org.wildfly.security.http.oidc.ElytronMessages.log;
+import static org.wildfly.security.jose.jwk.JsonWebKeySetUtil.FOR_SIGNATURE_VALIDATION;
+import static org.wildfly.security.jose.jwk.JsonWebKeySetUtil.getKeys;
 
 import java.security.PublicKey;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.client.methods.HttpGet;
-import org.wildfly.security.jose.jwk.JWK;
 import org.wildfly.security.jose.jwk.JsonWebKeySet;
-import org.wildfly.security.jose.jwk.JsonWebKeySetUtil;
 
 /**
  * A public key locator that dynamically obtains the public key from an OpenID
@@ -95,7 +95,7 @@ class JWKPublicKeyLocator implements PublicKeyLocator {
         try {
             JsonWebKeySet jwks = Oidc.sendJsonHttpRequest(oidcClientConfiguration, getMethod, JsonWebKeySet.class);
 
-            Map<String, PublicKey> publicKeys = JsonWebKeySetUtil.getKeysForUse(jwks, JWK.Use.SIG);
+            Map<String, PublicKey> publicKeys = getKeys(jwks, FOR_SIGNATURE_VALIDATION);
 
             if (log.isDebugEnabled()) {
                 log.debug("Public keys successfully retrieved for client " +  oidcClientConfiguration.getResourceName() + ". New kids: " + publicKeys.keySet().toString());
