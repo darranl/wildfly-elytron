@@ -1,14 +1,8 @@
-name: Pull Request CI
+name: Pull Request CI (3.x)
 on:
   pull_request:
     branches:
-      - 1.17.x
-      - 1.15.x
-      - 1.x
-      - 2.x
-      - 2.2.x
-      - 2.6.x
-      - master
+      - 3.x
 
 jobs:
   build:
