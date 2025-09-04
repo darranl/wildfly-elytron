@@ -17,9 +17,7 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
@@ -50,7 +48,8 @@
     <scm>
         <connection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</connection>
         <url>https://github.com/wildfly-security/wildfly-elytron</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <properties>
         <version.org.codehaus.mojo.xml.plugin>1.0.2</version.org.codehaus.mojo.xml.plugin>
@@ -239,9 +238,28 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>create-test-jar</id>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>create-empty-source-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-empty-javadoc-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -326,7 +344,7 @@
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <useFile/>
+                        <useFile />
                         <excludes>**/*$logger.java,**/*$bundle.java</excludes>
                     </configuration>
                     <dependencies>
@@ -507,7 +525,7 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-sasl-scram</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-x500</artifactId>
@@ -524,7 +542,7 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-x500-principal</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>
@@ -843,7 +861,7 @@
                                 <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
                                 <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
                                 <overrideCompatibilityChangeParameters>
-                                    <overrideCompatibilityChangeParameter> allowing new method in interface if default impl provided 
+                                    <overrideCompatibilityChangeParameter> allowing new method in interface if default impl provided
                                         <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
                                         <binaryCompatible>true</binaryCompatible>
                                         <sourceCompatible>true</sourceCompatible>
@@ -941,8 +959,8 @@
                 </property>
             </activation>
             <properties>
-                <modular.jdk.args/>
-                <modular.jdk.props/>
+                <modular.jdk.args />
+                <modular.jdk.props />
             </properties>
             <build>
                 <plugins>
@@ -976,8 +994,8 @@
                 </property>
             </activation>
             <properties>
-                <modular.jdk.args/>
-                <modular.jdk.props/>
+                <modular.jdk.args />
+                <modular.jdk.props />
             </properties>
             <build>
                 <plugins>
