@@ -74,21 +74,25 @@ public class JWKParser {
     }
 
     public PublicKey toPublicKey() {
+        return toPublicKey(jwk);
+    }
+
+    public static PublicKey toPublicKey(JWK jwk) {
         String keyType = jwk.getKeyType();
         if (keyType.equals(RSAPublicJWK.RSA)) {
-            return createRSAPublicKey();
+            return createRSAPublicKey(jwk);
         } else if (keyType.equals(ECPublicJWK.EC)) {
-            return createECPublicKey();
+            return createECPublicKey(jwk);
         } else {
             throw log.unsupportedKeyTypeForJWK(keyType);
         }
     }
 
-    public boolean isKeyTypeSupported(String keyType) {
+    public static boolean isKeyTypeSupported(String keyType) {
         return (RSAPublicJWK.RSA.equals(keyType) || ECPublicJWK.EC.equals(keyType));
     }
 
-    private PublicKey createECPublicKey() {
+    private static PublicKey createECPublicKey(JWK jwk) {
         String crv = (String) jwk.getOtherClaims().get(ECPublicJWK.CRV);
 
         BigInteger x = new BigInteger(1,
@@ -123,7 +127,7 @@ public class JWKParser {
         }
     }
 
-    private PublicKey createRSAPublicKey() {
+    private static PublicKey createRSAPublicKey(JWK jwk) {
         BigInteger modulus = new BigInteger(1,
                 CodePointIterator.ofString(jwk.getOtherClaims().get(RSAPublicJWK.MODULUS).toString()).base64Decode(BASE64_URL, false).drain());
         BigInteger publicExponent = new BigInteger(1,
