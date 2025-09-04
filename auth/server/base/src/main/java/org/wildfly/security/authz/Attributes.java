@@ -654,7 +654,7 @@ public interface Attributes {
             }
 
             @Override
-            public Entry get(String key) {
+            public synchronized Entry get(String key) {
                 return this.entryCache.computeIfAbsent(key, s -> new SimpleAttributesEntry(this, s));
             }
         };

@@ -71,6 +71,9 @@ public class Oidc {
     public static final String CORS_ALLOWED_METHODS = "cors-allowed-methods";
     public static final String CORS_EXPOSED_HEADERS = "cors-exposed-headers";
     public static final String CONNECTION_POOL_SIZE = "connection-pool-size";
+    public static final String CONNECTION_TIMEOUT_MILLIS = "connection-timeout-millis";
+    public static final String CONNECTION_TTL_MILLIS = "connection-ttl-millis";
+    public static final String SOCKET_TIMEOUT_MILLIS = "socket-timeout-millis";
     public static final String CLIENTS_MANAGEMENT_REGISTER_NODE_PATH = "clients-managements/register-node";
     public static final String CLIENTS_MANAGEMENT_UNREGISTER_NODE_PATH = "clients-managements/unregister-node";
     public static final String CREDENTIALS = "credentials";
