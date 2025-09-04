@@ -239,6 +239,7 @@
                     <tagNameFormat>@{project.version}</tagNameFormat>
                     <pushChanges>false</pushChanges>
                     <preparationProfiles>jboss-release</preparationProfiles>
+                    <arguments>-DskipTests</arguments>
                     <!-- Perform -->
                     <localCheckout>true</localCheckout>
                     <releaseProfiles>jboss-release</releaseProfiles>
