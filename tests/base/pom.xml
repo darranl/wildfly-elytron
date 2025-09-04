@@ -17,14 +17,12 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
         <artifactId>wildfly-elytron-parent</artifactId>
-        <version>3.0.0.Alpha1-SNAPSHOT</version>
+        <version>3.0.0.Alpha1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -50,7 +48,8 @@
     <scm>
         <connection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</connection>
         <url>https://github.com/wildfly-security/wildfly-elytron</url>
-    </scm>
+      <tag>3.0.0.Alpha1</tag>
+  </scm>
 
     <properties>
         <version.org.codehaus.mojo.xml.plugin>1.0.2</version.org.codehaus.mojo.xml.plugin>
@@ -345,7 +344,7 @@
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <useFile/>
+                        <useFile />
                         <excludes>**/*$logger.java,**/*$bundle.java</excludes>
                     </configuration>
                     <dependencies>
@@ -965,8 +964,8 @@
                 </property>
             </activation>
             <properties>
-                <modular.jdk.args/>
-                <modular.jdk.props/>
+                <modular.jdk.args />
+                <modular.jdk.props />
             </properties>
             <build>
                 <plugins>
@@ -1000,8 +999,8 @@
                 </property>
             </activation>
             <properties>
-                <modular.jdk.args/>
-                <modular.jdk.props/>
+                <modular.jdk.args />
+                <modular.jdk.props />
             </properties>
             <build>
                 <plugins>
