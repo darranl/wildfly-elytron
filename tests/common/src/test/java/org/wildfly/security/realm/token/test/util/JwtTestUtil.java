@@ -4,6 +4,10 @@
  */
 package org.wildfly.security.realm.token.test.util;
 
+import java.net.URI;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -13,19 +17,9 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSASSASigner;
 
 import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonValue;
-
-import java.math.BigInteger;
-import java.net.URI;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.Base64;
-
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -35,21 +29,7 @@ import okhttp3.mockwebserver.RecordedRequest;
  *
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
  */
-public final class JwtTestUtil {
-
-    public static JsonObject jwksToJson(RsaJwk... jwks) {
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        for (int i = 0; i < jwks.length; i++){
-            JsonObjectBuilder jwk = Json.createObjectBuilder()
-                    .add("kty", jwks[i].getKty())
-                    .add("alg", jwks[i].getAlg())
-                    .add("kid", jwks[i].getKid())
-                    .add("n", jwks[i].getN())
-                    .add("e", jwks[i].getE());
-            jab.add(jwk);
-        }
-        return Json.createObjectBuilder().add("keys", jab).build();
-    }
+public final class JwtTestUtil extends JwkTestUtil {
 
     public static String createJwt(KeyPair keyPair, int expirationOffset, int notBeforeOffset) throws Exception {
         return createJwt(keyPair, expirationOffset, notBeforeOffset, null, null);
@@ -109,19 +89,6 @@ public final class JwtTestUtil {
         return claimsBuilder;
     }
 
-    public static RsaJwk createRsaJwk(KeyPair keyPair, String kid) {
-        RSAPublicKey pk = (RSAPublicKey) keyPair.getPublic();
-        RsaJwk jwk = new RsaJwk();
-
-        jwk.setAlg("RS256");
-        jwk.setKid(kid);
-        jwk.setKty("RSA");
-        jwk.setE(Base64.getUrlEncoder().withoutPadding().encodeToString(toBase64urlUInt(pk.getPublicExponent())));
-        jwk.setN(Base64.getUrlEncoder().withoutPadding().encodeToString(toBase64urlUInt(pk.getModulus())));
-
-        return jwk;
-    }
-
     public static Dispatcher createTokenDispatcher(String response) {
         return new Dispatcher() {
             @Override
@@ -129,21 +96,6 @@ public final class JwtTestUtil {
                 return new MockResponse().setBody(response);
             }
         };
-    }
-
-    // rfc7518 dictates the use of Base64urlUInt for "n" and "e" and it explicitly mentions that the
-    // minimum number of octets should be used and the 0 leading sign byte should not be included
-    private static byte[] toBase64urlUInt(final BigInteger bigInt) {
-        byte[] bytes = bigInt.toByteArray();
-        int i = 0;
-        while (i < bytes.length && bytes[i] == 0) {
-            i++;
-        }
-        if (i > 0 && i < bytes.length) {
-            return Arrays.copyOfRange(bytes, i, bytes.length);
-        } else {
-            return bytes;
-        }
     }
 
 }
