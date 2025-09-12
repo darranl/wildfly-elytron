@@ -126,6 +126,9 @@ public final class WildFlyElytronClientDefaultSSLContextProvider extends Provide
                     throw ElytronMessages.log.sslContextForSecurityProviderCreatesInfiniteLoop();
                 }
             } catch (ConfigXMLParseException | GeneralSecurityException e) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Unable to obtain SSLContext", e);
+                }
                 if (e.getCause() instanceof FileNotFoundException) {
                     throw log.clientConfigurationFileNotFound();
                 }
