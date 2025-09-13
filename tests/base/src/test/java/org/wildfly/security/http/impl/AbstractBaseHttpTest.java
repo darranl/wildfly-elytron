@@ -684,7 +684,7 @@ public class AbstractBaseHttpTest {
         }
 
         public HttpScope getScope(Scope scope) {
-            throw new IllegalStateException();
+            return null;
         }
 
         public Collection<String> getScopeIds(Scope scope) {
