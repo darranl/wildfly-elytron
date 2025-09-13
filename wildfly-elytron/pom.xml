@@ -17,9 +17,7 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
@@ -49,7 +47,8 @@
     <scm>
         <connection>scm:git:git@github.com:wildfly-security/wildfly-elytron.git</connection>
         <url>https://github.com/wildfly-security/wildfly-elytron</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <build>
         <resources>
@@ -175,8 +174,7 @@
                                 </excludes>
                             </artifactSet>
                             <transformers>
-                                <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                         </configuration>
                     </execution>
@@ -206,7 +204,7 @@
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <useFile/>
+                        <useFile />
                         <excludes>**/*$logger.java,**/*$bundle.java</excludes>
                     </configuration>
                     <dependencies>
@@ -557,7 +555,7 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron</artifactId>
-                                    <version>2.6.0.Final</version> <!-- When updating to next release, clear all exclusions. -->
+                                    <version>2.6.5.Final</version> <!-- When updating to next release, clear all exclusions. -->
                                     <type>jar</type>
                                 </dependency>
                             </oldVersion>
@@ -953,9 +951,6 @@
                                     <include>org.wildfly.security.x500.cert</include>
                                 </includes>
                                 <excludes>
-                                    <exclude>org.wildfly.security.auth.client.ElytronMessages_$logger</exclude>
-                                    <exclude>org.wildfly.security.auth.util.ElytronMessages_$logger</exclude>
-                                    <exclude>org.wildfly.security.auth.util.GSSCredentialSecurityFactory</exclude>
                                 </excludes>
                                 <includeExclusively>true</includeExclusively>
                             </parameter>
@@ -966,6 +961,29 @@
                                 <goals>
                                     <goal>cmp</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jboss-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>empty-javadoc-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>javadoc</classifier>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
