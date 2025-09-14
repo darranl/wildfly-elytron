@@ -42,6 +42,8 @@ public class JWK {
 
     public static final String PUBLIC_KEY_USE = "use";
 
+    public static final String KEY_OPS = "key_ops";
+
     public enum Use {
         SIG("sig"),
         ENC("enc");
@@ -49,6 +51,27 @@ public class JWK {
         private String str;
 
         Use(String str) {
+            this.str = str;
+        }
+
+        public String asString() {
+            return str;
+        }
+    }
+
+    public enum KeyOp {
+        SIGN("sign"),
+        VERIFY("verify"),
+        ENCRYPT("encrypt"),
+        DECRYPT("decrypt"),
+        WRAP_KEY("wrapKey"),
+        UNWRAP_KEY("unwrapKey"),
+        DERIVE_KEY("deriveKey"),
+        DERIVE_BITS("deriveBits");
+
+        private String str;
+
+        KeyOp(String str) {
             this.str = str;
         }
 
@@ -68,6 +91,9 @@ public class JWK {
 
     @JsonProperty(PUBLIC_KEY_USE)
     private String publicKeyUse;
+
+    @JsonProperty(KEY_OPS)
+    private String[] keyOps;
 
     protected Map<String, Object> otherClaims = new HashMap<String, Object>();
 
@@ -102,6 +128,14 @@ public class JWK {
 
     public void setPublicKeyUse(String publicKeyUse) {
         this.publicKeyUse = publicKeyUse;
+    }
+
+    public String[] getKeyOps() {
+        return keyOps;
+    }
+
+    public void setKeyOps(String[] keyOps) {
+        this.keyOps = keyOps;
     }
 
     @JsonAnyGetter
