@@ -67,6 +67,20 @@ public class AggregateRealmTest {
     }
 
     @Test
+    public void testAuthenticationFails() throws Exception {
+        Attributes authenticationAttributes = new MapAttributes();
+        authenticationAttributes.add("team", 0, "One");
+
+        SecurityRealm testRealm = createSecurityRealm(false, authenticationAttributes, null, new Attributes[] { null });
+        RealmIdentity identity = testRealm.getRealmIdentity(new NamePrincipal("invalid_principal"));
+
+        assertFalse("Identity should not exist", identity.exists());
+
+        Attributes identityAttributes = identity.getAuthorizationIdentity().getAttributes();
+        assertEquals("Expected no attributes due to authentication failure.", 0, identityAttributes.size());
+    }
+
+    @Test
     public void testAuthorizationOnly() throws Exception {
         Attributes authorizationAttributes = new MapAttributes();
         authorizationAttributes.add("team", 0, "One");
