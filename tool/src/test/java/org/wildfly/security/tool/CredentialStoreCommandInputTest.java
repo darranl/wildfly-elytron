@@ -17,6 +17,9 @@
  */
 package org.wildfly.security.tool;
 
+import static org.junit.Assert.fail;
+
+import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -67,19 +70,17 @@ public class CredentialStoreCommandInputTest extends AbstractCommandTest {
     }
 
     @Test
-    public void testNullValue() throws Exception {
+    public void testMissingAliasValue() throws Exception {
         String storageLocation = getStoragePathForNewFile();
         String storagePassword = "cspassword";
-        String[] aliasNames = { null, "testalias1", null };
-        String[] aliasValues = { "secretValue", null, null };
 
-        for (int i = 0; i < aliasNames.length; i++) {
-            try {
-                createStoreAndAddAliasAndCheck(storageLocation, storagePassword, aliasNames[i], aliasValues[i]);
-            } catch (RuntimeException e) {
-                if (!(e.getCause() instanceof NullPointerException)) {
-                    Assert.fail("It must fail with NullPointerException.");
-                }
+        try {
+            createStoreAndAddAliasAndCheck(storageLocation, storagePassword, null, "secretValue");
+            fail("It must fail with MissingArgumentException.");
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            if (!(e.getCause() instanceof MissingArgumentException)) {
+                Assert.fail("It must fail with MissingArgumentException.");
             }
         }
     }

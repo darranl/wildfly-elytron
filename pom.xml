@@ -74,7 +74,7 @@
 
         <version.com.fasterxml.jackson>2.17.2</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}</version.com.fasterxml.jackson.databind>
-        <version.commons-cli>1.6.0</version.commons-cli>
+        <version.commons-cli>1.10.0</version.commons-cli>
         <version.jakarta.enterprise>4.0.1</version.jakarta.enterprise>
         <version.org.apache.commons>3.18.0</version.org.apache.commons>
         <version.org.apache.directory.server>2.0.0.AM27</version.org.apache.directory.server>
@@ -121,6 +121,7 @@
         <version.org.keycloak.keycloak-services>23.0.7</version.org.keycloak.keycloak-services>
         <version.org.aesh>2.7</version.org.aesh>
         <version.org.xnio>3.8.16.Final</version.org.xnio>
+        <version.org.openclover>4.5.2</version.org.openclover>
 
         <test.level>INFO</test.level>
         <!-- Checkstyle configuration -->
@@ -886,6 +887,14 @@
                 </exclusions>
             </dependency>
 
+            <!-- https://mvnrepository.com/artifact/org.openclover/clover-maven-plugin -->
+            <dependency>
+                <groupId>org.openclover</groupId>
+                <artifactId>clover-maven-plugin</artifactId>
+                <version>${version.org.openclover}</version>
+                <scope>test</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
@@ -1533,6 +1542,30 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!--To generate a report on test coverage run
+            mvn -Ptest-coverage clean org.openclover:clover-maven-plugin:setup install  org.openclover:clover-maven-plugin:aggregate org.openclover:clover-maven-plugin:clover
+            -->
+            <id>test-coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.siom79.japicmp</groupId>
+                        <artifactId>japicmp-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
