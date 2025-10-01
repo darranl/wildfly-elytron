@@ -47,7 +47,8 @@ public final class TokenSecurityRealm implements SecurityRealm {
     private final String principalClaimName;
     /** A function that maps the set of token claims to a Principal. */
     private final Function<Attributes, Principal> claimToPrincipal;
-
+    /** A function that transofrms Principal  **/
+    private final Function<Principal, Principal> principalTransformer;
     /**
      * Returns a {@link Builder} instance that can be used to configure and create a {@link TokenSecurityRealm}.
      *
@@ -71,6 +72,8 @@ public final class TokenSecurityRealm implements SecurityRealm {
         } else {
             this.claimToPrincipal = configuration.claimToPrincipal;
         }
+
+        this.principalTransformer = configuration.principalTransformer;
 
         this.strategy = Assert.checkNotNullParam("tokenValidationStrategy", configuration.strategy);
     }
@@ -134,12 +137,17 @@ public final class TokenSecurityRealm implements SecurityRealm {
                 this.evidence = null;
             }
         }
+
         @Override
         public Principal getRealmIdentityPrincipal() {
             Principal principal = null;
             try {
                 if (exists()) {
                     principal = claimToPrincipal.apply(this.claims);
+
+                    if (principalTransformer != null) {
+                        principal = principalTransformer.apply(principal);
+                    }
                 }
             } catch (Exception e) {
                 throw ElytronMessages.log.tokenRealmFailedToObtainPrincipal(e);
@@ -223,7 +231,7 @@ public final class TokenSecurityRealm implements SecurityRealm {
         private String principalClaimName = "username";
         private Function<Attributes, Principal> claimToPrincipal;
         private TokenValidator strategy;
-
+        private Function<Principal, Principal> principalTransformer;
         /**
          * Construct a new instance.
          */
@@ -262,6 +270,15 @@ public final class TokenSecurityRealm implements SecurityRealm {
             return this;
         }
 
+        /**
+         * Defines a {@link TokenValidator} that will be used to validate tokens.
+         *
+         * @return this instance
+         */
+        public Builder principalTransformer(Function<Principal, Principal> func) {
+            this.principalTransformer = func;
+            return this;
+        }
         /**
          * Creates a {@link TokenSecurityRealm} instance with all the given configuration.
          *
