@@ -18,15 +18,13 @@
 
 package org.wildfly.security.mechanism.digest;
 
-import org.wildfly.common.Assert;
-import org.wildfly.security.auth.callback.CredentialCallback;
-import org.wildfly.security.credential.PasswordCredential;
-import org.wildfly.security.mechanism._private.ElytronMessages;
-import org.wildfly.security.mechanism.AuthenticationMechanismException;
-import org.wildfly.security.password.TwoWayPassword;
-import org.wildfly.security.password.interfaces.ClearPassword;
-import org.wildfly.security.password.interfaces.DigestPassword;
-import org.wildfly.security.password.spec.DigestPasswordAlgorithmSpec;
+import static org.wildfly.security.mechanism.digest.DigestUtil.getTwoWayPasswordChars;
+import static org.wildfly.security.mechanism.digest.DigestUtil.userRealmPasswordDigest;
+
+import java.security.MessageDigest;
+import java.security.Provider;
+import java.util.Arrays;
+import java.util.function.Supplier;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.callback.Callback;
@@ -36,13 +34,16 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
-import java.security.MessageDigest;
-import java.security.Provider;
-import java.util.Arrays;
-import java.util.function.Supplier;
 
-import static org.wildfly.security.mechanism.digest.DigestUtil.getTwoWayPasswordChars;
-import static org.wildfly.security.mechanism.digest.DigestUtil.userRealmPasswordDigest;
+import org.wildfly.common.Assert;
+import org.wildfly.security.auth.callback.CredentialCallback;
+import org.wildfly.security.credential.PasswordCredential;
+import org.wildfly.security.mechanism._private.ElytronMessages;
+import org.wildfly.security.mechanism.AuthenticationMechanismException;
+import org.wildfly.security.password.TwoWayPassword;
+import org.wildfly.security.password.interfaces.ClearPassword;
+import org.wildfly.security.password.interfaces.DigestPassword;
+import org.wildfly.security.password.spec.DigestPasswordAlgorithmSpec;
 
 /**
  * Utility class used to obtain username+realm+password using SASL/HTTP mechanism callbacks.
