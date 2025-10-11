@@ -38,6 +38,7 @@ import static org.wildfly.security.asn1.ASN1.SET_TYPE;
 import static org.wildfly.security.asn1.ASN1.TAG_NUMBER_MASK;
 import static org.wildfly.security.asn1.ASN1.UNIVERSAL_STRING_TYPE;
 import static org.wildfly.security.asn1.ASN1.UTF8_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.validatePrintableByte;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
