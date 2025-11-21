@@ -17,6 +17,7 @@
  */
 package org.wildfly.security.auth.server;
 
+import static org.wildfly.security.auth.server.ElytronMessages.log;
 import static org.wildfly.security.http.HttpConstants.SECURITY_IDENTITY;
 
 import static org.wildfly.common.Assert.checkNotNullParam;
@@ -105,6 +106,7 @@ class SecurityIdentityServerMechanismFactory implements HttpServerAuthentication
 
         private final CallbackHandler delegate;
         private SecurityIdentity securityIdentity;
+        private boolean authenticationCompleteSucceeded = false;
 
         SecurityIdentityCallbackHandler(CallbackHandler delegate) {
             this.delegate = delegate;
@@ -126,10 +128,14 @@ class SecurityIdentityServerMechanismFactory implements HttpServerAuthentication
             delegate.handle(theCallbacks);
             if (securityIdentityCallback != null) {
                 securityIdentity = securityIdentityCallback.getSecurityIdentity();
+                authenticationCompleteSucceeded = true;
             }
         }
 
         SecurityIdentity getSecurityIdentity() {
+            if (!authenticationCompleteSucceeded) {
+                log.trace("Successful AuthenticationCompleteCallback has not been intercepted");
+            }
             return securityIdentity;
         }
 
