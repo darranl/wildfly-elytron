@@ -48,8 +48,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          key: ${{ runner.os }}-${{ matrix.java }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.java }}-m2
       - name: Version Info
         run: mvn -version
         # Code for JDK versions < JDK-24 are incompatible with JDK-24+.
