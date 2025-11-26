@@ -72,7 +72,7 @@
         <nexus.staging.tag>wildfly-elytron-${project.version}</nexus.staging.tag>
         <nexus.repository.release>wildfly-security</nexus.repository.release>
 
-        <version.com.fasterxml.jackson>2.17.2</version.com.fasterxml.jackson>
+        <version.com.fasterxml.jackson>2.17.3</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}</version.com.fasterxml.jackson.databind>
         <version.commons-cli>1.10.0</version.commons-cli>
         <version.jakarta.enterprise>4.0.1</version.jakarta.enterprise>
