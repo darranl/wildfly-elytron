@@ -172,7 +172,7 @@ public class OidcTest extends OidcBaseTest {
         assertEquals(Status.NO_AUTH, request.getResult());
 
         HtmlPage page = loginToKeycloak(KeycloakConfiguration.ALICE, "WRONG_PASSWORD", requestUri, response.getLocation(), response.getCookies()).click();
-        assertTrue(page.getBody().asText().contains("Invalid username or password"));
+        assertTrue(page.getBody().asNormalizedText().contains("Invalid username or password"));
     }
 
     @Test
@@ -594,7 +594,7 @@ public class OidcTest extends OidcBaseTest {
         assertEquals(Status.NO_AUTH, request.getResult());
 
         HtmlPage page = loginToKeycloak(username, password, requestUri, response.getLocation(), response.getCookies()).click();
-        assertTrue(page.getBody().asText().contains("Invalid username or password"));
+        assertTrue(page.getBody().asNormalizedText().contains("Invalid username or password"));
     }
 
     private void loginToAppMultiTenancy(InputStream oidcConfig, String username, String password, boolean loginToKeycloak,

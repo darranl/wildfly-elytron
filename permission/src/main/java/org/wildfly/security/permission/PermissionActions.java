@@ -20,11 +20,11 @@ package org.wildfly.security.permission;
 
 import static org.wildfly.security.permission.SecurityMessages.permission;
 
-import org.wildfly.common.Assert;
-
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+
+import org.wildfly.common.Assert;
 
 /**
  * A helper class for defining permissions which use a finite list of actions.  Define custom permissions using
