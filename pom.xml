@@ -29,7 +29,7 @@
 
     <groupId>org.wildfly.security</groupId>
     <artifactId>wildfly-elytron-parent</artifactId>
-    <version>2.7.0.CR1-SNAPSHOT</version>
+    <version>2.8.0.CR1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>WildFly Elytron Parent</name>
@@ -72,9 +72,9 @@
         <nexus.staging.tag>wildfly-elytron-${project.version}</nexus.staging.tag>
         <nexus.repository.release>wildfly-security</nexus.repository.release>
 
-        <version.com.fasterxml.jackson>2.17.2</version.com.fasterxml.jackson>
+        <version.com.fasterxml.jackson>2.17.3</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}</version.com.fasterxml.jackson.databind>
-        <version.commons-cli>1.6.0</version.commons-cli>
+        <version.commons-cli>1.10.0</version.commons-cli>
         <version.jakarta.enterprise>4.0.1</version.jakarta.enterprise>
         <version.org.apache.commons>3.18.0</version.org.apache.commons>
         <version.org.apache.directory.server>2.0.0.AM27</version.org.apache.directory.server>
@@ -93,7 +93,7 @@
         <version.org.jboss.logging.tools>3.0.1.Final</version.org.jboss.logging.tools>
         <version.org.jboss.modules>1.12.2.Final</version.org.jboss.modules>
         <version.org.jboss.slf4j>1.2.0.Final</version.org.jboss.slf4j>
-        <version.jakarta.json.jakarta-json-api>2.1.2</version.jakarta.json.jakarta-json-api>
+        <version.jakarta.json.jakarta-json-api>2.1.3</version.jakarta.json.jakarta-json-api>
         <version.jakarta.servlet.jakarta-servlet-api>5.0.0</version.jakarta.servlet.jakarta-servlet-api>
         <version.org.jboss.threads>3.5.1.Final</version.org.jboss.threads>
         <version.org.kohsuke.metainf-services.metainf-services>1.11</version.org.kohsuke.metainf-services.metainf-services>
@@ -101,11 +101,11 @@
         <version.jmockit>1.34</version.jmockit>
         <version.hsqldb>2.7.1</version.hsqldb>
         <version.net.minidev.json-smart>2.4.9</version.net.minidev.json-smart>
-        <version.com.nimbusds.nimbus-jose-jwt>9.37.3</version.com.nimbusds.nimbus-jose-jwt>
+        <version.com.nimbusds.nimbus-jose-jwt>10.3</version.com.nimbusds.nimbus-jose-jwt>
         <version.com.squareup.okhttp3.mockwebserver>4.0.0</version.com.squareup.okhttp3.mockwebserver>
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.client.config>1.0.1.Final</version.org.wildfly.client.config>
-        <version.org.wildfly.common>1.6.0.Final</version.org.wildfly.common>
+        <version.org.wildfly.common>2.0.1</version.org.wildfly.common>
         <version.commons-io.commons-io>2.16.1</version.commons-io.commons-io>
         <version.org.mock-server.mockserver-netty>5.4.1</version.org.mock-server.mockserver-netty>
         <version.org.xipki.pki.ocsp-server>3.0.0</version.org.xipki.pki.ocsp-server>
@@ -113,11 +113,14 @@
         <version.org.testcontainers.testcontainers>1.20.1</version.org.testcontainers.testcontainers>
         <version.org.keycloak>25.0.2</version.org.keycloak>
         <version.io.rest-assured>5.5.0</version.io.rest-assured>
-        <version.net.sourceforge.htmlunit.htmlunit>2.40.0</version.net.sourceforge.htmlunit.htmlunit>
+        <version.org.testcontainers.nginx>1.20.1</version.org.testcontainers.nginx>
+        <version.org.testcontainers.testcontainers>1.20.1</version.org.testcontainers.testcontainers>
+        <version.net.sourceforge.htmlunit.htmlunit>2.70.0</version.net.sourceforge.htmlunit.htmlunit>
         <version.org.apache.santuario>2.3.0</version.org.apache.santuario>
         <version.org.keycloak.keycloak-services>23.0.7</version.org.keycloak.keycloak-services>
         <version.org.aesh>2.7</version.org.aesh>
         <version.org.xnio>3.8.16.Final</version.org.xnio>
+        <version.org.openclover>4.5.2</version.org.openclover>
 
         <test.level>INFO</test.level>
         <!-- Checkstyle configuration -->
@@ -151,7 +154,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0-jboss-1</version>
+                <version>${version.compiler.plugin}</version>
                 <executions>
                     <execution>
                         <id>default-compile</id>
@@ -160,13 +163,10 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>8</release>
+                            <release>11</release>
                             <buildDirectory>${project.build.directory}</buildDirectory>
                             <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.directory}/jdk-misc.jar</additionalClasspathElement>
-                            </additionalClasspathElements>
                         </configuration>
                     </execution>
                 </executions>
@@ -908,6 +908,14 @@
                 </exclusions>
             </dependency>
 
+            <!-- https://mvnrepository.com/artifact/org.openclover/clover-maven-plugin -->
+            <dependency>
+                <groupId>org.openclover</groupId>
+                <artifactId>clover-maven-plugin</artifactId>
+                <version>${version.org.openclover}</version>
+                <scope>test</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
@@ -1306,7 +1314,7 @@
                     <!-- Javadoc -->
                     <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${version-javadoc-plugin}</version>
+                        <version>${version.javadoc.plugin}</version>
                         <configuration>
                             <additionalDependencies>
                                 <additionalDependency>
@@ -1496,13 +1504,13 @@
                             </sourceFileExcludes>
                         </configuration>
                         <executions>
-                            <execution><!-- mvn javadoc:aggregate@api-javadoc -->
+                                       <!-- mvn -Paggregate-javadoc javadoc:aggregate-jar@api-javadoc -->
+                            <execution><!-- mvn -Paggregate-javadoc javadoc:aggregate@api-javadoc -->
                                 <id>api-javadoc</id>
                                 <goals>
                                     <goal>aggregate</goal>
                                 </goals>
                                 <configuration>
-                                    <destDir>api-javadoc</destDir>
                                     <sourceFileIncludes>
                                         <include>org/wildfly/security/*.java</include>
                                         <include>org/wildfly/security/asn1/*.java</include>
@@ -1545,13 +1553,13 @@
                                     </sourceFileIncludes>
                                 </configuration>
                             </execution>
-                            <execution><!-- mvn javadoc:aggregate@full-javadoc -->
+                                        <!-- mvn -Paggregate-javadoc javadoc:aggregate-jar@full-javadoc -->
+                            <execution><!-- mvn -Paggregate-javadoc javadoc:aggregate@full-javadoc -->
                                 <id>full-javadoc</id>
                                 <goals>
                                     <goal>aggregate</goal>
                                 </goals>
                                 <configuration>
-                                    <destDir>full-javadoc</destDir>
                                     <show>private</show>
                                     <sourceFileIncludes>
                                         <include>**\/\*.java</include>
@@ -1559,6 +1567,30 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!--To generate a report on test coverage run
+            mvn -Ptest-coverage clean org.openclover:clover-maven-plugin:setup install  org.openclover:clover-maven-plugin:aggregate org.openclover:clover-maven-plugin:clover
+            -->
+            <id>test-coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.siom79.japicmp</groupId>
+                        <artifactId>japicmp-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

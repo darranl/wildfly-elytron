@@ -18,7 +18,8 @@
 
 package org.wildfly.security.sasl;
 
-import static org.wildfly.common.math.HashMath.*;
+import static org.wildfly.common.math.HashMath.multiHashOrdered;
+import static org.wildfly.common.math.HashMath.multiHashUnordered;
 
 import java.util.Arrays;
 import java.util.function.Predicate;
