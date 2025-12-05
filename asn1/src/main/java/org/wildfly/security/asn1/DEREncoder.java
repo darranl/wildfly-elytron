@@ -19,7 +19,26 @@
 package org.wildfly.security.asn1;
 
 import static org.wildfly.security.asn1.ElytronMessages.log;
-import static org.wildfly.security.asn1.ASN1.*;
+
+import static org.wildfly.security.asn1.ASN1.BIT_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.BMP_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.BOOLEAN_TYPE;
+import static org.wildfly.security.asn1.ASN1.CLASS_MASK;
+import static org.wildfly.security.asn1.ASN1.CONSTRUCTED_MASK;
+import static org.wildfly.security.asn1.ASN1.CONTEXT_SPECIFIC_MASK;
+import static org.wildfly.security.asn1.ASN1.GENERALIZED_TIME_TYPE;
+import static org.wildfly.security.asn1.ASN1.IA5_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.INTEGER_TYPE;
+import static org.wildfly.security.asn1.ASN1.NULL_TYPE;
+import static org.wildfly.security.asn1.ASN1.OBJECT_IDENTIFIER_TYPE;
+import static org.wildfly.security.asn1.ASN1.OCTET_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.PRINTABLE_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.SEQUENCE_TYPE;
+import static org.wildfly.security.asn1.ASN1.SET_TYPE;
+import static org.wildfly.security.asn1.ASN1.TAG_NUMBER_MASK;
+import static org.wildfly.security.asn1.ASN1.UNIVERSAL_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.UTF8_STRING_TYPE;
+import static org.wildfly.security.asn1.ASN1.validatePrintableByte;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;

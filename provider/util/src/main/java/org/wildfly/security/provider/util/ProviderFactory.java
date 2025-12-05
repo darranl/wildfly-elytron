@@ -18,7 +18,8 @@
 
 package org.wildfly.security.provider.util;
 
-import org.wildfly.security.provider.util._private.ElytronMessages;
+import static java.lang.System.getSecurityManager;
+import static org.wildfly.security.provider.util.ProviderUtil.INSTALLED_PROVIDERS;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
@@ -27,8 +28,7 @@ import java.security.Provider;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
-import static java.lang.System.getSecurityManager;
-import static org.wildfly.security.provider.util.ProviderUtil.INSTALLED_PROVIDERS;
+import org.wildfly.security.provider.util._private.ElytronMessages;
 
 /**
  * Utility class to obtain Supplier with providers available on the classpath.

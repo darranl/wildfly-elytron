@@ -24,6 +24,7 @@ import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.wildfly.security.auth.realm.token.validator.OAuth2IntrospectValidator;
+import org.wildfly.security.auth.server.NameRewriter;
 import org.wildfly.security.auth.server.RealmIdentity;
 import org.wildfly.security.auth.server.RealmUnavailableException;
 import org.wildfly.security.authz.Attributes;
@@ -42,6 +43,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.function.Function;
 
 import static org.junit.Assert.assertTrue;
@@ -96,6 +98,60 @@ public class OAuth2TokenSecurityRealmTest {
 
         tokenBuilder.add("active", true);
         tokenBuilder.add("user-defined-claim", "elytron@jboss.org");
+
+        RealmIdentity realmIdentity = securityRealm.getRealmIdentity(new BearerTokenEvidence(tokenBuilder.build().toString()));
+
+        assertTrue(realmIdentity.exists());
+
+        Principal realmIdentityPrincipal = realmIdentity.getRealmIdentityPrincipal();
+
+        assertEquals("elytron@jboss.org", realmIdentityPrincipal.getName());
+    }
+
+    @Test
+    public void testPrincipalTransformer() throws Exception {
+        configureReplayTokenIntrospection();
+
+        Function<Principal, Principal> principalTransformer = new CaseRewriter().asPrincipalRewriter();
+        TokenSecurityRealm securityRealm = TokenSecurityRealm.builder()
+                .validator(OAuth2IntrospectValidator.builder()
+                        .clientId("wildfly-elytron")
+                        .clientSecret("dont_tell_me")
+                        .tokenIntrospectionUrl(new URL("http://as.test.org/oauth2/token/introspect")).build())
+                        .principalTransformer(principalTransformer)
+                .build();
+
+        JsonObjectBuilder tokenBuilder = Json.createObjectBuilder();
+
+        tokenBuilder.add("active", true);
+        tokenBuilder.add("username", "elytron@jboss.org");
+
+        RealmIdentity realmIdentity = securityRealm.getRealmIdentity(new BearerTokenEvidence(tokenBuilder.build().toString()));
+
+        assertTrue(realmIdentity.exists());
+
+        Principal realmIdentityPrincipal = realmIdentity.getRealmIdentityPrincipal();
+
+        assertEquals("ELYTRON@JBOSS.ORG", realmIdentityPrincipal.getName());
+    }
+
+    @Test
+    public void testNullPrincipalTransformer() throws Exception {
+        configureReplayTokenIntrospection();
+
+        Function<Principal, Principal> principalTransformer = null;
+        TokenSecurityRealm securityRealm = TokenSecurityRealm.builder()
+                .validator(OAuth2IntrospectValidator.builder()
+                        .clientId("wildfly-elytron")
+                        .clientSecret("dont_tell_me")
+                        .tokenIntrospectionUrl(new URL("http://as.test.org/oauth2/token/introspect")).build())
+                        .principalTransformer(principalTransformer)
+                .build();
+
+        JsonObjectBuilder tokenBuilder = Json.createObjectBuilder();
+
+        tokenBuilder.add("active", true);
+        tokenBuilder.add("username", "elytron@jboss.org");
 
         RealmIdentity realmIdentity = securityRealm.getRealmIdentity(new BearerTokenEvidence(tokenBuilder.build().toString()));
 
@@ -220,5 +276,14 @@ public class OAuth2TokenSecurityRealmTest {
                 return introspector.apply(token);
             }
         };
+    }
+
+    /*
+     * Function to convert string to all caps
+     */
+    private class CaseRewriter implements NameRewriter {
+        public String rewriteName(String original) {
+            return (original == null) ? null : original.toUpperCase(Locale.ROOT);
+        }
     }
 }
