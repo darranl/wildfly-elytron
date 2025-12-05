@@ -167,6 +167,13 @@
                             <buildDirectory>${project.build.directory}</buildDirectory>
                             <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.jboss.logging</groupId>
+                                    <artifactId>jboss-logging-processor</artifactId>
+                                    <version>${version.org.jboss.logging.tools}</version>
+                                </path>
+                            </annotationProcessorPaths>
                         </configuration>
                     </execution>
                 </executions>
