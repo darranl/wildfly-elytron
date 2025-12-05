@@ -38,10 +38,10 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-auth-server</artifactId>
         </dependency>
-        <dependency>        
+        <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-credential</artifactId>
-        </dependency>    
+        </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-http</artifactId>
@@ -61,7 +61,7 @@
 
         <dependency>
             <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging-processor</artifactId>
+            <artifactId>jboss-logging-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -69,7 +69,7 @@
             <artifactId>metainf-services</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.wildfly.common</groupId>
             <artifactId>wildfly-common</artifactId>
