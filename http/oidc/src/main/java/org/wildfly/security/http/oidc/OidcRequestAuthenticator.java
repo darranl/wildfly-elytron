@@ -42,6 +42,7 @@ import static org.wildfly.security.http.oidc.Oidc.generateId;
 import static org.wildfly.security.http.oidc.Oidc.getQueryParamValue;
 import static org.wildfly.security.http.oidc.Oidc.logToken;
 import static org.wildfly.security.http.oidc.Oidc.stripQueryParam;
+import static org.wildfly.security.http.oidc.OidcCookieTokenStore.getCookiePath;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -239,9 +240,10 @@ public class OidcRequestAuthenticator {
                 tokenStore.saveRequest();
                 log.debug("Sending redirect to login page: " + redirect);
                 exchange.getResponse().setStatus(HttpStatus.SC_MOVED_TEMPORARILY);
-                exchange.getResponse().setCookie(deployment.getStateCookieName(), state, "/", null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
+                String cookiePath = deployment.getOidcStateCookiePath().isEmpty() ? "/" : getCookiePath(deployment, facade);
+                exchange.getResponse().setCookie(deployment.getStateCookieName(), state, cookiePath, null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
                 exchange.getResponse().setHeader(HttpConstants.LOCATION, redirect);
-                exchange.getResponse().setCookie(SESSION_RANDOM_VALUE, sessionRandomValue, "/", null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
+                exchange.getResponse().setCookie(SESSION_RANDOM_VALUE, sessionRandomValue, cookiePath, null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
                 return true;
             }
         };

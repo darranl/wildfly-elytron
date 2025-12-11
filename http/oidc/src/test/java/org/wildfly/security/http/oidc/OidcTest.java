@@ -153,6 +153,44 @@ public class OidcTest extends OidcBaseTest {
     }
 
     @Test
+    public void testWithoutCookiePathConfigurationOption() throws Exception {
+        String cookiePath = "/";
+
+        Map<String, Object> props = new HashMap<>();
+        OidcClientConfiguration oidcClientConfiguration =OidcClientConfigurationBuilder.build(getOidcConfigurationInputStreamWithCookiePath(null));
+
+        OidcClientContext oidcClientContext = new OidcClientContext(oidcClientConfiguration);
+        oidcFactory = new OidcMechanismFactory(oidcClientContext);
+        HttpServerAuthenticationMechanism mechanism = oidcFactory.createAuthenticationMechanism(OIDC_NAME, props, getCallbackHandler());
+
+        URI requestUri = new URI(getClientUrl());
+        TestingHttpServerRequest request = new TestingHttpServerRequest(null, requestUri);
+        mechanism.evaluateRequest(request);
+        TestingHttpServerResponse response = request.getResponse();
+
+        assertEquals(cookiePath, response.getCookies().get(0).getPath());
+    }
+
+    @Test
+    public void testCookiePathConfigurationOption() throws Exception {
+        String cookiePath = "/cookie_path";
+
+        Map<String, Object> props = new HashMap<>();
+        OidcClientConfiguration oidcClientConfiguration =OidcClientConfigurationBuilder.build(getOidcConfigurationInputStreamWithCookiePath(cookiePath));
+
+        OidcClientContext oidcClientContext = new OidcClientContext(oidcClientConfiguration);
+        oidcFactory = new OidcMechanismFactory(oidcClientContext);
+        HttpServerAuthenticationMechanism mechanism = oidcFactory.createAuthenticationMechanism(OIDC_NAME, props, getCallbackHandler());
+
+        URI requestUri = new URI(getClientUrl());
+        TestingHttpServerRequest request = new TestingHttpServerRequest(null, requestUri);
+        mechanism.evaluateRequest(request);
+        TestingHttpServerResponse response = request.getResponse();
+
+        assertEquals(cookiePath, response.getCookies().get(0).getPath());
+    }
+
+    @Test
     public void testSucessfulAuthenticationWithAuthServerUrl() throws Exception {
         performAuthentication(getOidcConfigurationInputStream(), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 true, HttpStatus.SC_MOVED_TEMPORARILY, getClientUrl(), CLIENT_PAGE_TEXT);
@@ -491,6 +529,24 @@ public class OidcTest extends OidcBaseTest {
                 "    \"ssl-required\" : \"EXTERNAL\",\n" +
                 "    \"credentials\" : {\n" +
                 "        \"secret\" : \"" + clientSecret + "\"\n" +
+                "    }\n" +
+                "}";
+        return new ByteArrayInputStream(oidcConfig.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private InputStream getOidcConfigurationInputStreamWithCookiePath(String cookiePath) {
+
+        String adapterStateCookiePath = (cookiePath == null) ? "" : (" \"adapter-state-cookie-path\" : \"" + cookiePath + "\",\n");
+
+        String oidcConfig = "{\n" +
+                "    \"realm\" : \"" + TEST_REALM + "\",\n" +
+                "    \"resource\" : \"" + CLIENT_ID + "\",\n" +
+                "    \"public-client\" : \"false\",\n" +
+                adapterStateCookiePath +
+                "    \"auth-server-url\" : \"" + KEYCLOAK_CONTAINER.getAuthServerUrl() + "\",\n" +
+                "    \"ssl-required\" : \"EXTERNAL\",\n" +
+                "    \"credentials\" : {\n" +
+                "        \"secret\" : \"" + CLIENT_SECRET + "\"\n" +
                 "    }\n" +
                 "}";
         return new ByteArrayInputStream(oidcConfig.getBytes(StandardCharsets.UTF_8));
