@@ -171,7 +171,7 @@ interface ElytronMessages extends BasicLogger {
     @LogMessage(level = Logger.Level.WARN)
     @Message(id = 13012, value = "A realm within the distributed realm is unavailable. This realm will be ignored.")
     void realmIsNotAvailable(@Cause Exception e);
-    
+
     @Message(id = 13013, value = "Unable to create identity")
     RealmUnavailableException unableToCreateIdentity();
 
