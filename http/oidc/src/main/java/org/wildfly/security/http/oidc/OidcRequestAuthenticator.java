@@ -46,10 +46,16 @@ import static org.wildfly.security.http.oidc.Oidc.STATE;
 import static org.wildfly.security.http.oidc.Oidc.UI_LOCALES;
 import static org.wildfly.security.http.oidc.Oidc.ClientCredentialsProviderType.SECRET;
 
+import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE;
+import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE_METHOD;
+import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE_METHOD_S256;
+import static org.wildfly.security.http.oidc.Oidc.CODE_VERIFIER;
 import static org.wildfly.security.http.oidc.Oidc.logToken;
 import static org.wildfly.security.http.oidc.Oidc.generateId;
 import static org.wildfly.security.http.oidc.Oidc.getQueryParamValue;
 import static org.wildfly.security.http.oidc.Oidc.stripQueryParam;
+import static org.wildfly.security.http.oidc.OidcCookieTokenStore.getCookiePath;
+import static org.wildfly.security.jose.jwk.JWKUtil.BASE64_URL;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -273,6 +279,15 @@ public class OidcRequestAuthenticator {
                 .addParameter(STATE, state)
                 .addParameters(forwardedQueryParams)
                 .addParameter(NONCE, sessionRandomValueHash);
+
+        if (deployment.isPkce()) {
+            String codeVerifier = generateCodeVerifier();
+            String codeChallenge = generateCodeChallenge(codeVerifier);
+            redirectUriBuilder.addParameter(CODE_CHALLENGE, codeChallenge)
+                    .addParameter(CODE_CHALLENGE_METHOD, CODE_CHALLENGE_METHOD_S256);
+            facade.getResponse().setCookie(CODE_VERIFIER, codeVerifier, getCookiePath(deployment, facade), null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
+        }
+
         return redirectUriBuilder;
     }
 
@@ -425,8 +440,19 @@ public class OidcRequestAuthenticator {
         AccessAndIDTokenResponse tokenResponse;
         strippedOauthParametersRequestUri = rewrittenRedirectUri(stripOauthParametersFromRedirect(facade.getRequest().getURI()));
 
+        String codeVerifier = null;
+        if (deployment.isPkce()) {
+            codeVerifier = getCookieValue(CODE_VERIFIER);
+            if (codeVerifier != null) {
+                OidcHttpFacade.Cookie cookie = getCookie(CODE_VERIFIER);
+                if (cookie != null) {
+                    facade.getResponse().resetCookie(CODE_VERIFIER, cookie.getPath());
+                }
+            }
+        }
+
         try {
-            tokenResponse = ServerRequest.invokeAccessCodeToToken(deployment, code, strippedOauthParametersRequestUri);
+            tokenResponse = ServerRequest.invokeAccessCodeToToken(deployment, code, strippedOauthParametersRequestUri, codeVerifier);
         } catch (ServerRequest.HttpFailure failure) {
             log.error("failed to turn code into token");
             log.error("status from server: " + failure.getStatus());
@@ -645,5 +671,30 @@ public class OidcRequestAuthenticator {
         byte[] nonceData = new byte[NONCE_SIZE];
         random.nextBytes(nonceData);
         return ByteIterator.ofBytes(nonceData).base64Encode().drainToString();
+    }
+
+    /**
+     * Generate a code verifier for PKCE as per RFC 7636.
+     * The code verifier is a cryptographically random string using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+     * with a minimum length of 43 characters and a maximum length of 128 characters.
+     *
+     * @return the code verifier
+     */
+    private String generateCodeVerifier() {
+        SecureRandom random = new SecureRandom();
+        byte[] randomBytes = new byte[32];
+        random.nextBytes(randomBytes);
+        return ByteIterator.ofBytes(randomBytes).base64Encode(BASE64_URL, false).drainToString();
+    }
+
+    /**
+     * Generate a code challenge from the code verifier for PKCE as per RFC 7636.
+     * The code challenge is the Base64-URL encoded SHA-256 hash of the code verifier.
+     *
+     * @param codeVerifier the code verifier
+     * @return the code challenge
+     */
+    private String generateCodeChallenge(String codeVerifier) {
+        return Oidc.getCryptographicValue(codeVerifier);
     }
 }
