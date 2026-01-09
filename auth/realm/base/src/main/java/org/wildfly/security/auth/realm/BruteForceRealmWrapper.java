@@ -57,6 +57,8 @@ public class BruteForceRealmWrapper {
     private static final Set<Method> GET_IDENTITY_METHODS;
     private static final Method EVENT_HANDLER_METHOD;
 
+    private static final int MINUITES_TO_MS = 60 * 1000;
+
     static {
         Set<Method> getIdentityMethods = new HashSet<>();
         // We don't need to scan SecurityRealm as ModificableSecurityRealm extends this.
@@ -114,7 +116,7 @@ public class BruteForceRealmWrapper {
      *
      * @param maxFailedAttempts - the maximum number of failed attempts before the lockout
      *                          interval kicks in.
-     * @return @return {@code this} to allow chaining.
+     * @return {@code this} to allow chaining.
      */
     public BruteForceRealmWrapper setMaxFailedAttempts(final int maxFailedAttempts) {
         assertNotBuilt();
@@ -146,7 +148,7 @@ public class BruteForceRealmWrapper {
 
     /**
      * After a failed authentication attempt how long in minutes to keep the tracking session
-     * alive
+     * alive.
      *
      * Subsequent failed attempts will renew the timeout.
      *
@@ -162,6 +164,12 @@ public class BruteForceRealmWrapper {
         return this;
     }
 
+    /**
+     * Add an additional interface to be proxied by the dynamic proxy.
+     *
+     * @param interfaze an additional interface to be proxied by the dynamic proxy.
+     * @return {@code this} to allow chaining.
+     */
     public BruteForceRealmWrapper addAdditionalInterface(final Class<?> interfaze) {
         assertNotBuilt();
         checkNotNullParam("interfaze", interfaze);
@@ -303,9 +311,9 @@ public class BruteForceRealmWrapper {
                         int count = session.failAuthentication();
                         if (count >= maxFailedAttempts) {
                             log.tracef("Disabling authentication for '%s'", principal);
-                            session.disableForMs(lockoutInterval);
+                            session.disableForMs(lockoutInterval * MINUITES_TO_MS);
                         }
-                        session.scheduleTimeout(failureSessionTimeout);
+                        session.scheduleTimeout(failureSessionTimeout * MINUITES_TO_MS);
                     }
 
                 }
@@ -429,7 +437,7 @@ public class BruteForceRealmWrapper {
         }
 
         public boolean exists() throws RealmUnavailableException {
-            return false;
+            return true;
         }
 
         public void delete() throws RealmUnavailableException {
