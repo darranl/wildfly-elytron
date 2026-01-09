@@ -10,6 +10,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 
 import javax.json.Json;
@@ -143,6 +144,36 @@ public final class JwtTestUtil {
             return Arrays.copyOfRange(bytes, i, bytes.length);
         } else {
             return bytes;
+        }
+    }
+
+    public static String createHS256Jwt(String secret, int expirationOffset, String issuer, String audience, String subject, String preferredUsername) throws Exception {
+        JWSSigner signer = new MACSigner(secret);
+
+        JsonObjectBuilder claimsBuilder = Json.createObjectBuilder()
+                .add("sub", subject)
+                .add("iss", issuer)
+                .add("aud", audience)
+                .add("exp", (System.currentTimeMillis() / 1000) + expirationOffset)
+                .add("preferred_username", preferredUsername);
+
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
+                .type(new JOSEObjectType("JWT"))
+                .build();
+
+        JWSObject jwsObject = new JWSObject(header, new Payload(claimsBuilder.build().toString()));
+        jwsObject.sign(signer);
+
+        return jwsObject.serialize();
+    }
+
+    public static String createHS256JwtForOAuth2() {
+        String secret = "longenoughsecretthatisstleast256bitslong";
+
+        try {
+            return createHS256Jwt(secret, 600, "auth.server", "for_me", "1234567890", "jdoe");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate JWT token", e);
         }
     }
 
