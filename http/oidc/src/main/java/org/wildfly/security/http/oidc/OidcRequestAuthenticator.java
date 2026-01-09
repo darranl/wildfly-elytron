@@ -45,7 +45,6 @@ import static org.wildfly.security.http.oidc.Oidc.SESSION_STATE;
 import static org.wildfly.security.http.oidc.Oidc.STATE;
 import static org.wildfly.security.http.oidc.Oidc.UI_LOCALES;
 import static org.wildfly.security.http.oidc.Oidc.ClientCredentialsProviderType.SECRET;
-
 import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE;
 import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE_METHOD;
 import static org.wildfly.security.http.oidc.Oidc.CODE_CHALLENGE_METHOD_S256;
@@ -335,10 +334,10 @@ public class OidcRequestAuthenticator {
                 tokenStore.saveRequest();
                 log.debug("Sending redirect to login page: " + redirect);
                 exchange.getResponse().setStatus(HttpStatus.SC_MOVED_TEMPORARILY);
-                exchange.getResponse().setCookie(deployment.getStateCookieName(), state, "/", null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
+                String cookiePath = deployment.getOidcStateCookiePath().isEmpty() ? "/" : getCookiePath(deployment, facade);
+                exchange.getResponse().setCookie(deployment.getStateCookieName(), state, cookiePath, null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
                 exchange.getResponse().setHeader(HttpConstants.LOCATION, redirect);
-                exchange.getResponse().setCookie(SESSION_RANDOM_VALUE, sessionRandomValue, "/", null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
-
+                exchange.getResponse().setCookie(SESSION_RANDOM_VALUE, sessionRandomValue, cookiePath, null, -1, deployment.getSSLRequired().isRequired(facade.getRequest().getRemoteAddr()), true);
                 return true;
             }
         };
