@@ -251,11 +251,16 @@ public class BruteForceRealmWrapper {
             } else if (GET_IDENTITY_METHODS.contains(method) && (args[0] instanceof Principal || args[0] instanceof Evidence) ) {
                 Principal principal = args[0] instanceof Principal ? (Principal) args[0] : ((Evidence)args[0]).getDecodedPrincipal();
                 if (isDisabled(principal)) {
+                    log.tracef("Returning Disabled?RealmIdentity for %s", principal.getName());
                     Class<?> returnType = method.getReturnType();
                     if (ModifiableRealmIdentity.class.equals(returnType)) {
                         return new DisabledModifiableRealmIdentity(principal);
                     } else if (RealmIdentity.class.equals(returnType)) {
                         return new DisabledRealmIdentity(principal);
+                    }
+                } else {
+                    if (principal != null) {
+                        log.tracef("Identity not disabled, proceeding for %s", principal.getName());
                     }
                 }
             }
@@ -283,6 +288,7 @@ public class BruteForceRealmWrapper {
 
         private void invalidate(final Principal principal) {
             synchronized(failedAttempts) {
+                log.tracef("Removing brute force session for %s", principal.getName());
                 failedAttempts.remove(principal);
             }
         }
