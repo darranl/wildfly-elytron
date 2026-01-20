@@ -8,6 +8,7 @@ import static org.wildfly.common.Assert.checkNotNullParam;
 import static org.wildfly.security.auth.realm.ElytronMessages.log;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.security.Principal;
@@ -267,7 +268,11 @@ public class BruteForceRealmWrapper {
 
             // If we have reached this point we have not replaced the call to the target realm so can allow it to
             // proceed.
-            return method.invoke(wrapped, args);
+            try {
+                return method.invoke(wrapped, args);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
         }
 
 
