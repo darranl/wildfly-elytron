@@ -275,8 +275,13 @@ public class BruteForceRealmWrapper {
         }
 
         private Object invoke(Object proxy, Method method, Object[] args, boolean eventHandled) throws Throwable {
-            if (!eventHandled && EVENT_HANDLER_METHOD.equals(method) && args[0] instanceof RealmEvent) {
-                handleRealmEvent((RealmEvent) args[0]);
+            if (EVENT_HANDLER_METHOD.equals(method) && args[0] instanceof RealmEvent) {
+                if (log.isTraceEnabled()) {
+                    log.tracef("Event Received %s, alreadyHandled %b", args[0].getClass().getSimpleName(), eventHandled);
+                }
+                if (!eventHandled) {
+                    handleRealmEvent((RealmEvent) args[0]);
+                }
             } else if (GET_IDENTITY_METHODS.contains(method) && (args[0] instanceof Principal || args[0] instanceof Evidence) ) {
                 Principal principal = args[0] instanceof Principal ? (Principal) args[0] : ((Evidence)args[0]).getDecodedPrincipal();
                 if (isDisabled(principal)) {
