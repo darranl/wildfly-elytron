@@ -241,13 +241,41 @@ public class BruteForceRealmWrapper {
         }
     }
 
+    /*
+     * Sometimes {@code SecurityRealm} implementations delegate to other instances, each of these
+     * could be wrapped individualy with the {@code BruteForceRealmWrapper}, to avoid unpredictable
+     * interactions interception of events should only happen in the first realm wrapper in the chain.
+     *
+     * This {@code ThreadLocal<Boolean>} is to track if brute force event handling has already occurred
+     * on the current call stack.
+     */
+    private static final ThreadLocal<Boolean> BRUTE_FORCE_EVENT_HANDLED = new ThreadLocal<>() {
+
+            @Override
+            protected Boolean initialValue() {
+                return Boolean.FALSE;
+            }
+    };
     private class RealmWrapper implements InvocationHandler {
 
         private final Map<Principal, FailureSession> failedAttempts = new HashMap<>();
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (EVENT_HANDLER_METHOD.equals(method) && args[0] instanceof RealmEvent) {
+            boolean eventHandled = BRUTE_FORCE_EVENT_HANDLED.get();
+            try {
+                BRUTE_FORCE_EVENT_HANDLED.set(true);
+
+                return invoke(proxy, method, args, eventHandled);
+            } finally {
+                // We set this to the value we obtained from the ThreadLocal as there could
+                // be multiple wrappers in the call chain.
+                BRUTE_FORCE_EVENT_HANDLED.set(eventHandled);
+            }
+        }
+
+        private Object invoke(Object proxy, Method method, Object[] args, boolean eventHandled) throws Throwable {
+            if (!eventHandled && EVENT_HANDLER_METHOD.equals(method) && args[0] instanceof RealmEvent) {
                 handleRealmEvent((RealmEvent) args[0]);
             } else if (GET_IDENTITY_METHODS.contains(method) && (args[0] instanceof Principal || args[0] instanceof Evidence) ) {
                 Principal principal = args[0] instanceof Principal ? (Principal) args[0] : ((Evidence)args[0]).getDecodedPrincipal();
