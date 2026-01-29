@@ -82,9 +82,9 @@ public class BruteForceRealmWrapper {
 
     private ScheduledExecutorService executor;
     private SecurityRealm wrapped;
-    private int maxFailedAttempts = 25;
+    private int maxFailedAttempts = 10;
     private int lockoutInterval = 15;
-    private int failureSessionTimeout = 60;
+    private int failureSessionTimeout = 30;
     private List<Class<?>> additionalInterfaces = new ArrayList<>();
 
     /**
