@@ -249,7 +249,7 @@ public class BruteForceRealmWrapper {
      * This {@code ThreadLocal<Boolean>} is to track if brute force event handling has already occurred
      * on the current call stack.
      */
-    private static final ThreadLocal<Boolean> BRUTE_FORCE_EVENT_HANDLED = new ThreadLocal<>() {
+    private static final ThreadLocal<Boolean> BRUTE_FORCE_EVENT_HANDLED = new ThreadLocal<Boolean>() {
 
             @Override
             protected Boolean initialValue() {
