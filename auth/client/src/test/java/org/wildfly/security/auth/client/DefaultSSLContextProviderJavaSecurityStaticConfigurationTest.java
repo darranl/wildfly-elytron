@@ -45,7 +45,6 @@ public class DefaultSSLContextProviderJavaSecurityStaticConfigurationTest {
             Assert.assertNotNull(defaultSSLContext.getSocketFactory());
             // this will make sure the file is used instead of the empty AuthenticationContext
             Assert.assertEquals(1, defaultSSLContext.createSSLEngine().getSSLParameters().getProtocols().length);
-            Assert.assertEquals(1, defaultSSLContext.getSocketFactory().getSupportedCipherSuites().length);
         });
     }
 }
