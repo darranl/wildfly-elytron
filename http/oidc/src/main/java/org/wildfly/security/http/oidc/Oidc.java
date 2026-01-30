@@ -121,6 +121,10 @@ public class Oidc {
     public static final String RESPONSE_TYPE = "response_type";
     public static final String SESSION_RANDOM_VALUE="session_random_value";
     public static final String SESSION_STATE = "session_state";
+    public static final String CODE_VERIFIER = "code_verifier";
+    public static final String CODE_CHALLENGE = "code_challenge";
+    public static final String CODE_CHALLENGE_METHOD = "code_challenge_method";
+    public static final String CODE_CHALLENGE_METHOD_S256 = "S256";
     public static final String SOAP_ACTION = "SOAPAction";
     public static final String SSL_REQUIRED = "ssl-required";
     public static final String STALE_TOKEN = "Stale token";

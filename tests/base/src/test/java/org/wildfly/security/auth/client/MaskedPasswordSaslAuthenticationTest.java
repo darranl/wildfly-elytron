@@ -46,6 +46,7 @@ import org.wildfly.security.auth.realm.token.validator.JwtValidator;
 import org.wildfly.security.auth.server.SecurityRealm;
 import org.wildfly.security.credential.source.OAuth2CredentialSource;
 import org.wildfly.security.password.WildFlyElytronPasswordProvider;
+import org.wildfly.security.realm.token.test.util.JwtTestUtil;
 import org.wildfly.security.sasl.SaslMechanismSelector;
 import org.wildfly.security.sasl.oauth2.OAuth2SaslServerFactory;
 import org.wildfly.security.sasl.oauth2.WildFlyElytronSaslOAuth2Provider;
@@ -111,8 +112,7 @@ public class MaskedPasswordSaslAuthenticationTest {
                         && (body.contains("username=alice") || body.contains("username=jdoe"))
                         && body.contains("password=dont_tell_me")) {
                     JsonObjectBuilder tokenBuilder = Json.createObjectBuilder();
-
-                    tokenBuilder.add("access_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaXNzIjoiYXV0aC5zZXJ2ZXIiLCJhdWQiOiJmb3JfbWUiLCJleHAiOjE5MTg4OTgxMjUsInByZWZlcnJlZF91c2VybmFtZSI6Impkb2UifQ.ZZxdTZB_XiDGx4zcY6oR-GXQTx4mlsyxA3u8Kjsvtm8");
+                    tokenBuilder.add("access_token", JwtTestUtil.createHS256JwtForOAuth2());
 
                     return new MockResponse().setBody(tokenBuilder.build().toString());
                 } else if (clientCredentials
@@ -120,7 +120,7 @@ public class MaskedPasswordSaslAuthenticationTest {
                         && !body.contains("username=")) {
                     JsonObjectBuilder tokenBuilder = Json.createObjectBuilder();
 
-                    tokenBuilder.add("access_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaXNzIjoiYXV0aC5zZXJ2ZXIiLCJhdWQiOiJmb3JfbWUiLCJleHAiOjE5MTg4OTgxMjUsInByZWZlcnJlZF91c2VybmFtZSI6Impkb2UifQ.ZZxdTZB_XiDGx4zcY6oR-GXQTx4mlsyxA3u8Kjsvtm8");
+                    tokenBuilder.add("access_token", JwtTestUtil.createHS256JwtForOAuth2());
 
                     return new MockResponse().setBody(tokenBuilder.build().toString());
                 }
