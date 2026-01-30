@@ -17,8 +17,7 @@
                 <key-store-ssl-certificate key-store-name="keystore1">
                     <key-store-clear-password password="password"/>
                 </key-store-ssl-certificate>
-                <protocol names="TLSv1.2" />
-                <cipher-suite selector="TLS_RSA_WITH_AES_128_CBC_SHA256" />
+                <protocol names="TLSv1.3" />
             </ssl-context>
         </ssl-contexts>
         <ssl-context-rules>
