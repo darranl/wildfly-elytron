@@ -316,6 +316,35 @@ public class OidcTest extends OidcBaseTest {
                 true, HttpStatus.SC_MOVED_TEMPORARILY, getClientUrl(), CLIENT_PAGE_TEXT, expectedScope, false);
     }
 
+    @Test
+    public void testSuccessfulAuthenticationWithPkce() throws Exception {
+        performAuthentication(getOidcConfigurationInputStreamWithPkce(), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
+                true, HttpStatus.SC_MOVED_TEMPORARILY, getClientUrl(), CLIENT_PAGE_TEXT);
+    }
+
+    @Test
+    public void testPkceParametersInAuthorizationRequest() throws Exception {
+        Map<String, Object> props = new HashMap<>();
+        OidcClientConfiguration oidcClientConfiguration = OidcClientConfigurationBuilder.build(getOidcConfigurationInputStreamWithPkce());
+        assertTrue("PKCE should be enabled", oidcClientConfiguration.isPkce());
+
+        OidcClientContext oidcClientContext = new OidcClientContext(oidcClientConfiguration);
+        oidcFactory = new OidcMechanismFactory(oidcClientContext);
+        HttpServerAuthenticationMechanism mechanism = oidcFactory.createAuthenticationMechanism(OIDC_NAME, props, getCallbackHandler());
+
+        URI requestUri = new URI(getClientUrl());
+        TestingHttpServerRequest request = new TestingHttpServerRequest(null, requestUri);
+        mechanism.evaluateRequest(request);
+        TestingHttpServerResponse response = request.getResponse();
+
+        assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
+        assertEquals(Status.NO_AUTH, request.getResult());
+
+        String location = response.getLocation();
+        assertTrue("Authorization URL should contain code_challenge parameter", location.contains("code_challenge="));
+        assertTrue("Authorization URL should contain code_challenge_method parameter", location.contains("code_challenge_method=S256"));
+    }
+
     // Note: The tests will fail if `localhost` is not listed first in `/etc/hosts` file for the loopback addresses (IPv4 and IPv6).
     @Test
     public void testSuccessfulOauth2Request() throws Exception {
@@ -1027,6 +1056,20 @@ public class OidcTest extends OidcBaseTest {
                 "    \"" + SSL_REQUIRED + "\" : \"EXTERNAL\",\n" +
                 "    \"" + CREDENTIALS + "\" : {\n" +
                 "        \"" + ClientCredentialsProviderType.SECRET.getValue() + "\" : \"" + clientSecret + "\"\n" +
+                "    }\n" +
+                "}";
+        return new ByteArrayInputStream(oidcConfig.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private InputStream getOidcConfigurationInputStreamWithPkce() {
+        String oidcConfig = "{\n" +
+                "    \"" + RESOURCE + "\" : \"" + CLIENT_ID + "\",\n" +
+                "    \"" + PUBLIC_CLIENT + "\" : \"false\",\n" +
+                "    \"" + PROVIDER_URL + "\" : \"" + KEYCLOAK_CONTAINER.getAuthServerUrl() + "/realms/" + TEST_REALM + "\",\n" +
+                "    \"" + SSL_REQUIRED + "\" : \"EXTERNAL\",\n" +
+                "    \"" + Oidc.ENABLE_PKCE + "\" : \"true\",\n" +
+                "    \"" + CREDENTIALS + "\" : {\n" +
+                "        \"" + ClientCredentialsProviderType.SECRET.getValue() + "\" : \"" + CLIENT_SECRET + "\"\n" +
                 "    }\n" +
                 "}";
         return new ByteArrayInputStream(oidcConfig.getBytes(StandardCharsets.UTF_8));

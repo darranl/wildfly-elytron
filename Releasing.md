@@ -86,6 +86,10 @@ Reset your local Git checkout:
     git reset --hard upstream/${BRANCH}
     git tag --delete ${TAG}
 
+# Update API check
+
+Remember to update the API check which is done by japicmp maven plugin to a version you've just released. 
+
 # Forward Merging
 
 After releasing one of the maintenance branches the branch must also be merged to the next branch under active maintenance, if there are intermediate branches not listed above they can be ignored.
