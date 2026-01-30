@@ -65,7 +65,7 @@
   </scm>
 
     <properties>
-        <jdk.min.version>11</jdk.min.version>
+        <jdk.min.version>17</jdk.min.version>
 
         <!-- Nexus Settings -->
         <nexus.repository.staging>wildfly-staging</nexus.repository.staging>
