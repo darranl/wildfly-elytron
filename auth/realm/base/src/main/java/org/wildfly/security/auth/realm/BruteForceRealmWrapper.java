@@ -16,8 +16,8 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +58,7 @@ public class BruteForceRealmWrapper {
     private static final Set<Method> GET_IDENTITY_METHODS;
     private static final Method EVENT_HANDLER_METHOD;
 
-    private static final int MINUITES_TO_MS = 60 * 1000;
+    private static final int MINUTES_TO_MS = 60 * 1000;
 
     static {
         Set<Method> getIdentityMethods = new HashSet<>();
@@ -85,6 +85,7 @@ public class BruteForceRealmWrapper {
     private int maxFailedAttempts = 10;
     private int lockoutInterval = 15;
     private int failureSessionTimeout = 30;
+    private int maxCachedSessions = 1000;
     private List<Class<?>> additionalInterfaces = new ArrayList<>();
 
     /**
@@ -166,6 +167,23 @@ public class BruteForceRealmWrapper {
     }
 
     /**
+     * Set the maximum number of sessions that will be cached before the least recently used
+     * session is evicted from the cache.
+     *
+     * @param maxCachedSessions the maximum number of sessions that will be cached before the
+     * least recently used session is evicted.
+     * @return {@code this} to allow chaining.
+     */
+    public BruteForceRealmWrapper setMaxCachedSessions(final int maxCachedSessions) {
+        assertNotBuilt();
+        if (maxCachedSessions > 0) {
+            this.maxCachedSessions = maxCachedSessions;
+        }
+
+        return this;
+    }
+
+    /**
      * Add an additional interface to be proxied by the dynamic proxy.
      *
      * @param interfaze an additional interface to be proxied by the dynamic proxy.
@@ -223,7 +241,7 @@ public class BruteForceRealmWrapper {
         }
 
         Object proxy = Proxy.newProxyInstance(BruteForceRealmWrapper.class.getClassLoader(),
-            proxiedInterfaces.toArray(new Class[proxiedInterfaces.size()]), new RealmWrapper());
+            proxiedInterfaces.toArray(new Class[proxiedInterfaces.size()]), new RealmWrapper(maxCachedSessions));
 
         if (!securityRealmType.isInstance(proxy)) {
             throw log.doesNotImplementRequiredInterface(wrapped.getClass().getName(), securityRealmType.getName());
@@ -256,9 +274,29 @@ public class BruteForceRealmWrapper {
                 return Boolean.FALSE;
             }
     };
+
     private class RealmWrapper implements InvocationHandler {
 
-        private final Map<Principal, FailureSession> failedAttempts = new HashMap<>();
+        private final Map<Principal, FailureSession> failedAttempts;
+
+        RealmWrapper(int maxSessions) {
+            failedAttempts = new LinkedHashMap<Principal, FailureSession>(16, 0.75f, true) {
+
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<Principal, FailureSession> eldest) {
+                    if (size() > maxSessions) {
+                        // If this is called the handleEvent method is adding an entry to the Map so holds the
+                        // lock, if the event is running it will not receive the lock until after this clean up
+                        // is complete so interrupt it.
+                        eldest.getValue().cancelExpiry(true);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+            };
+        }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -355,9 +393,9 @@ public class BruteForceRealmWrapper {
                         int count = session.failAuthentication();
                         if (count >= maxFailedAttempts) {
                             log.tracef("Disabling authentication for '%s'", principal);
-                            session.disableForMs(lockoutInterval * MINUITES_TO_MS);
+                            session.disableForMs(lockoutInterval * MINUTES_TO_MS);
                         }
-                        session.scheduleTimeout(failureSessionTimeout * MINUITES_TO_MS);
+                        session.scheduleTimeout(failureSessionTimeout * MINUTES_TO_MS);
                     }
 
                 }
