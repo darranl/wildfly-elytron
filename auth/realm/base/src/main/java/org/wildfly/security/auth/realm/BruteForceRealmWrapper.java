@@ -316,7 +316,7 @@ public class BruteForceRealmWrapper {
                         eldest.getValue().cancelExpiry(true);
 
                         long nowNanos = System.nanoTime();
-                        if ((nowNanos - lastWarnLoggedNanos) > LOG_INTERVAL_NANOS) {
+                        if (lastWarnLoggedNanos == Long.MIN_VALUE || (nowNanos - lastWarnLoggedNanos) > LOG_INTERVAL_NANOS) {
                             // We don't want to flood the log, but we do want to ensure we are periodically reporting
                             // this situation so an administrator can take action.
                             log.bruteForceSessionEvicted(realmName);
