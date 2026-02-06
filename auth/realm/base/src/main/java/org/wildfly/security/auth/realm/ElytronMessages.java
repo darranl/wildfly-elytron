@@ -187,7 +187,11 @@ interface ElytronMessages extends BasicLogger {
     @Message(id = 13017, value = "Class '%s' is not an interface, only interfaces can be proxied")
     IllegalStateException notAnInterface(String className);
 
-    @Message(id = 13018, value = "Wrapped SecurityRealm '%s' does not implement interface '%s'")
-    IllegalStateException doesNotImplementRequiredInterface(String className, String interfaceName);
+    @Message(id = 13018, value = "Wrapped SecurityRealm '%s' implementation class '%s' does not implement interface '%s'")
+    IllegalStateException doesNotImplementRequiredInterface(String realmName, String implementationClass, String interfaceName);
+
+    @LogMessage(level = Logger.Level.WARN)
+    @Message(id = 13019, value = "The brute force tracking session cache for security realm '%s' is at capacity, tracking sessions are being evicted.")
+    void bruteForceSessionEvicted(String realmName);
 
 }
