@@ -96,7 +96,7 @@ public class BruteForceRealmWrapperTest {
         Map<String, SimpleRealmEntry> identityMap = new HashMap<>();
         mapBackedSecurityRealm.setIdentityMap(identityMap);
         PasswordFactory factory = PasswordFactory.getInstance(ALGORITHM_CLEAR);
-        for (int i = 1 ; i <= 5 ; i++) {
+        for (int i = 1 ; i <= 9 ; i++) {
             ClearPasswordSpec passwordSpec = new ClearPasswordSpec(password(i));
 
             identityMap.put(user(i), new SimpleRealmEntry(Collections.singletonList(new PasswordCredential(factory.generatePassword(passwordSpec)))));
@@ -110,6 +110,7 @@ public class BruteForceRealmWrapperTest {
             .setMaxFailedAttempts(5)
             .setLockoutInterval(5)
             .setFailureSessionTimeout(2)
+            .setMaxCachedSessions(3)
             .wrap(SecurityRealm.class);
     }
 
@@ -193,6 +194,46 @@ public class BruteForceRealmWrapperTest {
 
         // Now it should work again
         performAuthentication(protectedRealm, 2, true, true);
+    }
+
+    /**
+     * Test case to verify that sessions are evicted from the cache once the maximum size is reached.
+     * @throws Exception
+     */
+    @Test
+    public void testMaxCachedSessions() throws Exception {
+        // Lock an identity. 4
+        // Test against rawRealm - just to verify our call is correct.
+        performAuthentication(rawRealm, 4, true, true);
+
+        // Now make 5 bad calls
+        for (int i = 0 ; i < 5 ; i++) {
+            performAuthentication(protectedRealm, 4, true, false, false);
+        }
+
+        // Only one identity is being tested so we should have one session.
+        assertEquals("Expected failure session", 1, scheduledRunnables.size());
+
+        // Add 2 more sessions to cache 5,6
+        performAuthentication(protectedRealm, 5, true, false, false);
+        performAuthentication(protectedRealm, 6, true, false, false);
+
+        // There should now be three sessions.
+        assertEquals("Expected failure session", 3, scheduledRunnables.size());
+
+        // Verify identity is locked. 4
+        performAuthentication(protectedRealm, 4, true, false, true);
+
+        // Add 3 sessions to cache 5,6,7
+        performAuthentication(protectedRealm, 5, true, false, false);
+        performAuthentication(protectedRealm, 6, true, false, false);
+        performAuthentication(protectedRealm, 7, true, false, false);
+
+        // Should still be 3 sessions.
+        assertEquals("Expected failure session", 3, scheduledRunnables.size());
+
+        // Verify identity was evicted and can now be accessed. 4
+        performAuthentication(protectedRealm, 4, true, true, true);
     }
 
     /**
