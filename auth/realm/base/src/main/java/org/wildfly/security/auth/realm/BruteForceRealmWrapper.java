@@ -16,8 +16,8 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +58,9 @@ public class BruteForceRealmWrapper {
     private static final Set<Method> GET_IDENTITY_METHODS;
     private static final Method EVENT_HANDLER_METHOD;
 
-    private static final int MINUITES_TO_MS = 60 * 1000;
+    private static final int MINUTES_TO_MS = 60 * 1000;
+    private static final long MINUTES_TO_NANOS = 60L * 1000L * 1000L * 1000L;
+    private static final long LOG_INTERVAL_NANOS = 15 * MINUTES_TO_NANOS;
 
     static {
         Set<Method> getIdentityMethods = new HashSet<>();
@@ -82,9 +84,11 @@ public class BruteForceRealmWrapper {
 
     private ScheduledExecutorService executor;
     private SecurityRealm wrapped;
+    private String realmName;
     private int maxFailedAttempts = 10;
     private int lockoutInterval = 15;
     private int failureSessionTimeout = 30;
+    private int maxCachedSessions = 25000;
     private List<Class<?>> additionalInterfaces = new ArrayList<>();
 
     /**
@@ -107,6 +111,22 @@ public class BruteForceRealmWrapper {
     public BruteForceRealmWrapper withExecutor(ScheduledExecutorService executor) {
         assertNotBuilt();
         this.executor = executor;
+
+        return this;
+    }
+
+    /**
+     * Set the realm name that should be used in any log messages.
+     *
+     * If no realm name is specified the simple class name of the wrapped realm
+     * will be used instead.
+     *
+     * @param realmName the realm name that should be used in any log messages.
+     * @return {@code this} to allow chaining.
+     */
+    public BruteForceRealmWrapper setRealmName(final String realmName) {
+        assertNotBuilt();
+        this.realmName = realmName;
 
         return this;
     }
@@ -166,6 +186,23 @@ public class BruteForceRealmWrapper {
     }
 
     /**
+     * Set the maximum number of sessions that will be cached before the least recently used
+     * session is evicted from the cache.
+     *
+     * @param maxCachedSessions the maximum number of sessions that will be cached before the
+     * least recently used session is evicted.
+     * @return {@code this} to allow chaining.
+     */
+    public BruteForceRealmWrapper setMaxCachedSessions(final int maxCachedSessions) {
+        assertNotBuilt();
+        if (maxCachedSessions > 0) {
+            this.maxCachedSessions = maxCachedSessions;
+        }
+
+        return this;
+    }
+
+    /**
      * Add an additional interface to be proxied by the dynamic proxy.
      *
      * @param interfaze an additional interface to be proxied by the dynamic proxy.
@@ -213,20 +250,23 @@ public class BruteForceRealmWrapper {
             // The prior two extend from this.
             proxiedInterfaces.add(SecurityRealm.class);
         }
+
+        String realmName = this.realmName != null ? this.realmName : wrapped.getClass().getSimpleName();
+
         // Iterate the additional interfaces and verify that the wrapped realm does
         // actually support them as we will be just passing calls through.
         for (Class<?> additionalInterface : additionalInterfaces) {
             if (!additionalInterface.isInstance(wrapped)) {
-                throw log.doesNotImplementRequiredInterface(wrapped.getClass().getName(), additionalInterface.getName());
+                throw log.doesNotImplementRequiredInterface(realmName, wrapped.getClass().getName(), additionalInterface.getName());
             }
             proxiedInterfaces.add(additionalInterface);
         }
 
         Object proxy = Proxy.newProxyInstance(BruteForceRealmWrapper.class.getClassLoader(),
-            proxiedInterfaces.toArray(new Class[proxiedInterfaces.size()]), new RealmWrapper());
+            proxiedInterfaces.toArray(new Class[proxiedInterfaces.size()]), new RealmWrapper(realmName, maxCachedSessions));
 
         if (!securityRealmType.isInstance(proxy)) {
-            throw log.doesNotImplementRequiredInterface(wrapped.getClass().getName(), securityRealmType.getName());
+            throw log.doesNotImplementRequiredInterface(realmName, wrapped.getClass().getName(), securityRealmType.getName());
         }
 
         S response = securityRealmType.cast(proxy);
@@ -256,9 +296,41 @@ public class BruteForceRealmWrapper {
                 return Boolean.FALSE;
             }
     };
+
     private class RealmWrapper implements InvocationHandler {
 
-        private final Map<Principal, FailureSession> failedAttempts = new HashMap<>();
+        private final String realmName;
+        private final Map<Principal, FailureSession> failedAttempts;
+        private long lastWarnLoggedNanos = Long.MIN_VALUE; // Does not need to be volatile as always accessed in the same lock.
+
+        RealmWrapper(final String realmName, final int maxSessions) {
+            this.realmName = realmName;
+            failedAttempts = new LinkedHashMap<Principal, FailureSession>(16, 0.75f, true) {
+
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<Principal, FailureSession> eldest) {
+                    if (size() > maxSessions) {
+                        // If this is called the handleRealmEvent method is adding an entry to the Map so holds the
+                        // lock, if the FailureSession invalidate task is running it will not receive the lock until
+                        // after this clean up is complete so interrupt it.
+                        eldest.getValue().cancelExpiry(true);
+
+                        long nowNanos = System.nanoTime();
+                        if ((nowNanos - lastWarnLoggedNanos) > LOG_INTERVAL_NANOS) {
+                            // We don't want to flood the log, but we do want to ensure we are periodically reporting
+                            // this situation so an administrator can take action.
+                            log.bruteForceSessionEvicted(realmName);
+                            lastWarnLoggedNanos = nowNanos;
+                        }
+
+                        return true;
+                    }
+
+                    return false;
+                }
+
+            };
+        }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -277,7 +349,7 @@ public class BruteForceRealmWrapper {
         private Object invoke(Object proxy, Method method, Object[] args, boolean eventHandled) throws Throwable {
             if (EVENT_HANDLER_METHOD.equals(method) && args[0] instanceof RealmEvent) {
                 if (log.isTraceEnabled()) {
-                    log.tracef("Event Received %s, alreadyHandled %b", args[0].getClass().getSimpleName(), eventHandled);
+                    log.tracef("Event Received %s, for Realm %s, alreadyHandled %b", args[0].getClass().getSimpleName(), realmName, eventHandled);
                 }
                 if (!eventHandled) {
                     handleRealmEvent((RealmEvent) args[0]);
@@ -285,7 +357,7 @@ public class BruteForceRealmWrapper {
             } else if (GET_IDENTITY_METHODS.contains(method) && (args[0] instanceof Principal || args[0] instanceof Evidence) ) {
                 Principal principal = args[0] instanceof Principal ? (Principal) args[0] : ((Evidence)args[0]).getDecodedPrincipal();
                 if (isDisabled(principal)) {
-                    log.tracef("Returning Disabled?RealmIdentity for %s", principal.getName());
+                    log.tracef("Protecting realm %s and Returning DisabledRealmIdentity for %s", realmName, principal.getName());
                     Class<?> returnType = method.getReturnType();
                     if (ModifiableRealmIdentity.class.equals(returnType)) {
                         return new DisabledModifiableRealmIdentity(principal);
@@ -294,7 +366,7 @@ public class BruteForceRealmWrapper {
                     }
                 } else {
                     if (principal != null) {
-                        log.tracef("Identity not disabled, proceeding for %s", principal.getName());
+                        log.tracef("Identity not disabled for realm %s, proceeding for %s", realmName, principal.getName());
                     }
                 }
             }
@@ -326,7 +398,7 @@ public class BruteForceRealmWrapper {
 
         private void invalidate(final Principal principal) {
             synchronized(failedAttempts) {
-                log.tracef("Removing brute force session for %s", principal.getName());
+                log.tracef("Removing brute force session for %s in realm %s", principal.getName(), realmName);
                 failedAttempts.remove(principal);
             }
         }
@@ -344,20 +416,20 @@ public class BruteForceRealmWrapper {
                             if (!session.cancelExpiry(true)) {
                                 // We hold the lock so if executing we should have been able to interrupt and
                                 // prevent it from removing the session.
-                                log.tracef("Unable to cancel cleanup for '%s'", principal);
+                                log.tracef("Unable to cancel cleanup for '%s' in realm %s", principal, realmName);
                                 return;
                             }
                         } else {
                             session = new FailureSession(() -> invalidate(principal));
-                            log.tracef("Beginning tracking of failed authentication attempts for '%s'", principal);
+                            log.tracef("Beginning tracking of failed authentication attempts for '%s' in realm %s", principal, realmName);
                             failedAttempts.put(principal, session);
                         }
                         int count = session.failAuthentication();
                         if (count >= maxFailedAttempts) {
-                            log.tracef("Disabling authentication for '%s'", principal);
-                            session.disableForMs(lockoutInterval * MINUITES_TO_MS);
+                            log.tracef("Disabling authentication for '%s' in realm %s", principal, realmName);
+                            session.disableForMs(lockoutInterval * MINUTES_TO_MS);
                         }
-                        session.scheduleTimeout(failureSessionTimeout * MINUITES_TO_MS);
+                        session.scheduleTimeout(failureSessionTimeout * MINUTES_TO_MS);
                     }
 
                 }
@@ -370,8 +442,8 @@ public class BruteForceRealmWrapper {
                     synchronized (failedAttempts) {
                         FailureSession session = failedAttempts.get(principal);
                         if (session != null) {
-                            log.tracef("Successful authentication for previously cached failed authentication '%s'",
-                                    principal.getName());
+                            log.tracef("Successful authentication for previously cached failed authentication '%s' in realm %s",
+                                    principal.getName(), realmName);
                             // No point interrupting cleanup is likely in progress.
                             if (session.cancelExpiry(false)) {
                                 invalidate(principal);
@@ -384,16 +456,18 @@ public class BruteForceRealmWrapper {
             }
         }
 
+        private boolean exists(RealmIdentity identity) {
+            try {
+                return identity.exists();
+            } catch (RealmUnavailableException e) {
+                log.tracef(e,"Unable to determine if identity exists in realm %s", realmName);
+                return false;
+            }
+        }
+
     }
 
-    private static boolean exists(RealmIdentity identity) {
-        try {
-            return identity.exists();
-        } catch (RealmUnavailableException e) {
-            log.trace("Unable to determine if identity exists", e);
-            return false;
-        }
-    }
+
 
     private class FailureSession {
         private final Runnable invalidate;
