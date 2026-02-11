@@ -26,6 +26,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -75,28 +76,53 @@ public class SSLServerSocketTestInstance {
                 sslServerSocket.setEnabledCipherSuites(configuredEnabledCipherSuites);
             }
             sslServerSocket.bind(new InetSocketAddress("localhost", port));
+            sslServerSocket.setSoTimeout(100);
             serverThread = new Thread(() -> {
                 running.set(true);
-                while (running.get()) {
+                while (running.get() && !Thread.currentThread().isInterrupted()) {
                     SSLSocket sslSocket;
                     try {
                         sslSocket = (SSLSocket) sslServerSocket.accept();
                         new Thread(new ServerThread(sslSocket)).start();
+                    } catch (java.net.SocketTimeoutException e) {
+                        // Expected timeout
                     } catch (Exception e) {
-                        Assert.fail();
+                        if (!running.get() || Thread.currentThread().isInterrupted()) {
+                            break;
+                        } else {
+                            Assert.fail();
+                        }
                     }
                 }
             });
             serverThread.start();
         } catch (Exception ex) {
-            Assert.fail();
-        } finally {
             running.set(false);
+            Assert.fail();
         }
     }
 
     public void stop() {
         running.set(false);
+        closeQuietly(sslServerSocket);
+        if (serverThread != null) {
+            serverThread.interrupt();
+            try {
+                serverThread.join(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                // Ignore exceptions during shutdown
+            }
+        }
     }
 
     // Thread handling the socket from client
@@ -114,11 +140,13 @@ public class SSLServerSocketTestInstance {
                 // wait for client's message first so that the first client message will trigger handshake.
                 // This way client can set its preferences in SSLParams after creation of bound createSocket(host,port) without server triggering handshake before.
                 running.set(true);
+                sslSocket.setSoTimeout(10000);
                 sslSocket.startHandshake();
                 InputStream inputStream = sslSocket.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 while (running.get()) {
-                    if ((bufferedReader.readLine()).equals("Client Hello")) {
+                    String line = bufferedReader.readLine();
+                    if (line != null && line.equals("Client Hello")) {
                         break;
                     }
                 }
@@ -126,12 +154,14 @@ public class SSLServerSocketTestInstance {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(sslSocket.getOutputStream()));
                 printWriter.println(STATUS_OK);
                 printWriter.flush();
-                sslSocket.close();
             } catch (Exception ex) {
-                ex.printStackTrace();
-                Assert.fail();
+                if (!sslSocket.isClosed() && running.get()) {
+                    ex.printStackTrace();
+                    Assert.fail();
+                }
             } finally {
                 running.set(false);
+                SSLServerSocketTestInstance.closeQuietly(sslSocket);
             }
         }
     }
