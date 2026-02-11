@@ -119,7 +119,7 @@ public class PasswordDigestObtainer {
     /**
      * Handles callbacks for user and password information.
      *
-     * @return the salted password.
+     * @return the salted password, never {@code null}.
      * @throws AuthenticationMechanismException if the callback handler does not support credential acquisition.
      */
     public byte[] handleUserRealmPasswordCallbacks() throws AuthenticationMechanismException {
