@@ -72,7 +72,7 @@
         <nexus.staging.tag>wildfly-elytron-${project.version}</nexus.staging.tag>
         <nexus.repository.release>wildfly-security</nexus.repository.release>
 
-        <version.com.fasterxml.jackson>2.17.3</version.com.fasterxml.jackson>
+        <version.com.fasterxml.jackson>2.20.2</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}</version.com.fasterxml.jackson.databind>
         <version.commons-cli>1.10.0</version.commons-cli>
         <version.jakarta.enterprise>4.0.1</version.jakarta.enterprise>
@@ -383,6 +383,15 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Jackson BOM -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${version.com.fasterxml.jackson}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
              <!--
                  Local Modules
             -->
@@ -928,21 +937,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${version.com.fasterxml.jackson}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${version.com.fasterxml.jackson}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${version.com.fasterxml.jackson.databind}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
                 <version>${version.org.bitbucket.b_c.jose4j}</version>
@@ -1386,17 +1380,17 @@
                                 <additionalDependency>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-databind</artifactId>
-                                    <version>${version.com.fasterxml.jackson.databind}</version>
+                                    <version>${jackson.version.databind}</version>
                                 </additionalDependency>
                                 <additionalDependency>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-annotations</artifactId>
-                                    <version>${version.com.fasterxml.jackson}</version>
+                                    <version>${jackson.version.annotations}</version>
                                 </additionalDependency>
                                 <additionalDependency>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-core</artifactId>
-                                    <version>${version.com.fasterxml.jackson}</version>
+                                    <version>${jackson.version.core}</version>
                                 </additionalDependency>
                                 <additionalDependency>
                                     <groupId>jakarta.servlet</groupId>
