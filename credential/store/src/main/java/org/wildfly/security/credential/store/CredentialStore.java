@@ -26,6 +26,7 @@ import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.Security;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -426,4 +427,26 @@ public final class CredentialStore {
             return credentialSource;
         }
    }
+
+    /**
+     * Returns the extension types supported by this credential store.
+     *
+     * @return a list of extension interface/class types supported by this store (never {@code null});
+     */
+    public List<Class<? extends CredentialStoreExtension>> getSupportedExtensionTypes() {
+        return spi.getSupportedExtensionTypes();
+    }
+
+    /**
+     * Returns an extension instance of the given type for this credential store, if supported.
+     * The type must extend {@link CredentialStoreExtension}.
+     *
+     * @param extensionType the extension type
+     * @param <C> theextension interface or class (must not be {@code null})
+     * @return an instance implementing the requested extension type, or {@code null} if this store does not support that extension
+     */
+    public <C extends CredentialStoreExtension> C getExtensionInstance(final Class<C> extensionType) {
+        Assert.checkNotNullParam("extensionType", extensionType);
+        return spi.getExtensionInstance(extensionType);
+    }
 }
