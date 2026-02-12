@@ -968,7 +968,7 @@
             </build>
         </profile>
         <profile>
-            <id>jboss-release</id>
+            <id>central-release</id>
             <build>
                 <plugins>
                     <plugin>
