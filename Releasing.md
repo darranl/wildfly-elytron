@@ -2,15 +2,24 @@
 
 At this point in time the following branches are being maintained for the WildFly Elytron project:
 
- * 1.15.x
- * 2.2.x
- * 2.6.x
- * 2.x
- * 3.x
+ * 1.15.x (Java 11)
+ * 2.2.x (Java 11)
+ * 2.6.x (Java 11)
+ * 2.x (Java 17)
+ * 3.x (Java 17)
 
 To release WildFly Elytron first checkout the project and ensure you are on the latest commit for the branch you are releasing with no local changes.
 
 Prior to releasing you should ensure you have your own GPG signing key set up, published to a key server and listed on [wildfly.org](https://www.wildfly.org/contributors/pgp/).
+
+Before performing a release you will need to set up a Sonatype access token with permission to push to the `org.wildfly.security` namespace as a server entry
+in your settings.xml
+
+    <server>
+        <id>central</id>
+        <username>XXX</username>
+        <password>xxxxxxxxxxxxxxxxxxxxxx</password>
+    </server>
 
 ## Prepare the release
 
@@ -20,51 +29,42 @@ Execute:
 
 Enter the version being released:
 
-    What is the release version for "WildFly Elytron Parent"? (wildfly-elytron-parent) 1.15.27.CR1: 1.15.27.Alpha1
+    What is the release version for "WildFly Elytron Parent"? (wildfly-elytron-parent) 2.8.1.CR1: 2.8.1.Final
 
 The tag will default to the version:
 
-    What is the SCM release tag or label for "WildFly Elytron Parent"? (wildfly-elytron-parent) 1.15.27.Alpha1:
+    What is the SCM release tag or label for "WildFly Elytron Parent"? (wildfly-elytron-parent) 2.8.1.Final:
 
 Set the next version:
 
-    What is the new development version for "WildFly Elytron Parent"? (wildfly-elytron-parent) 1.15.28.Alpha1-SNAPSHOT: 1.15.27.CR1-SNAPSHOT
+    What is the new development version for "WildFly Elytron Parent"? (wildfly-elytron-parent) 2.8.2.Final-SNAPSHOT: 2.8.2.CR1-SNAPSHOT
 
 The release commit can be checked with:
 
     git show ${TAG}
 
-If everything is Ok perform the release which will deploy to Nexus.
+If everything is Ok perform the release which will deploy to Maven Central.
 
 ## Perform the release
 
 Execute:
 
-    mvn release:perform -Pjboss-release
+    mvn release:perform
 
-This will deploy the release to the `wildfly-staging` repository.
+This will deploy the release directly to Maven central.
 
-Wait for 10 minutes then visit the Validation task for the `wildfly-staging` repository in Nexus. If this task ran at least 10 minutes after the release was deployed check the latest results on the Settings tab and verify that at least one component was processed and that there were no errors. If the task has not run it can be manually kicked off using the Run button.
-
-e.g.
-
-> Processed 70 components.
-> - no errors were found.
-> - the deployment was a dry run (no actual publishing).
-
-If others are also deploying at the same time this count could be higher, the important check is that the scan was at least 10 minutes after it was deployed, 1 or more components were scanned and no errors specific to WildFly Elytron are reported.
-
-Nexus only scans components once if there are no issues so if you check these results after multiple scans the component count may be back to 0.
+The end of the build process will indicate if there are any validation errors with the
+proposed artifacts.
 
 ## Complete the release
 
 If no issues are reported complete the release.
 
-Move the component to the `wildfly-security` repository:
+Log into [Maven Central: Publishing](https://central.sonatype.com/publishing), and
+click `Publish` on the release.
 
-    git checkout ${TAG}
-    mvn nxrm3:staging-move
-    git checkout ${BRANCH}
+The Maven Central interface will also indicate if there are errors and you will not
+be able to click on `Publish` if any are present.
 
 Push the branch and tag to GitHub:
 
@@ -75,20 +75,21 @@ Push the branch and tag to GitHub:
 
 If the release failed, revert the release.
 
-Delete the component from Nexus:
-
-    git checkout ${TAG}
-    mvn nxrm3:staging-delete
-    git checkout ${BRANCH}
+Log into [Maven Central: Publishing](https://central.sonatype.com/publishing), and
+click `Drop` on the release.
 
 Reset your local Git checkout:
 
     git reset --hard upstream/${BRANCH}
     git tag --delete ${TAG}
 
+Correct any errors and try again.
+
 # Update API check
 
-Remember to update the API check which is done by japicmp maven plugin to a version you've just released. 
+Remember to update the API check which is done by japicmp maven plugin to a version you've just released.
+
+The version is specified within the `wildfly-security/pom.xml` pom file.
 
 # Forward Merging
 
