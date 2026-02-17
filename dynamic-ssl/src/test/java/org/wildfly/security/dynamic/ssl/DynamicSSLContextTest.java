@@ -306,22 +306,26 @@ public class DynamicSSLContextTest {
                 new SSLServerSocketTestInstance(RESOURCES + "default-server.keystore.jks", RESOURCES + "default-server.truststore.jks", 10004);
         testSSLServerSingleCipherSuite.setConfiguredEnabledCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_RSA_WITH_AES_256_CBC_SHA256"});
         testSSLServerSingleCipherSuite.run();
-        AuthenticationContext context = getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml");
-        context.run(() -> {
-            try {
-                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContext.getSocketFactory().createSocket();
-                SSLParameters sslParameters = clientSslSocket.getSSLParameters();
-                sslParameters.setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
-                clientSslSocket.setSSLParameters(sslParameters);
-                clientSslSocket.connect(new InetSocketAddress("localhost", 10000));
-                clientSslSocket.startHandshake();
-                Assert.assertEquals("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", clientSslSocket.getSession().getCipherSuite());
-                checkOutputIsOK(clientSslSocket);
-                clientSslSocket.close();
-            } catch (Exception e) {
-                Assert.assertEquals("fine", e.getMessage());
-            }
-        });
+        try {
+            AuthenticationContext context = getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml");
+            context.run(() -> {
+                try {
+                    SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContext.getSocketFactory().createSocket();
+                    SSLParameters sslParameters = clientSslSocket.getSSLParameters();
+                    sslParameters.setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
+                    clientSslSocket.setSSLParameters(sslParameters);
+                    clientSslSocket.connect(new InetSocketAddress("localhost", 10004));
+                    clientSslSocket.startHandshake();
+                    Assert.assertEquals("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", clientSslSocket.getSession().getCipherSuite());
+                    checkOutputIsOK(clientSslSocket);
+                    clientSslSocket.close();
+                } catch (Exception e) {
+                    Assert.assertEquals("fine", e.getMessage());
+                }
+            });
+        } finally {
+            testSSLServerSingleCipherSuite.stop();
+        }
     }
 
     @Test
@@ -431,12 +435,16 @@ public class DynamicSSLContextTest {
     }
 
     private void checkOutputIsOK(SSLSocket clientSslSocket) throws IOException {
+        clientSslSocket.setSoTimeout(10000);
         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(clientSslSocket.getOutputStream()));
         printWriter.println("Client Hello");
         printWriter.flush();
         InputStream inputStream = clientSslSocket.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        String line = bufferedReader.readLine().trim();
+        String line = bufferedReader.readLine();
+        if (line != null) {
+            line = line.trim();
+        }
         Assert.assertEquals(STATUS_OK, line);
     }
 

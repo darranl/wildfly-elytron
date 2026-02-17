@@ -20,7 +20,6 @@ package org.wildfly.security.tool;
 import static org.junit.Assert.fail;
 
 import org.apache.commons.cli.MissingArgumentException;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -66,7 +65,16 @@ public class CredentialStoreCommandInputTest extends AbstractCommandTest {
 
     @Test
     public void testLongAliasNameOrValue() throws Exception {
-        testCharactersAliasNameAndAliasValue(RandomStringUtils.randomPrint(COUNT_OF_CHARACTERS));
+        // Generate a deterministic long string to test length handling
+        // Use a repeating pattern that doesn't start with '-' to avoid
+        // ambiguity with command-line options (commons-cli 1.11.0 compatibility)
+        StringBuilder longString = new StringBuilder(COUNT_OF_CHARACTERS);
+        String pattern = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+=[]{}|;:,.<>?/ ";
+        while (longString.length() < COUNT_OF_CHARACTERS) {
+            longString.append(pattern);
+        }
+        longString.setLength(COUNT_OF_CHARACTERS); // Trim to exact length
+        testCharactersAliasNameAndAliasValue(longString.toString());
     }
 
     @Test
