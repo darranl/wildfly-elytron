@@ -505,7 +505,7 @@
             </activation>
             <properties>
                 <!-- [WFCORE-1431] remove SASL workaround -->
-                <modular.jdk.args>--add-modules java.sql --illegal-access=permit</modular.jdk.args>
+                <modular.jdk.args>--add-modules java.sql</modular.jdk.args>
                 <!-- use version of jboss-logging that works much better with JDK9 -->
                 <modular.jdk.props>-Djdk.attach.allowAttachSelf=true</modular.jdk.props>
                 <!-- 2.20.x doesn't start on JDK10-->
@@ -532,7 +532,7 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron</artifactId>
-                                    <version>2.8.2.Final</version> <!-- When updating to next release, clear all exclusions. -->
+                                    <version>2.8.3.Final</version> <!-- When updating to next release, clear all exclusions. -->
                                     <type>jar</type>
                                 </dependency>
                             </oldVersion>
@@ -940,7 +940,7 @@
             </build>
         </profile>
         <profile>
-            <id>jboss-release</id>
+            <id>central-release</id>
             <build>
                 <plugins>
                     <plugin>

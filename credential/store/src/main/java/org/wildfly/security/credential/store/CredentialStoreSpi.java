@@ -21,6 +21,7 @@ import static org.wildfly.security.credential.store._private.ElytronMessages.log
 
 import java.security.Provider;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,5 +174,26 @@ public abstract class CredentialStoreSpi {
             if (!validAttributes.contains(attr))
                 throw log.unsupportedAttribute(attr, validAttributes);
         }
+    }
+
+    /**
+     * Returns the extension types supported by this credential store.
+     *
+     * @return a list of extension interface/class types supported by this store (never {@code null});
+     */
+    public List<Class<? extends CredentialStoreExtension>> getSupportedExtensionTypes() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Returns an extension instance of the given type for this credential store, if supported.
+     * The type must extend {@link CredentialStoreExtension}.
+     *
+     * @param extensionType the extension type
+     * @param <C> theextension interface or class (must not be {@code null})
+     * @return an instance implementing the requested extension type, or {@code null} if this store does not support that extension
+     */
+    public <C extends CredentialStoreExtension> C getExtensionInstance(final Class<C> extensionType) {
+        return null;
     }
 }
