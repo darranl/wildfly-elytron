@@ -25,6 +25,7 @@ import org.wildfly.security.password.Password;
 import org.wildfly.security.password.interfaces.BSDUnixDESCryptPassword;
 import org.wildfly.security.password.interfaces.ClearPassword;
 import org.wildfly.security.password.interfaces.SaltedSimpleDigestPassword;
+import org.wildfly.security.password.interfaces.ScramDigestPassword;
 import org.wildfly.security.password.interfaces.SimpleDigestPassword;
 import org.wildfly.security.password.interfaces.UnixDESCryptPassword;
 import org.wildfly.security.password.spec.Encoding;
@@ -277,6 +278,115 @@ public class UserPasswordPasswordUtilTest {
 
         byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
         assertEquals("{crypt}_N.../TTpyByTVvdmWGo", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha1() throws Exception {
+        byte[] orig = "{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha1HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha1}10000$73616c74$0000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha1}10000$73616c74$0000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2BareScheme() throws Exception {
+        // {PBKDF2} without hash name is treated as SHA-1 (OpenLDAP convention)
+        byte[] orig = "{pbkdf2}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        // Compose normalizes to the explicit {pbkdf2-sha1} scheme
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256() throws Exception {
+        byte[] orig = "{pbkdf2-sha256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha256}10000$73616c74$0000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha256}10000$73616c74$0000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256CaseInsensitive() throws Exception {
+        byte[] orig = "{PBKDF2-SHA256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+    }
+
+    @Test
+    public void testPbkdf2Sha384() throws Exception {
+        byte[] orig = "{pbkdf2-sha384}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_384, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha384}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha384HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha384}10000$73616c74$000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_384, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha384}10000$73616c74$000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha512() throws Exception {
+        byte[] orig = "{pbkdf2-sha512}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_512, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha512}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha512HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha512}10000$73616c74$00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_512, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha512}10000$73616c74$00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
     }
 
 }
