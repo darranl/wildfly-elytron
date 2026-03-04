@@ -19,6 +19,7 @@
 package org.wildfly.security.auth.realm.ldap;
 
 import static org.wildfly.security.auth.realm.ldap.ElytronMessages.log;
+import static org.wildfly.security.password.interfaces.BCryptPassword.ALGORITHM_BCRYPT;
 import static org.wildfly.security.password.interfaces.BSDUnixDESCryptPassword.ALGORITHM_BSD_CRYPT_DES;
 import static org.wildfly.security.password.interfaces.ClearPassword.ALGORITHM_CLEAR;
 import static org.wildfly.security.password.interfaces.SaltedSimpleDigestPassword.ALGORITHM_PASSWORD_SALT_DIGEST_MD5;
@@ -36,6 +37,9 @@ import static org.wildfly.security.password.interfaces.SimpleDigestPassword.ALGO
 import static org.wildfly.security.password.interfaces.SimpleDigestPassword.ALGORITHM_SIMPLE_DIGEST_SHA_384;
 import static org.wildfly.security.password.interfaces.SimpleDigestPassword.ALGORITHM_SIMPLE_DIGEST_SHA_512;
 import static org.wildfly.security.password.interfaces.UnixDESCryptPassword.ALGORITHM_CRYPT_DES;
+import static org.wildfly.security.password.interfaces.UnixMD5CryptPassword.ALGORITHM_CRYPT_MD5;
+import static org.wildfly.security.password.interfaces.UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_256;
+import static org.wildfly.security.password.interfaces.UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -107,10 +111,12 @@ class UserPasswordPasswordUtil {
         if (prefixEqual(0, new byte[] { '{', 'C', 'R', 'Y', 'P', 'T', '}' }, userPassword)) {
             if (userPassword[7] == '_') {
                 return ModularCrypt.createPassword(userPassword, BSDUnixDESCryptPassword.ALGORITHM_BSD_CRYPT_DES);
+            } else if (userPassword[7] == '$') {
+                // Modular crypt format ($1$, $2a$, $5$, $6$, etc.): strip {CRYPT} prefix and delegate
+                return ModularCrypt.decode(new String(userPassword, 7, userPassword.length - 7, StandardCharsets.UTF_8));
             } else {
                 return ModularCrypt.createPassword(userPassword, UnixDESCryptPassword.ALGORITHM_CRYPT_DES);
             }
-
         }
         if (prefixEqual(0, new byte[] { '{', 'M', 'D', '5', '}' }, userPassword)) {
             return createSimpleDigestPassword(ALGORITHM_SIMPLE_DIGEST_MD5, 5, userPassword, hashEncoding);
@@ -313,6 +319,16 @@ class UserPasswordPasswordUtil {
         } else if (ALGORITHM_CRYPT_DES.equals(algorithm)) {
             out.write(new byte[]{'{','c','r','y','p','t','}'});
             ModularCrypt.composePassword(out, password);
+        } else if (ALGORITHM_BCRYPT.equals(algorithm)
+            || ALGORITHM_CRYPT_MD5.equals(algorithm)
+            || ALGORITHM_CRYPT_SHA_256.equals(algorithm)
+            || ALGORITHM_CRYPT_SHA_512.equals(algorithm)) {
+            out.write(new byte[]{'{','c','r','y','p','t','}'});
+            try {
+               out.write(ModularCrypt.encodeAsString(password).getBytes(StandardCharsets.UTF_8));
+            } catch (InvalidKeySpecException e) {
+               throw new IOException(e);
+            }
         } else if (ALGORITHM_SCRAM_SHA_1.equals(algorithm)) {
             out.write(new byte[]{'{','p','b','k','d','f','2','-','s','h','a','1','}'});
             out.write(composePbkdf2((ScramDigestPassword) password, hashEncoding));
@@ -387,6 +403,10 @@ class UserPasswordPasswordUtil {
             case ALGORITHM_PASSWORD_SALT_DIGEST_SHA_512:
             case ALGORITHM_BSD_CRYPT_DES:
             case ALGORITHM_CRYPT_DES:
+            case ALGORITHM_CRYPT_MD5:
+            case ALGORITHM_CRYPT_SHA_256:
+            case ALGORITHM_CRYPT_SHA_512:
+            case ALGORITHM_BCRYPT:
             case ALGORITHM_SCRAM_SHA_1:
             case ALGORITHM_SCRAM_SHA_256:
             case ALGORITHM_SCRAM_SHA_384:
