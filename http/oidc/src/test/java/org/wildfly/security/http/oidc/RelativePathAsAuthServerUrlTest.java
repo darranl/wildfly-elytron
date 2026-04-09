@@ -18,6 +18,7 @@
 
 package org.wildfly.security.http.oidc;
 
+import com.github.dockerjava.api.exception.NotFoundException;
 import io.restassured.RestAssured;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.http.HttpStatus;
@@ -26,8 +27,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.NginxContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -35,12 +36,9 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
@@ -93,9 +91,11 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
     }
 
     @After
-    public void afterMethod() {
+    public void afterMethod() throws Exception {
         if (nginxContainer != null) {
+            String nginxId = nginxContainer.getContainerId();
             nginxContainer.stop();
+            waitForContainerRemoval(nginxId);
             nginxContainer = null;
         }
 
@@ -105,20 +105,72 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
                     .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
                     .when()
                     .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM).then().statusCode(204);
+            String keycloakId = KEYCLOAK_CONTAINER.getContainerId();
             KEYCLOAK_CONTAINER.stop();
+            waitForContainerRemoval(keycloakId);
             KEYCLOAK_CONTAINER = null;
         }
 
         if (network != null) {
+            String networkId = network.getId();
             network.close();
+            waitForNetworkRemoval(networkId);
             network = null;
         }
+
+        // Extra safety: give Podman socket time to fully release resources
+        // Increased to 2 seconds to prevent socket exhaustion
+        Thread.sleep(2000);
+    }
+
+    /**
+     * Wait for a container to be fully removed from Docker/Podman.
+     * This prevents socket exhaustion by ensuring cleanup is complete before the next test starts.
+     */
+    private void waitForContainerRemoval(String containerId) throws Exception {
+        if (containerId == null) {
+            return;
+        }
+
+        var dockerClient = DockerClientFactory.instance().client();
+        int maxAttempts = 20; // 10 seconds max wait
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                dockerClient.inspectContainerCmd(containerId).exec();
+                Thread.sleep(500); // Container still exists, wait
+            } catch (NotFoundException e) {
+                return; // Container is gone
+            }
+        }
+        // If we get here, container didn't clean up in time, but continue anyway
+    }
+
+    /**
+     * Wait for a network to be fully removed from Docker/Podman.
+     * Networks can take time to clean up, especially with Podman.
+     */
+    private void waitForNetworkRemoval(String networkId) throws Exception {
+        if (networkId == null) {
+            return;
+        }
+
+        var dockerClient = DockerClientFactory.instance().client();
+        int maxAttempts = 20; // 10 seconds max wait
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                dockerClient.inspectNetworkCmd().withNetworkId(networkId).exec();
+                Thread.sleep(500); // Network still exists, wait
+            } catch (NotFoundException e) {
+                return; // Network is gone
+            }
+        }
+        // If we get here, network didn't clean up in time, but continue anyway
     }
 
     @Test
     public void testSuccessfulAuthenticationWithRelativeAuthServerUrl() throws Exception {
         prepareKeycloakAndClient(null);
-        URL proxyHttpUrl = startProxyAndGetProxyPort(8060, "http://keycloak:8080/realms/WildFly/");
+        URL proxyHttpUrl = startProxyAndGetProxyPort("http://keycloak:8080/realms/WildFly/");
         performAuthentication(getOidcConfigurationInputStream(CLIENT_SECRET, "/"), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 true, HttpStatus.SC_MOVED_TEMPORARILY, true, proxyHttpUrl + "/" + CLIENT_APP, proxyHttpUrl + "/" + CLIENT_APP, CLIENT_PAGE_TEXT);
     }
@@ -126,7 +178,7 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
     @Test
     public void testSuccessfulAuthenticationWithRelativeAuthServerUrlSubUrl() throws Exception {
         prepareKeycloakAndClient("keycloak");
-        URL proxyHttpUrl = startProxyAndGetProxyPort(8060, "http://keycloak:8080/keycloak/realms/WildFly/");
+        URL proxyHttpUrl = startProxyAndGetProxyPort("http://keycloak:8080/keycloak/realms/WildFly/");
         performAuthentication(getOidcConfigurationInputStream(CLIENT_SECRET, "/keycloak"), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 true, HttpStatus.SC_MOVED_TEMPORARILY, true, proxyHttpUrl + "/" + CLIENT_APP, proxyHttpUrl + "/" + CLIENT_APP, CLIENT_PAGE_TEXT);
     }
@@ -134,7 +186,7 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
     @Test
     public void testUnauthenticatedClientWithRelativeAuthServerUrl() throws Exception {
         prepareKeycloakAndClient("keycloak");
-        URL proxyHttpUrl = startProxyAndGetProxyPort(8060, "http://keycloak:8080/keycloak/realms/WildFly/");
+        URL proxyHttpUrl = startProxyAndGetProxyPort("http://keycloak:8080/keycloak/realms/WildFly/");
 
         performAuthentication(getOidcConfigurationInputStream("incorrect_client_secret", "/keycloak"), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 true, HttpStatus.SC_FORBIDDEN, true, proxyHttpUrl + "/" + CLIENT_APP, null, "Forbidden");
@@ -143,7 +195,7 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
     @Test
     public void testWrongRelativeAuthServerUrl() throws Exception {
         prepareKeycloakAndClient(null);
-        URL proxyHttpUrl = startProxyAndGetProxyPort(8060, "http://keycloak:8080/realms/WildFly/");
+        URL proxyHttpUrl = startProxyAndGetProxyPort("http://keycloak:8080/realms/WildFly/");
 
         performAuthentication(getOidcConfigurationInputStream(CLIENT_SECRET, "/wrong_relative_url_endpoint"), KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 true, -1, proxyHttpUrl + "/" + CLIENT_APP, null, null, null, false, false, true, false);
@@ -167,22 +219,35 @@ public class RelativePathAsAuthServerUrlTest extends OidcBaseTest {
         assertEquals("http://test.com:4567/keycloak", oidcClientConfigurationWithResolvedUrls.getAuthServerBaseUrl());
     }
 
-    private URL startProxyAndGetProxyPort(int proxyPort, String keycloakUrl) throws MalformedURLException {
+    private URL startProxyAndGetProxyPort(String keycloakUrl) throws Exception {
         Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger(RelativePathAsAuthServerUrlTest.class));
-        List<String> portBindings = new ArrayList<>();
-        portBindings.add(proxyPort + ":80");
+
+        // Get absolute path for the nginx config file
+        String nginxConfPath = new java.io.File("src/test/resources/org/wildfly/security/http/oidc/nginx.conf").getAbsolutePath();
+
+        // Add a delay to prevent Podman socket exhaustion when running multiple tests
+        // Increased to 3 seconds to give Podman more time between container operations
+        Thread.sleep(3000);
 
         nginxContainer = new NginxContainer<>(DockerImageName.parse(NGINX_IMAGE))
                 .withNetwork(network)
-                .withEnv("KC_ENDPOINT", keycloakUrl)
-                .withEnv("PROXY_PORT", String.valueOf(proxyPort))
-                .withEnv("CLIENT_PORT", String.valueOf(CLIENT_PORT))
+                .withEnv("kc_endpoint", keycloakUrl)
+                .withEnv("client_port", String.valueOf(CLIENT_PORT))
                 .withExposedPorts(80)
-                .withClasspathResourceMapping("org/wildfly/security/http/oidc/nginx.conf", "/etc/nginx/templates/default.conf.template", BindMode.READ_WRITE)
+                .withCreateContainerCmdModifier(cmd -> {
+                    cmd.getHostConfig().withBinds(
+                        new com.github.dockerjava.api.model.Bind(
+                            nginxConfPath,
+                            new com.github.dockerjava.api.model.Volume("/etc/nginx/templates/default.conf.template"),
+                            com.github.dockerjava.api.model.AccessMode.ro,
+                            com.github.dockerjava.api.model.SELContext.shared
+                        )
+                    );
+                })
                 .withAccessToHost(true);
-        nginxContainer.setPortBindings(portBindings);
         nginxContainer.start();
         nginxContainer.followOutput(logConsumer);
+
         URL proxyHttpUrl = nginxContainer.getBaseUrl("http", 80);
         assertNotNull(proxyHttpUrl);
 

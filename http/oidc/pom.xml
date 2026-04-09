@@ -205,6 +205,8 @@
                 <configuration>
                     <environmentVariables>
                         <OIDC_PROVIDER_URL_ENV>/realms/WildFly</OIDC_PROVIDER_URL_ENV>
+                        <DOCKER_HOST>${env.DOCKER_HOST}</DOCKER_HOST>
+                        <TESTCONTAINERS_RYUK_DISABLED>${env.TESTCONTAINERS_RYUK_DISABLED}</TESTCONTAINERS_RYUK_DISABLED>
                     </environmentVariables>
                 </configuration>
             </plugin>
