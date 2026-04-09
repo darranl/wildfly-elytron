@@ -36,11 +36,12 @@ jobs:
       #    docker-machine create --driver virtualbox default
       #    docker --version
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-${{ matrix.java }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-${{ matrix.java }}-m2
+          save-always: true
       - name: Version Info
         run: mvn -version
         # Code for JDK versions < JDK-24 are incompatible with JDK-24+.
