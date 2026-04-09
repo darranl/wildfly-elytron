@@ -144,11 +144,19 @@ This is consistent with the following sequence:
 
 ## Why This Looks Like a Test Issue
 
-The test currently assumes that a host IP resolved from [`InetAddress.getLocalHost().getHostAddress()`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java:52) is a stable and container-reachable callback target.
+The test had two issues:
 
-That assumption is often false in GitHub Actions and other containerized CI environments.
+1. **Host Reachability**: The test assumed that a host IP resolved from [`InetAddress.getLocalHost().getHostAddress()`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java:52) is a stable and container-reachable callback target. That assumption is often false in GitHub Actions and other containerized CI environments.
 
-The issue therefore appears to be in how the test chooses the callback address, rather than in the logout implementation itself.
+2. **Timeout Configuration**: The test did not configure an explicit timeout for the HtmlUnit WebClient. The backchannel logout flow requires:
+   - Browser initiates logout request to the application
+   - Application redirects to Keycloak's end-session endpoint
+   - Keycloak makes a **separate HTTP POST** to the backchannel callback URL
+   - Only after the backchannel callback completes does Keycloak respond to the browser
+
+   This means `webClient.getPage()` blocks waiting for Keycloak's response, which in turn waits for the backchannel callback to complete. On Java 17, the default HtmlUnit timeout appears to be insufficient for this flow in CI environments.
+
+The issues therefore appear to be in how the test configures networking and timeouts, rather than in the logout implementation itself.
 
 ## Proposed Fix Direction
 
@@ -252,11 +260,38 @@ When resuming work after clearing context, start with:
 - [`KeycloakContainer`](http/oidc/src/test/java/org/wildfly/security/http/oidc/KeycloakContainer.java) - added log emission hook
 - [`OidcBaseTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/OidcBaseTest.java) - invoked log emission in cleanup
 
-### Current iteration (host routing fix)
-- [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java) - replaced `InetAddress.getLocalHost().getHostAddress()` with `host.testcontainers.internal`
+### Current iteration (host routing and timeout fixes)
+- [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java):
+  - Replaced `InetAddress.getLocalHost().getHostAddress()` with `host.testcontainers.internal`
+  - Added explicit 60-second timeout for the logout request to allow time for backchannel callback completion
 - [`KeycloakContainer`](http/oidc/src/test/java/org/wildfly/security/http/oidc/KeycloakContainer.java) - enabled host access with `withAccessToHost(true)`
+
+## Root Cause Analysis
+
+### Java 17 vs Java 21 Behavior
+
+The test passed on Java 21 but hung on Java 17, suggesting a difference in:
+- HtmlUnit's default timeout behavior between Java versions
+- Thread pool management in the underlying HTTP client
+- Network stack timing characteristics
+
+### The Race Condition
+
+The backchannel logout creates a potential race condition:
+1. Main test thread calls `webClient.getPage()` which blocks
+2. Keycloak needs to make a backchannel POST to the mock server
+3. The MockWebServer dispatcher must handle this POST on a separate thread
+4. Only after the POST completes can Keycloak respond to the blocked `webClient.getPage()` call
+
+Without an explicit timeout, HtmlUnit may use a default timeout that's too short for this multi-step flow, especially in slower CI environments or with different Java versions.
+
+### The Solution
+
+Two changes were required:
+1. **Fix host reachability**: Use `host.testcontainers.internal` with `withAccessToHost(true)` so Keycloak can reach the mock server
+2. **Increase timeout**: Set `webClient.getOptions().setTimeout(60000)` to allow sufficient time for the backchannel callback to complete
 
 ## Notes
 
 One malformed link should be corrected in future edits if this file is updated:
-- the [`rewriteHost()`](http://http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java:50) reference in “Option A” should point to the local file path without the duplicated protocol prefix.
+- the [`rewriteHost()`](http://http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java:50) reference in "Option A" should point to the local file path without the duplicated protocol prefix.
