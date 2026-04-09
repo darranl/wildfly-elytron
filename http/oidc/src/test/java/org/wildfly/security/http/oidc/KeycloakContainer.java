@@ -18,6 +18,8 @@
 
 package org.wildfly.security.http.oidc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
@@ -27,6 +29,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
  */
 public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeycloakContainer.class);
     public static final String KEYCLOAK_ADMIN_USER = "admin";
     public static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
 
@@ -75,5 +79,9 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
             url = String.format("http://%s:%s", host, port);
         }
         return url;
+    }
+
+    public void logContainerOutput() {
+        LOGGER.info("Keycloak container logs:\n{}", getLogs());
     }
 }

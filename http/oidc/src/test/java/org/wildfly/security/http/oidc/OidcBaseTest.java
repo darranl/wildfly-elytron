@@ -116,6 +116,7 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
     @AfterClass
     public static void generalCleanup() throws Exception {
         if (KEYCLOAK_CONTAINER != null) {
+            KEYCLOAK_CONTAINER.logContainerOutput();
             RestAssured
                     .given()
                     .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))

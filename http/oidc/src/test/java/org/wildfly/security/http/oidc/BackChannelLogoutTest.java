@@ -27,12 +27,16 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import org.htmlunit.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.htmlunit.WebClient;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
 import org.keycloak.representations.idm.ClientRepresentation;
 
 public class BackChannelLogoutTest extends AbstractLogoutTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BackChannelLogoutTest.class);
 
     @Override
     protected void doConfigureClient(ClientRepresentation client) {
@@ -43,8 +47,9 @@ public class BackChannelLogoutTest extends AbstractLogoutTest {
         config.setLogoutCallbackPath(Oidc.DEFAULT_LOGOUT_CALLBACK_PATH);
         client.setFrontchannelLogout(false);
         client.getAttributes().put("backchannel.logout.session.required", "true");
-        client.getAttributes().put("backchannel.logout.url", rewriteHost(redirectUri)
-                + config.getLogoutCallbackPath());
+        String backchannelLogoutUrl = rewriteHost(redirectUri) + config.getLogoutCallbackPath();
+        LOGGER.info("Configured backchannel logout URL: {}", backchannelLogoutUrl);
+        client.getAttributes().put("backchannel.logout.url", backchannelLogoutUrl);
     }
 
     private static String rewriteHost(String redirectUri) {
