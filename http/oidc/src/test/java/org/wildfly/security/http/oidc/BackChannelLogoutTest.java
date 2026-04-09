@@ -21,9 +21,7 @@ package org.wildfly.security.http.oidc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import org.htmlunit.Page;
@@ -53,11 +51,8 @@ public class BackChannelLogoutTest extends AbstractLogoutTest {
     }
 
     private static String rewriteHost(String redirectUri) {
-        try {
-            return redirectUri.replace("localhost", InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
+        // Use host.testcontainers.internal to allow the Keycloak container to reach back to the host
+        return redirectUri.replace("localhost", "host.testcontainers.internal");
     }
 
     @Test
