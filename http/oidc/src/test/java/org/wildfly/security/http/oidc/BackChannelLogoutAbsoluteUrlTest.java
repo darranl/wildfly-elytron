@@ -65,6 +65,7 @@ public class BackChannelLogoutAbsoluteUrlTest extends AbstractLogoutTest {
         assertEquals(Status.NO_AUTH, getCurrentRequest().getResult());
 
         webClient = getWebClient();
+        webClient.getOptions().setJavaScriptEnabled(false);
         Page page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
                 requestUri, response.getLocation(),
                 response.getCookies())
