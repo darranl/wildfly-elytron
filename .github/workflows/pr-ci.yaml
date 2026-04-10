@@ -55,10 +55,10 @@ jobs:
             echo "file_exists=false" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
-      - name: Run BackChannelLogoutTest on JDK ${{ matrix.java }}
+      - name: Run BackChannelLogoutAbsoluteUrlTest on JDK ${{ matrix.java }}
         run: >-
           mvn -B verify --file pom.xml
-          -Dtest=BackChannelLogoutTest
+          -Dtest=BackChannelLogoutAbsoluteUrlTest
           -Dsurefire.failIfNoSpecifiedTests=false
           -DfailIfNoTests=false
       - name: debug data for env failure
@@ -71,7 +71,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: backchannel-logout-debug-jdk-${{ matrix.java }}
+          name: backchannel-logout-absolute-url-debug-jdk-${{ matrix.java }}
           if-no-files-found: warn
           path: |
             **/target/surefire-reports/**

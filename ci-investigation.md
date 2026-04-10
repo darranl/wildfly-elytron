@@ -1,8 +1,8 @@
-# CI Investigation: [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java)
+# CI Investigation: OIDC Back-Channel Logout Tests
 
 ## Summary
 
-This document records the current understanding of the CI failure affecting [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java), the investigation performed so far, the changes already made to improve CI diagnostics, and a proposed step-by-step plan for the next iteration.
+This document records the investigation of CI failures in OIDC back-channel logout tests, specifically [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java) and [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java). The investigation has evolved from a single test failure to understanding test interaction issues when running the full OIDC test suite.
 
 ## Original Failure
 
@@ -229,19 +229,34 @@ If needed, update [`KeycloakContainer`](http/oidc/src/test/java/org/wildfly/secu
 
 **Implementation:** Added `withAccessToHost(true)` to the [`configure()`](http/oidc/src/test/java/org/wildfly/security/http/oidc/KeycloakContainer.java:60) method to enable the Keycloak container to reach back to the host machine.
 
-### Step 4 ⏳ IN PROGRESS
+### Step 4 ✅ COMPLETED
 Re-run the narrowed CI workflow and inspect:
 - whether the callback URL changed as expected
 - whether the timeout disappears
 - whether the mock app receives the backchannel callback request
 
-**Status:** Ready for CI execution. The changes compile successfully locally.
+**Status:** Test now passes when run in isolation. The host reachability and timeout fixes resolved the issue for single test execution.
 
-### Step 5 ⏸️ PENDING
-If the test still fails, improve log capture by writing Keycloak logs into an uploaded artifact file rather than relying on console emission alone.
+### Step 5 ✅ COMPLETED - Applied Same Fixes to BackChannelLogoutAbsoluteUrlTest
+**Finding:** [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java) had the identical issues as [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java):
+- Used `InetAddress.getLocalHost().getHostAddress()` for backchannel callback URL
+- No explicit timeout for the logout request
 
-### Step 6 ⏸️ PENDING
-Only if the test still fails after the host-routing fix, inspect whether Keycloak logout behavior itself changed and whether the test assumptions around synchronous completion need to be updated.
+**Implementation:** Applied the same fixes:
+1. Modified [`rewriteHost()`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java:49) to use `host.testcontainers.internal`
+2. Added 60-second timeout before the logout request at line 78
+3. Removed unused imports
+4. Updated CI workflow to test this specific test
+
+### Step 6 ⏳ IN PROGRESS
+Re-run CI with [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java) to verify the fixes work for this test as well.
+
+### Step 7 ⏸️ PENDING
+If both tests pass individually but fail when run together in the full suite, investigate test interaction issues:
+- Check for proper test cleanup between tests
+- Verify Keycloak container lifecycle management
+- Look for resource leaks (ports, connections, threads)
+- Consider test execution order dependencies
 
 ## Suggested Next Conversation Reset Point
 
@@ -264,7 +279,12 @@ When resuming work after clearing context, start with:
 - [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java):
   - Replaced `InetAddress.getLocalHost().getHostAddress()` with `host.testcontainers.internal`
   - Added explicit 60-second timeout for the logout request to allow time for backchannel callback completion
+- [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java):
+  - Replaced `InetAddress.getLocalHost().getHostAddress()` with `host.testcontainers.internal`
+  - Added explicit 60-second timeout for the logout request to allow time for backchannel callback completion
+  - Removed unused imports for `InetAddress` and `UnknownHostException`
 - [`KeycloakContainer`](http/oidc/src/test/java/org/wildfly/security/http/oidc/KeycloakContainer.java) - enabled host access with `withAccessToHost(true)`
+- [`.github/workflows/pr-ci.yaml`](.github/workflows/pr-ci.yaml) - updated to run `BackChannelLogoutAbsoluteUrlTest` instead of `BackChannelLogoutTest`
 
 ## Root Cause Analysis
 
