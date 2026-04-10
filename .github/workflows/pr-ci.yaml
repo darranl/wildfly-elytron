@@ -55,12 +55,16 @@ jobs:
             echo "file_exists=false" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
-      - name: Run BackChannelLogoutAbsoluteUrlTest on JDK ${{ matrix.java }}
+      - name: Run OIDC module tests on JDK ${{ matrix.java }}
         run: >-
           mvn -B verify --file pom.xml
-          -Dtest=BackChannelLogoutAbsoluteUrlTest
-          -Dsurefire.failIfNoSpecifiedTests=false
-          -DfailIfNoTests=false
+          -DskipTests
+          -pl http/oidc
+          -am
+        continue-on-error: false
+      - name: Run OIDC tests on JDK ${{ matrix.java }}
+        run: >-
+          mvn -B test --file http/oidc/pom.xml
       - name: debug data for env failure
         if: ${{ failure() }}
         shell: bash
@@ -71,7 +75,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: backchannel-logout-absolute-url-debug-jdk-${{ matrix.java }}
+          name: oidc-tests-debug-jdk-${{ matrix.java }}
           if-no-files-found: warn
           path: |
             **/target/surefire-reports/**

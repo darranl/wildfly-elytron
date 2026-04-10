@@ -79,12 +79,13 @@ The GitHub Actions workflow was updated in [`.github/workflows/pr-ci.yaml`](.git
 
 - runs only on Ubuntu
 - runs only Java 17 and 21
-- runs only [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java)
-- avoids failing modules with no matching tests
+- skips all tests during the build phase (`-DskipTests`)
+- builds only the http/oidc module and its dependencies (`-pl http/oidc -am`)
+- runs all tests in the http/oidc module in a separate step
 - uploads failure artifacts
 - always saves the Maven cache
 
-These changes were intended to shorten the feedback loop.
+These changes allow testing all OIDC tests together to identify any test interaction issues while avoiding the overhead of building and testing unrelated modules.
 
 ### 4. Added backchannel logout URL logging
 
@@ -248,11 +249,20 @@ Re-run the narrowed CI workflow and inspect:
 3. Removed unused imports
 4. Updated CI workflow to test this specific test
 
-### Step 6 ⏳ IN PROGRESS
-Re-run CI with [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java) to verify the fixes work for this test as well.
+### Step 6 ✅ COMPLETED
+Updated CI workflow to run all OIDC tests together rather than individual tests. This will help identify if there are test interaction issues when multiple OIDC tests run in sequence.
 
-### Step 7 ⏸️ PENDING
-If both tests pass individually but fail when run together in the full suite, investigate test interaction issues:
+**Implementation:**
+- First step: Build with `-DskipTests -pl http/oidc -am` to compile only the OIDC module and dependencies
+- Second step: Run `mvn test` in the http/oidc directory to execute all OIDC tests
+
+### Step 7 ⏳ IN PROGRESS
+Re-run CI with all OIDC tests to:
+1. Verify both [`BackChannelLogoutTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutTest.java) and [`BackChannelLogoutAbsoluteUrlTest`](http/oidc/src/test/java/org/wildfly/security/http/oidc/BackChannelLogoutAbsoluteUrlTest.java) pass with the fixes
+2. Identify any test interaction issues when running the full OIDC test suite
+
+### Step 8 ⏸️ PENDING
+If tests fail when run together, investigate test interaction issues:
 - Check for proper test cleanup between tests
 - Verify Keycloak container lifecycle management
 - Look for resource leaks (ports, connections, threads)
@@ -284,7 +294,7 @@ When resuming work after clearing context, start with:
   - Added explicit 60-second timeout for the logout request to allow time for backchannel callback completion
   - Removed unused imports for `InetAddress` and `UnknownHostException`
 - [`KeycloakContainer`](http/oidc/src/test/java/org/wildfly/security/http/oidc/KeycloakContainer.java) - enabled host access with `withAccessToHost(true)`
-- [`.github/workflows/pr-ci.yaml`](.github/workflows/pr-ci.yaml) - updated to run `BackChannelLogoutAbsoluteUrlTest` instead of `BackChannelLogoutTest`
+- [`.github/workflows/pr-ci.yaml`](.github/workflows/pr-ci.yaml) - updated to skip all tests during build and run all http/oidc module tests together
 
 ## Root Cause Analysis
 
