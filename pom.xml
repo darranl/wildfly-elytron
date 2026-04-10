@@ -85,7 +85,7 @@
         <sonatype.server.id>central</sonatype.server.id>
         <autoPublish>false</autoPublish>
 
-        <version.com.fasterxml.jackson>2.20.2</version.com.fasterxml.jackson>
+        <version.com.fasterxml.jackson>2.21.1</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.databind>${version.com.fasterxml.jackson}</version.com.fasterxml.jackson.databind>
         <version.commons-cli>1.11.0</version.commons-cli>
         <version.jakarta.enterprise>4.0.1</version.jakarta.enterprise>
@@ -95,7 +95,7 @@
         <version.org.apache.kerby>2.0.3</version.org.apache.kerby>
         <version.org.apache.directory.jdbm>2.0.0-M3</version.org.apache.directory.jdbm>
         <version.org.apache.directory.mavibot>1.0.0-M8</version.org.apache.directory.mavibot>
-        <version.org.bouncycastle>1.67</version.org.bouncycastle>
+        <version.org.bouncycastle>1.69</version.org.bouncycastle>
         <version.org.apache.sshd.common>2.17.1</version.org.apache.sshd.common>
         <version.org.apache.httpcomponents.httpclient>4.5.14</version.org.apache.httpcomponents.httpclient>
         <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
@@ -125,13 +125,13 @@
         <version.org.mock-server.mockserver-netty>5.4.1</version.org.mock-server.mockserver-netty>
         <version.org.xipki.pki.ocsp-server>3.0.0</version.org.xipki.pki.ocsp-server>
         <version.org.bitbucket.b_c.jose4j>0.9.6</version.org.bitbucket.b_c.jose4j>
-        <version.org.keycloak>25.0.2</version.org.keycloak>
+        <version.org.keycloak>25.0.6</version.org.keycloak>
         <version.io.rest-assured>5.5.0</version.io.rest-assured>
         <version.org.testcontainers.nginx>1.20.1</version.org.testcontainers.nginx>
         <version.org.testcontainers.testcontainers>2.0.2</version.org.testcontainers.testcontainers>
-        <version.net.sourceforge.htmlunit.htmlunit>2.70.0</version.net.sourceforge.htmlunit.htmlunit>
+        <version.org.htmlunit.htmlunit>4.10.0</version.org.htmlunit.htmlunit>
         <version.org.apache.santuario>2.3.0</version.org.apache.santuario>
-        <version.org.keycloak.keycloak-services>23.0.7</version.org.keycloak.keycloak-services>
+        <version.org.keycloak.keycloak-services>25.0.6</version.org.keycloak.keycloak-services>
         <version.org.aesh>2.7</version.org.aesh>
         <version.org.xnio>3.8.16.Final</version.org.xnio>
         <version.org.openclover>4.5.2</version.org.openclover>
@@ -1152,9 +1152,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>net.sourceforge.htmlunit</groupId>
+                <groupId>org.htmlunit</groupId>
                 <artifactId>htmlunit</artifactId>
-                <version>${version.net.sourceforge.htmlunit.htmlunit}</version>
+                <version>${version.org.htmlunit.htmlunit}</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>
@@ -1340,6 +1340,15 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>jdk21-test-profile</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <modules>
+                <module>tests/jdk21</module>
+            </modules>
         </profile>
         <profile>
             <id>aggregate-javadoc</id>

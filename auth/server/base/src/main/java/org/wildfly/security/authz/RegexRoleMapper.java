@@ -61,11 +61,8 @@ public class RegexRoleMapper implements RoleMapper {
     public Roles mapRoles(Roles rolesToMap) {
         return new RegexRoles(rolesToMap, this.pattern, this.replacement, this.keepNonMapped, this.replaceAll);
     }
-
     /**
      * Construct a new {@link Builder} for creating the {@link RegexRoleMapper}.
-     *
-     * @return a new {@link Builder} for creating the {@link RegexRoleMapper}.
      */
     public static class Builder {
         private String pattern;

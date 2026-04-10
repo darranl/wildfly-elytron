@@ -18,7 +18,7 @@
 
 package org.wildfly.security.http.oidc;
 
-import com.gargoylesoftware.htmlunit.TextPage;
+import org.htmlunit.TextPage;
 import io.restassured.RestAssured;
 import mockit.Mock;
 import mockit.MockUp;

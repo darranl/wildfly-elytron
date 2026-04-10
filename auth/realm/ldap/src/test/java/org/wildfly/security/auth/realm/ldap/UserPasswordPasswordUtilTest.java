@@ -22,11 +22,16 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.wildfly.security.password.Password;
+import org.wildfly.security.password.interfaces.BCryptPassword;
 import org.wildfly.security.password.interfaces.BSDUnixDESCryptPassword;
 import org.wildfly.security.password.interfaces.ClearPassword;
 import org.wildfly.security.password.interfaces.SaltedSimpleDigestPassword;
+import org.wildfly.security.password.interfaces.ScramDigestPassword;
 import org.wildfly.security.password.interfaces.SimpleDigestPassword;
 import org.wildfly.security.password.interfaces.UnixDESCryptPassword;
+import org.wildfly.security.password.interfaces.UnixMD5CryptPassword;
+import org.wildfly.security.password.interfaces.UnixSHACryptPassword;
+import org.wildfly.security.password.util.ModularCrypt;
 import org.wildfly.security.password.spec.Encoding;
 
 import java.nio.charset.StandardCharsets;
@@ -279,4 +284,232 @@ public class UserPasswordPasswordUtilTest {
         assertEquals("{crypt}_N.../TTpyByTVvdmWGo", new String(composed, StandardCharsets.UTF_8));
     }
 
+    @Test
+    public void testPbkdf2Sha1() throws Exception {
+        byte[] orig = "{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha1HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha1}10000$73616c74$0000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha1}10000$73616c74$0000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2BareScheme() throws Exception {
+        // {PBKDF2} without hash name is treated as SHA-1 (OpenLDAP convention)
+        byte[] orig = "{pbkdf2}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_1, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        // Compose normalizes to the explicit {pbkdf2-sha1} scheme
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha1}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256() throws Exception {
+        byte[] orig = "{pbkdf2-sha256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha256}10000$73616c74$0000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha256}10000$73616c74$0000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha256CaseInsensitive() throws Exception {
+        byte[] orig = "{PBKDF2-SHA256}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_256, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+    }
+
+    @Test
+    public void testPbkdf2Sha384() throws Exception {
+        byte[] orig = "{pbkdf2-sha384}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_384, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha384}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha384HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha384}10000$73616c74$000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_384, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha384}10000$73616c74$000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha512() throws Exception {
+        byte[] orig = "{pbkdf2-sha512}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_512, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword);
+        assertEquals("{pbkdf2-sha512}10000$c2FsdA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testPbkdf2Sha512HexEncoded() throws Exception {
+        byte[] orig = "{pbkdf2-sha512}10000$73616c74$00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        ScramDigestPassword parsedPassword = (ScramDigestPassword) UserPasswordPasswordUtil.parseUserPassword(orig, Encoding.HEX);
+        assertEquals(ScramDigestPassword.ALGORITHM_SCRAM_SHA_512, parsedPassword.getAlgorithm());
+        assertEquals(10000, parsedPassword.getIterationCount());
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(parsedPassword, Encoding.HEX);
+        assertEquals("{pbkdf2-sha512}10000$73616c74$00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", new String(composed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testCryptBcrypt() throws Exception {
+        // Create a raw bcrypt password, compose it to {crypt} format, then parse back
+        byte[] hash = new byte[23];
+        byte[] salt = new byte[16];
+        BCryptPassword original = BCryptPassword.createRaw(BCryptPassword.ALGORITHM_BCRYPT, hash, salt, 10);
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(original);
+        String composedStr = new String(composed, StandardCharsets.UTF_8);
+        assertEquals("{crypt}", composedStr.substring(0, 7));
+        assertEquals("$2a$10$", composedStr.substring(7, 14));
+
+        // Parse the {crypt}-wrapped bcrypt string back
+        BCryptPassword parsed = (BCryptPassword) UserPasswordPasswordUtil.parseUserPassword(composed);
+        assertEquals(BCryptPassword.ALGORITHM_BCRYPT, parsed.getAlgorithm());
+        assertEquals(10, parsed.getIterationCount());
+    }
+
+    @Test
+    public void testCryptBcryptRoundtrip() throws Exception {
+        // Build a {crypt}$2a$... string from a known modular crypt string
+        byte[] hash = new byte[23];
+        byte[] salt = new byte[16];
+        BCryptPassword original = BCryptPassword.createRaw(BCryptPassword.ALGORITHM_BCRYPT, hash, salt, 12);
+        String cryptStr = ModularCrypt.encodeAsString(original);
+
+        byte[] ldapPassword = ("{crypt}" + cryptStr).getBytes(StandardCharsets.UTF_8);
+        Password parsed = UserPasswordPasswordUtil.parseUserPassword(ldapPassword);
+        assertEquals(BCryptPassword.ALGORITHM_BCRYPT, parsed.getAlgorithm());
+
+        byte[] recomposed = UserPasswordPasswordUtil.composeUserPassword(parsed);
+        assertEquals(new String(ldapPassword, StandardCharsets.UTF_8), new String(recomposed, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testCryptMd5() throws Exception {
+        // Create a raw MD5 crypt password, compose to {crypt} format, then parse back
+        byte[] hash = new byte[16];
+        byte[] salt = "sa".getBytes(StandardCharsets.UTF_8);
+        UnixMD5CryptPassword original = UnixMD5CryptPassword.createRaw(
+                UnixMD5CryptPassword.ALGORITHM_CRYPT_MD5, salt, hash);
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(original);
+        String composedStr = new String(composed, StandardCharsets.UTF_8);
+        assertEquals("{crypt}", composedStr.substring(0, 7));
+        assertEquals("$1$", composedStr.substring(7, 10));
+
+        UnixMD5CryptPassword parsed = (UnixMD5CryptPassword) UserPasswordPasswordUtil.parseUserPassword(composed);
+        assertEquals(UnixMD5CryptPassword.ALGORITHM_CRYPT_MD5, parsed.getAlgorithm());
+    }
+
+    @Test
+    public void testCryptSha256() throws Exception {
+        // Create a raw SHA-256 crypt password, compose to {crypt} format, then parse back
+        byte[] hash = new byte[32];
+        byte[] salt = "saltsalt".getBytes(StandardCharsets.UTF_8);
+        UnixSHACryptPassword original = UnixSHACryptPassword.createRaw(
+                UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_256, salt, hash, 5000);
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(original);
+        String composedStr = new String(composed, StandardCharsets.UTF_8);
+        assertEquals("{crypt}", composedStr.substring(0, 7));
+        assertEquals("$5$", composedStr.substring(7, 10));
+
+        UnixSHACryptPassword parsed = (UnixSHACryptPassword) UserPasswordPasswordUtil.parseUserPassword(composed);
+        assertEquals(UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_256, parsed.getAlgorithm());
+        assertEquals(5000, parsed.getIterationCount());
+    }
+
+    @Test
+    public void testCryptSha512() throws Exception {
+        // Create a raw SHA-512 crypt password, compose to {crypt} format, then parse back
+        byte[] hash = new byte[64];
+        byte[] salt = "saltsalt".getBytes(StandardCharsets.UTF_8);
+        UnixSHACryptPassword original = UnixSHACryptPassword.createRaw(
+                UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, salt, hash, 5000);
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(original);
+        String composedStr = new String(composed, StandardCharsets.UTF_8);
+        assertEquals("{crypt}", composedStr.substring(0, 7));
+        assertEquals("$6$", composedStr.substring(7, 10));
+
+        UnixSHACryptPassword parsed = (UnixSHACryptPassword) UserPasswordPasswordUtil.parseUserPassword(composed);
+        assertEquals(UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, parsed.getAlgorithm());
+        assertEquals(5000, parsed.getIterationCount());
+    }
+
+    @Test
+    public void testCryptSha512WithRounds() throws Exception {
+        // Non-default iteration count should be preserved via rounds= parameter
+        byte[] hash = new byte[64];
+        byte[] salt = "saltsalt".getBytes(StandardCharsets.UTF_8);
+        UnixSHACryptPassword original = UnixSHACryptPassword.createRaw(
+                UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, salt, hash, 10000);
+
+        byte[] composed = UserPasswordPasswordUtil.composeUserPassword(original);
+        String composedStr = new String(composed, StandardCharsets.UTF_8);
+        assertEquals("{crypt}", composedStr.substring(0, 7));
+        // Non-default rounds should produce $6$rounds=10000$
+        assertEquals("$6$rounds=10000$", composedStr.substring(7, 23));
+
+        UnixSHACryptPassword parsed = (UnixSHACryptPassword) UserPasswordPasswordUtil.parseUserPassword(composed);
+        assertEquals(UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, parsed.getAlgorithm());
+        assertEquals(10000, parsed.getIterationCount());
+    }
+
+    @Test
+    public void testCryptSha512CaseInsensitive() throws Exception {
+        // {CRYPT} should be case-insensitive
+        byte[] hash = new byte[64];
+        byte[] salt = "saltsalt".getBytes(StandardCharsets.UTF_8);
+        UnixSHACryptPassword original = UnixSHACryptPassword.createRaw(
+                UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, salt, hash, 5000);
+        String cryptStr = ModularCrypt.encodeAsString(original);
+
+        byte[] ldapPassword = ("{CRYPT}" + cryptStr).getBytes(StandardCharsets.UTF_8);
+        Password parsed = UserPasswordPasswordUtil.parseUserPassword(ldapPassword);
+        assertEquals(UnixSHACryptPassword.ALGORITHM_CRYPT_SHA_512, parsed.getAlgorithm());
+    }
 }
