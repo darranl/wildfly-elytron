@@ -55,13 +55,10 @@ jobs:
             echo "file_exists=false" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
-      - name: Run OIDC module tests on JDK ${{ matrix.java }}
+      - name: Build all modules without tests on JDK ${{ matrix.java }}
         run: >-
-          mvn -B verify --file pom.xml
+          mvn -B install --file pom.xml
           -DskipTests
-          -pl http/oidc
-          -am
-        continue-on-error: false
       - name: Run OIDC tests on JDK ${{ matrix.java }}
         run: >-
           mvn -B test --file http/oidc/pom.xml

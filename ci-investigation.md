@@ -79,13 +79,12 @@ The GitHub Actions workflow was updated in [`.github/workflows/pr-ci.yaml`](.git
 
 - runs only on Ubuntu
 - runs only Java 17 and 21
-- skips all tests during the build phase (`-DskipTests`)
-- builds only the http/oidc module and its dependencies (`-pl http/oidc -am`)
-- runs all tests in the http/oidc module in a separate step
+- builds all modules with `mvn install -DskipTests` to ensure dependencies are available
+- runs only the tests in the http/oidc module in a separate step
 - uploads failure artifacts
 - always saves the Maven cache
 
-These changes allow testing all OIDC tests together to identify any test interaction issues while avoiding the overhead of building and testing unrelated modules.
+These changes allow testing all OIDC tests together to identify any test interaction issues while avoiding the overhead of running tests in unrelated modules.
 
 ### 4. Added backchannel logout URL logging
 
@@ -253,8 +252,8 @@ Re-run the narrowed CI workflow and inspect:
 Updated CI workflow to run all OIDC tests together rather than individual tests. This will help identify if there are test interaction issues when multiple OIDC tests run in sequence.
 
 **Implementation:**
-- First step: Build with `-DskipTests -pl http/oidc -am` to compile only the OIDC module and dependencies
-- Second step: Run `mvn test` in the http/oidc directory to execute all OIDC tests
+- First step: Build all modules with `mvn install -DskipTests` to ensure all dependencies are available in the local Maven repository
+- Second step: Run `mvn test --file http/oidc/pom.xml` to execute all OIDC tests
 
 ### Step 7 ⏳ IN PROGRESS
 Re-run CI with all OIDC tests to:
