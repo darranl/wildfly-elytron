@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2022 Red Hat, Inc., and individual contributors
+ * Copyright 2024 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,13 +64,13 @@ import org.wildfly.security.http.HttpServerCookie;
 import org.wildfly.security.http.impl.AbstractBaseHttpTest;
 import org.wildfly.security.jose.util.JsonSerialization;
 
-import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
-import com.gargoylesoftware.htmlunit.TextPage;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.javascript.SilentJavaScriptErrorListener;
+import org.htmlunit.SilentCssErrorHandler;
+import org.htmlunit.TextPage;
+import org.htmlunit.WebClient;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.javascript.SilentJavaScriptErrorListener;
 
 import io.restassured.RestAssured;
 import okhttp3.mockwebserver.Dispatcher;
@@ -340,6 +340,7 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
         WebClient webClient = new WebClient();
         webClient.setCssErrorHandler(new SilentCssErrorHandler());
         webClient.setJavaScriptErrorListener(new SilentJavaScriptErrorListener());
+        webClient.getOptions().setMaxInMemory(50000 * 1024);
         return webClient;
     }
 
@@ -356,7 +357,18 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
     }
 
     protected HtmlInput loginToKeycloak(String username, String password, URI requestUri, String location, List<HttpServerCookie> cookies, boolean keycloakClientExists) throws IOException {
-        WebClient webClient = getWebClient();
+        return loginToKeycloak(getWebClient(), username, password, requestUri, location, cookies, keycloakClientExists);
+    }
+
+    protected HtmlInput loginToKeycloak(WebClient webClient, String username, String password, URI requestUri,
+                                        String location, List<HttpServerCookie> cookies) throws IOException {
+        return loginToKeycloak(webClient, username, password, requestUri, location, cookies, true);
+    }
+
+    protected HtmlInput loginToKeycloak(WebClient webClient, String username, String password, URI requestUri,
+                                        String location, List<HttpServerCookie> cookies, boolean keycloakClientExists) throws IOException {
+
+
         if (cookies != null) {
             for (HttpServerCookie cookie : cookies) {
                 webClient.addCookie(getCookieString(cookie), requestUri.toURL(), null);

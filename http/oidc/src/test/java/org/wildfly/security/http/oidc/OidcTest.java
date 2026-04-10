@@ -79,9 +79,9 @@ import java.util.Map;
 
 import javax.security.auth.callback.CallbackHandler;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.TextPage;
-import com.gargoylesoftware.htmlunit.WebClient;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.TextPage;
+import org.htmlunit.WebClient;
 import io.restassured.RestAssured;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.QueueDispatcher;
