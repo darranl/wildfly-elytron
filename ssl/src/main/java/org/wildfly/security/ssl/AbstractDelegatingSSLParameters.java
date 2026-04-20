@@ -85,11 +85,11 @@ abstract class AbstractDelegatingSSLParameters extends SSLParameters {
     /*===== since Java 8u251 JEP-244 =====*/
 
     public String[] getApplicationProtocols() {
-        return JDKSpecific.getApplicationProtocols(delegate);
+        return delegate.getApplicationProtocols();
     }
 
     public void setApplicationProtocols(String[] protocols) {
-        JDKSpecific.setApplicationProtocols(delegate, protocols);
+        delegate.setApplicationProtocols(protocols);
     }
 
     /*==== 1.8 special ====*/
