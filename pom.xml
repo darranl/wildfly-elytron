@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>50</version>
+        <version>52</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -65,7 +65,7 @@
   </scm>
 
     <properties>
-        <jdk.min.version>17</jdk.min.version>
+        <jdk.min.version>25</jdk.min.version>
 
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
@@ -175,7 +175,7 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>11</release>
+                            <release>17</release>
                             <buildDirectory>${project.build.directory}</buildDirectory>
                             <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
