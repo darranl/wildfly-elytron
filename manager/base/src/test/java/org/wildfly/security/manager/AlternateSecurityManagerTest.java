@@ -83,6 +83,8 @@ public class AlternateSecurityManagerTest {
      */
     private volatile URL ourCodeSource;
 
+    private boolean securityManagerInstalled = false;
+
     @Before
     public void before() {
         Assume.assumeTrue("Skipping AlternateSecurityManagerTest suite, tests are not being run on JDK 17 or lower.",
@@ -95,15 +97,18 @@ public class AlternateSecurityManagerTest {
 
         System.setProperty(KEY, VALUE);
         System.setSecurityManager(securityManager);
+        securityManagerInstalled = true;
         securityManager.reset();
     }
 
     @After
     public void removeSecurityManager() {
-        System.setSecurityManager(null);
-        System.clearProperty(KEY);
-        securityManager.reset();
-
+        if (securityManagerInstalled) {
+            System.setSecurityManager(null);
+            System.clearProperty(KEY);
+            securityManager.reset();
+            securityManagerInstalled = false;
+        }
         context = null;
     }
 

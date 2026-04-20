@@ -70,4 +70,10 @@ public interface SecurityMessages extends BasicLogger {
 
     @Message(id = 8, value = "Invalid permission (expected an instance of %s, but got %s)")
     IllegalArgumentException wrongPermType(Class<? extends Permission> expectedType, Permission permission);
+
+    @Message(id = 9, value = "SecurityManager.checkPermission() is not supported on Java 25+. SecurityManager enforcement has been disabled by the JVM.")
+    UnsupportedOperationException securityManagerNotSupported();
+
+    @Message(id = 10, value = "SecurityManager.%s() is not supported on Java 25+. SecurityManager enforcement has been disabled by the JVM.")
+    UnsupportedOperationException securityManagerMethodNotSupported(String methodName);
 }

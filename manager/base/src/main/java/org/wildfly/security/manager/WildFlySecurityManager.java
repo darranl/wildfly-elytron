@@ -132,14 +132,46 @@ public final class WildFlySecurityManager extends SecurityManager implements Per
         boolean result = false;
         try {
             /*
-             * If JDKSpecific.getCallerClass(0) does not return this class assume a fault and fall back to using
+             * If getCallerClassInternal(0) does not return this class assume a fault and fall back to using
              * SecurityManager.getClassContext().
              */
-            result = JDKSpecific.getCallerClass(0) == WildFlySecurityManager.class;
+            result = getCallerClassInternal(0) == WildFlySecurityManager.class;
         } catch (Throwable ignored) {}
         hasGetCallerClass = result;
-        usingStackWalker = hasGetCallerClass && JDKSpecific.usingStackWalker();
+        usingStackWalker = hasGetCallerClass && usingStackWalkerInternal();
         LOG_ONLY = Boolean.parseBoolean(doPrivileged(new ReadPropertyAction("org.wildfly.security.manager.log-only", "false")));
+    }
+
+    /*
+     * Using StackWalker the OFFSET is the minimum number of StackFrames, the first will always be
+     * getCallerClassInternal(int), the second will always be the caller of this method.
+     */
+    private static final int STACK_WALKER_OFFSET = 2;
+
+    /**
+     * Get the caller class using StackWalker (JDK 9+).
+     *
+     * @param n the number of frames to skip
+     * @return the caller class
+     */
+    private static Class<?> getCallerClassInternal(int n) {
+        // Although we know WildFlySecurityManager is making the call it may not be the actual SecurityManager
+        // so we need to use doPrivileged instead of a doUnchecked unless we can be sure checking has been switched off.
+        final java.lang.StackWalker stackWalker = isChecking() ?
+                doPrivileged((PrivilegedAction<java.lang.StackWalker>) WildFlySecurityManager::getStackWalkerInstance) : getStackWalkerInstance();
+
+        java.util.List<java.lang.StackWalker.StackFrame> frames = stackWalker.walk(s ->
+                s.limit(n + STACK_WALKER_OFFSET).collect(java.util.stream.Collectors.toList())
+        );
+        return frames.get(frames.size() - 1).getDeclaringClass();
+    }
+
+    private static java.lang.StackWalker getStackWalkerInstance() {
+        return java.lang.StackWalker.getInstance(java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE);
+    }
+
+    private static boolean usingStackWalkerInternal() {
+        return true;
     }
 
     /**
@@ -163,10 +195,10 @@ public final class WildFlySecurityManager extends SecurityManager implements Per
              * An additional 1 is added to take into account the call to.
              *   WildFlySecurityManager.getCallerClass(int);
              *
-             * The individual JDKSpecific.getCallerClass(int) implementations take care
-             * of any offset they require.
+             * The getCallerClassInternal(int) implementation takes care
+             * of any offset it requires.
              */
-            return JDKSpecific.getCallerClass(n + 1);
+            return getCallerClassInternal(n + 1);
         } else {
             /*
              * Fixed offset of 2 to take into account the following calls on the call stack: -
