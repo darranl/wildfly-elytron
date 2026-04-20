@@ -283,13 +283,6 @@
                         <reuseForks>false</reuseForks>
                         <argLine>-javaagent:${settings.localRepository}/org/jmockit/jmockit/${version.jmockit}/jmockit-${version.jmockit}.jar ${modular.jdk.args} ${modular.jdk.props}</argLine>
                         <!-- See also excludedGroups property in profiles -->
-                        <!-- Toolchains configuration for multi-version testing -->
-                        <!-- Use toolchain if jdk.test.version property is set (e.g., -Djdk.test.version=17) -->
-                        <!-- Optional: specify vendor with -Djdk.test.vendor=temurin or -Djdk.test.vendor=semeru -->
-                        <jdkToolchain>
-                            <version>${jdk.test.version}</version>
-                            <vendor>${jdk.test.vendor}</vendor>
-                        </jdkToolchain>
                     </configuration>
                 </plugin>
 
