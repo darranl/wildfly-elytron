@@ -255,6 +255,8 @@
                                 <version>${jdk.test.version}</version>
                                 <vendor>${jdk.test.vendor}</vendor>
                             </jdkToolchain>
+                            <!-- Use vendor-specific report directory for single-version testing -->
+                            <reportsDirectory>${project.build.directory}/surefire-reports-java${jdk.test.version}-${jdk.test.vendor}</reportsDirectory>
                         </configuration>
                     </execution>
                 </executions>
