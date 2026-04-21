@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,14 +56,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** @author <a href="mailto:jrodri@redhat.com">Jessica Rodriguez</a> */
 public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
 
-    private static final String RELATIVE_BASE_DIR = "./target/test-classes/filesystem-integrity/";
-    private static final String RELATIVE_UNSIGNED_DIR = RELATIVE_BASE_DIR + "fs-unsigned-realms/";
-    private static final String RELATIVE_SIGNED_DIR = RELATIVE_BASE_DIR + "fs-signed-realms/";
+    // Immutable source directories (test-classes) - DO NOT MODIFY
+    private static final String TEST_RESOURCES_DIR = "./target/test-classes/filesystem-integrity/";
+    private static final String TEST_RESOURCES_UNSIGNED_DIR = TEST_RESOURCES_DIR + "fs-unsigned-realms/";
+    private static final String TEST_RESOURCES_SIGNED_DIR = TEST_RESOURCES_DIR + "fs-signed-realms/";
+
+    // Mutable working directories (test-output) - safe to modify during tests
+    private static final String TEST_OUTPUT_DIR = "./target/test-output/filesystem-integrity/";
+    private static final String TEST_OUTPUT_UNSIGNED_DIR = TEST_OUTPUT_DIR + "fs-unsigned-realms/";
+    private static final String TEST_OUTPUT_SIGNED_DIR = TEST_OUTPUT_DIR + "fs-signed-realms/";
+
+    // Legacy constants for backward compatibility (now point to test-output)
+    private static final String RELATIVE_BASE_DIR = TEST_OUTPUT_DIR;
+    private static final String RELATIVE_UNSIGNED_DIR = TEST_OUTPUT_UNSIGNED_DIR;
+    private static final String RELATIVE_SIGNED_DIR = TEST_OUTPUT_SIGNED_DIR;
 
     /* KeyStores (expires around June 2031) & credential stores used:
      *
@@ -72,9 +86,102 @@ public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
      * > fsKeyStoreEmpty.jks - JKS keystore. No aliases.
      * > fsCredStore.cs - SecretKey credential store. Two SecretKey aliases: secKey and key
      */
-    private static final Path FS_KEYSTORE_PATH = Paths.get(RELATIVE_BASE_DIR, "fsKeyStore.pfx");
+    private static final Path FS_KEYSTORE_PATH = Paths.get(TEST_RESOURCES_DIR, "fsKeyStore.pfx");
     private static final Path FS_REALM_SIGNED_PATH = Paths.get(RELATIVE_SIGNED_DIR);
     private static final String KEYSTORE_PASSWORD = "Guk]i%Aua4-wB";
+
+    @BeforeClass
+    public static void setupTestEnvironment() throws IOException {
+        // Create clean working directory structure
+        Path outputBase = Paths.get(TEST_OUTPUT_DIR);
+        if (outputBase.toFile().exists()) {
+            Files.walk(outputBase)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+        // Create base directory and subdirectories
+        Files.createDirectories(Paths.get(TEST_OUTPUT_DIR));
+        Files.createDirectories(Paths.get(TEST_OUTPUT_UNSIGNED_DIR));
+        Files.createDirectories(Paths.get(TEST_OUTPUT_SIGNED_DIR));
+
+        // Copy test resources from test-classes to test-output
+        copyDirectory(Paths.get(TEST_RESOURCES_UNSIGNED_DIR), Paths.get(TEST_OUTPUT_UNSIGNED_DIR));
+
+        // Copy keystore and credential store files to test-output base
+        copyFile(Paths.get(TEST_RESOURCES_DIR, "fsKeyStore.pfx"), Paths.get(TEST_OUTPUT_DIR, "fsKeyStore.pfx"));
+        copyFile(Paths.get(TEST_RESOURCES_DIR, "fsKeyStoreEC.jceks"), Paths.get(TEST_OUTPUT_DIR, "fsKeyStoreEC.jceks"));
+        copyFile(Paths.get(TEST_RESOURCES_DIR, "fsKeyStoreEmpty.jks"), Paths.get(TEST_OUTPUT_DIR, "fsKeyStoreEmpty.jks"));
+        copyFile(Paths.get(TEST_RESOURCES_DIR, "fsCredStore.cs"), Paths.get(TEST_OUTPUT_DIR, "fsCredStore.cs"));
+
+        // Copy in-place upgrade test realms (these are in TEST_RESOURCES_DIR, not in unsigned subdirectory)
+        Path inPlaceSource = Paths.get(TEST_RESOURCES_DIR, "fsRealmUpgradeInPlace");
+        Path inPlaceDest = Paths.get(TEST_OUTPUT_DIR, "fsRealmUpgradeInPlace");
+        if (inPlaceSource.toFile().exists()) {
+            copyDirectory(inPlaceSource, inPlaceDest);
+        }
+
+        Path inPlaceBulkSource = Paths.get(TEST_RESOURCES_DIR, "fsRealmUpgradeInPlaceBulk");
+        Path inPlaceBulkDest = Paths.get(TEST_OUTPUT_DIR, "fsRealmUpgradeInPlaceBulk");
+        if (inPlaceBulkSource.toFile().exists()) {
+            copyDirectory(inPlaceBulkSource, inPlaceBulkDest);
+        }
+
+        // Copy and update bulk conversion descriptors (replace test-classes with test-output)
+        Path bulkDescSource = Paths.get(TEST_RESOURCES_DIR).getParent().resolve("bulk-integrity-conversion-desc");
+        Path bulkDescDest = Paths.get(TEST_OUTPUT_DIR).getParent().resolve("bulk-integrity-conversion-desc");
+        if (bulkDescSource.toFile().exists()) {
+            copyAndUpdateBulkDescriptor(bulkDescSource, bulkDescDest);
+        }
+
+        // Copy and update invalid bulk conversion descriptor
+        Path bulkDescInvalidSource = Paths.get(TEST_RESOURCES_DIR).getParent().resolve("bulk-integrity-conversion-desc-INVALID");
+        Path bulkDescInvalidDest = Paths.get(TEST_OUTPUT_DIR).getParent().resolve("bulk-integrity-conversion-desc-INVALID");
+        if (bulkDescInvalidSource.toFile().exists()) {
+            copyAndUpdateBulkDescriptor(bulkDescInvalidSource, bulkDescInvalidDest);
+        }
+    }
+
+    private static void copyDirectory(Path source, Path target) throws IOException {
+        if (!source.toFile().exists()) {
+            return;
+        }
+        Files.walk(source)
+                .forEach(sourcePath -> {
+                    try {
+                        Path targetPath = target.resolve(source.relativize(sourcePath));
+                        if (Files.isDirectory(sourcePath)) {
+                            Files.createDirectories(targetPath);
+                        } else {
+                            Files.copy(sourcePath, targetPath);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private static void copyFile(Path source, Path target) throws IOException {
+        if (!source.toFile().exists()) {
+            return;
+        }
+        Files.createDirectories(target.getParent());
+        Files.copy(source, target);
+    }
+
+    private static void copyAndUpdateBulkDescriptor(Path source, Path target) throws IOException {
+        if (!source.toFile().exists()) {
+            return;
+        }
+        Files.createDirectories(target.getParent());
+        List<String> lines = Files.readAllLines(source);
+        List<String> updatedLines = new ArrayList<>();
+        for (String line : lines) {
+            // Replace test-classes with test-output in all paths
+            updatedLines.add(line.replace("test-classes", "test-output"));
+        }
+        Files.write(target, updatedLines);
+    }
 
     @Override
     protected String getCommandType() {
@@ -400,7 +507,7 @@ public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
     public void testBulkUpgradeAndRealmEnumeration() {
         // Also run with a summary
         String[] args = {
-                "--" + BULK_CONVERT_PARAM, Paths.get("./target/test-classes/bulk-integrity-conversion-desc").toString(),
+                "--" + BULK_CONVERT_PARAM, Paths.get("./target/test-output/bulk-integrity-conversion-desc").toString(),
                 "--summary"
         };
 
@@ -413,9 +520,9 @@ public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
         File[] signedRealmDirs = FS_REALM_SIGNED_PATH.toFile().listFiles();
 
         assertTrue("Could not find upgraded realm fsRealmUpgradeInPlaceBulk",
-                Paths.get(RELATIVE_BASE_DIR, "fsRealmUpgradeInPlaceBulk", "a", "l", "alice-MFWGSY3F.xml").toFile().exists());
+                Paths.get(TEST_OUTPUT_DIR, "fsRealmUpgradeInPlaceBulk", "a", "l", "alice-MFWGSY3F.xml").toFile().exists());
         assertTrue("Could not find creation of realm fsRealmEncryptedBulk",
-                Paths.get(RELATIVE_SIGNED_DIR, "fsRealmEncryptedBulk", "M","J", "X", "W", "MJXWE.xml" ).toFile().exists());
+                Paths.get(TEST_OUTPUT_SIGNED_DIR, "fsRealmEncryptedBulk", "M","J", "X", "W", "MJXWE.xml" ).toFile().exists());
         assertTrue("No signed filesystem realms could be found in " + FS_REALM_SIGNED_PATH.normalize().toAbsolutePath(),
                 signedRealmDirs != null && signedRealmDirs.length > 0);
 
@@ -617,7 +724,7 @@ public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
     @Test
     public void testInvalidBulkUpgrade() {
         String[] args = {
-                "--" + BULK_CONVERT_PARAM, Paths.get("./target/test-classes/bulk-integrity-conversion-desc-INVALID").toString(),
+                "--" + BULK_CONVERT_PARAM, Paths.get("./target/test-output/bulk-integrity-conversion-desc-INVALID").toString(),
                 "--summary"
         };
 
@@ -853,6 +960,18 @@ public class FileSystemRealmIntegrityCommandTest extends AbstractCommandTest {
         public ScriptParameters setCredentialStorePath(Path credentialStorePath) {
             this.credentialStorePath = credentialStorePath.normalize().toAbsolutePath().toString();
             return new ScriptParameters(this);
+        }
+    }
+
+    @AfterClass
+    public static void cleanup() throws Exception {
+        // Cleanup only test-output directory (working directory), leave test-classes untouched
+        Path outputPath = Paths.get(TEST_OUTPUT_DIR);
+        if (outputPath.toFile().exists()) {
+            Files.walk(outputPath)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
         }
     }
 }
