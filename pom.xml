@@ -67,6 +67,10 @@
     <properties>
         <jdk.min.version>25</jdk.min.version>
 
+        <!-- Testing properties -->
+        <jdk.test.version>25</jdk.test.version>
+        <jdk.test.vendor>temurin</jdk.test.vendor>
+
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
         <autoVersionSubmodules>true</autoVersionSubmodules>
@@ -246,6 +250,11 @@
                             <additionalClasspathElements>
                                 <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
                             </additionalClasspathElements>
+                            <!-- Enable toolchain support for single-version testing -->
+                            <jdkToolchain>
+                                <version>${jdk.test.version}</version>
+                                <vendor>${jdk.test.vendor}</vendor>
+                            </jdkToolchain>
                         </configuration>
                     </execution>
                 </executions>
@@ -1383,6 +1392,12 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <executions>
+                            <!-- Skip default test execution, only run version-specific tests -->
+                            <execution>
+                                <id>default-test</id>
+                                <phase>none</phase>
+                            </execution>
+                            
                             <!-- Test with Java 17 -->
                             <execution>
                                 <id>test-java-17</id>
@@ -1758,6 +1773,7 @@
         <module>auth/util</module>
         <module>auth/client</module>
         <module>base</module>
+
         <module>credential/base</module>
         <module>credential/store</module>
         <module>credential/source/deprecated</module>
