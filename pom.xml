@@ -70,6 +70,9 @@
         <!-- Testing properties -->
         <jdk.test.version>25</jdk.test.version>
         <jdk.test.vendor>temurin</jdk.test.vendor>
+        
+        <!-- Skip JDK 21+ tests when testing with Java 17 -->
+        <skipJdk21Tests>false</skipJdk21Tests>
 
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
@@ -1312,11 +1315,28 @@
             </modules>
         </profile>
         <profile>
+            <id>skip-jdk21-tests</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>17</value>
+                </property>
+            </activation>
+            <properties>
+                <skipJdk21Tests>true</skipJdk21Tests>
+            </properties>
+        </profile>
+
+        <profile>
             <id>test-all-versions</id>
             <properties>
                 <!-- Default to Temurin if not specified -->
                 <jdk.test.vendor>temurin</jdk.test.vendor>
             </properties>
+            <modules>
+                <!-- Include JDK 21+ test module for multi-version testing -->
+                <module>tests/jdk21</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -1329,7 +1349,7 @@
                                 <phase>none</phase>
                             </execution>
                             
-                            <!-- Test with Java 17 -->
+                            <!-- Test with Java 17 - skip JDK 21+ specific test modules -->
                             <execution>
                                 <id>test-java-17</id>
                                 <goals>

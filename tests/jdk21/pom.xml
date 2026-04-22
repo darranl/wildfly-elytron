@@ -46,6 +46,9 @@
                 <configuration>
                     <release>21</release>
                     <testRelease>21</testRelease>
+                    <!-- Skip compilation if tests will be skipped -->
+                    <skipMain>${skipJdk21Tests}</skipMain>
+                    <skip>${skipJdk21Tests}</skip>
                 </configuration>
             </plugin>
             <plugin>
@@ -60,6 +63,29 @@
                         <include>**/*TestSuite.java</include>
                     </includes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Skip tests if JDK version is less than 21 -->
+                            <skip>${skipJdk21Tests}</skip>
+                            <!-- Use toolchain to run tests with specified JDK version -->
+                            <jdkToolchain>
+                                <version>${jdk.test.version}</version>
+                                <vendor>${jdk.test.vendor}</vendor>
+                            </jdkToolchain>
+                            <!-- Use vendor-specific report directory -->
+                            <reportsDirectory>${project.build.directory}/surefire-reports-java${jdk.test.version}-${jdk.test.vendor}</reportsDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Skip Java 17 tests - bytecode is Java 21 -->
+                    <execution>
+                        <id>test-java-17</id>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
