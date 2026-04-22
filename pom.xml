@@ -253,13 +253,8 @@
                             <additionalClasspathElements>
                                 <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
                             </additionalClasspathElements>
-                            <!-- Enable toolchain support for single-version testing -->
-                            <jdkToolchain>
-                                <version>${jdk.test.version}</version>
-                                <vendor>${jdk.test.vendor}</vendor>
-                            </jdkToolchain>
-                            <!-- Use vendor-specific report directory for single-version testing -->
-                            <reportsDirectory>${project.build.directory}/surefire-reports-java${jdk.test.version}-${jdk.test.vendor}</reportsDirectory>
+                            <!-- Default test execution uses JDK on PATH/JAVA_HOME -->
+                            <!-- For explicit version testing, use -Djdk.test.version=X or -Ptest-all-versions -->
                         </configuration>
                     </execution>
                 </executions>
@@ -1325,6 +1320,41 @@
             <properties>
                 <skipJdk21Tests>true</skipJdk21Tests>
             </properties>
+        </profile>
+
+        <profile>
+            <id>single-version-test</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- Default to Temurin if not specified -->
+                <jdk.test.vendor>temurin</jdk.test.vendor>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <configuration>
+                                    <!-- Enable toolchain support for single-version testing -->
+                                    <jdkToolchain>
+                                        <version>${jdk.test.version}</version>
+                                        <vendor>${jdk.test.vendor}</vendor>
+                                    </jdkToolchain>
+                                    <!-- Use vendor-specific report directory -->
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-java${jdk.test.version}-${jdk.test.vendor}</reportsDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
         <profile>
