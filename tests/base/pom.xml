@@ -54,6 +54,7 @@
     <properties>
         <version.org.codehaus.mojo.xml.plugin>1.0.2</version.org.codehaus.mojo.xml.plugin>
         <version.org.glassfish.jaxb.jaxb-runtime>2.4.0-b180830.0438</version.org.glassfish.jaxb.jaxb-runtime>
+        <!-- Inherit surefire version from parent POM (jboss-parent) for toolchain support -->
     </properties>
 
     <build>
@@ -273,27 +274,8 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <trimStackTrace>false</trimStackTrace>
-                    <forkCount>1</forkCount>
-                    <reuseForks>false</reuseForks>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>default-test</id>
-                        <configuration>
-                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
-                            </additionalClasspathElements>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- Surefire configuration inherited from parent POM -->
+            <!-- Parent POM handles multi-release JAR testing and toolchain support -->
         </plugins>
 
         <pluginManagement>
@@ -303,7 +285,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${version.surefire.plugin}</version>
+                    <!-- Version inherited from parent POM (jboss-parent) for toolchain support -->
                     <configuration>
                         <systemPropertyVariables>
                             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -821,7 +803,7 @@
                 <!-- use version of jboss-logging that works much better with JDK9 -->
                 <modular.jdk.props>-Djdk.attach.allowAttachSelf=true</modular.jdk.props>
                 <!-- 2.20.x doesn't start on JDK10-->
-                <version.surefire.plugin>2.19.1</version.surefire.plugin>
+        <!-- Surefire version inherited from parent POM (jboss-parent) for toolchain support -->
             </properties>
         </profile>
         <profile>
