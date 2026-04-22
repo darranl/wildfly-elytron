@@ -1301,78 +1301,7 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>java8-test-profile</id>
-            <activation>
-                <property>
-                    <name>java8.home</name>
-                </property>
-            </activation>
-            <properties>
-                <modular.jdk.args />
-                <modular.jdk.props />
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>java8-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <reportsDirectory>${project.build.directory}/surefire-reports/java8</reportsDirectory>
-                                    <jvm>${java8.home}/bin/java</jvm>
-                                    <additionalClasspathElements>
-                                        <additionalClasspathElement>${java8.home}/lib/tools.jar</additionalClasspathElement>
-                                    </additionalClasspathElements>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>java9-test-profile</id>
-            <activation>
-                <property>
-                    <name>java9.home</name>
-                </property>
-            </activation>
-            <properties>
-                <modular.jdk.args />
-                <modular.jdk.props />
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>java9-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <reportsDirectory>${project.build.directory}/surefire-reports/java9</reportsDirectory>
-                                    <jvm>${java9.home}/bin/java</jvm>
-                                    <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
-                                    <additionalClasspathElements>
-                                        <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                                        <additionalClasspathElement>${java9.home}/lib/tools.jar</additionalClasspathElement>
-                                    </additionalClasspathElements>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+
         <profile>
             <id>jdk21-test-profile</id>
             <activation>
