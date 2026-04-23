@@ -81,17 +81,17 @@ jobs:
           sudo bash -c "echo '::1         localhost localhost.localdomain localhost6 localhost6.localdomain6' >> /etc/hosts"
           sudo sysctl -w fs.file-max=2097152
       - uses: actions/checkout@v2
-      - name: Set up JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '25'
+          java-version: '21'
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-elytron-web-4.x-jdk25-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-elytron-web-4.x-jdk25-m2
+          key: ${{ runner.os }}-elytron-web-4.x-jdk21-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-elytron-web-4.x-jdk21-m2
       - name: Version Info
         run: mvn -version
       - name: Resolve Elytron version

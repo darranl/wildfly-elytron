@@ -212,7 +212,7 @@ public class DynamicSSLContextTest {
         SSLSocketFactory dynamicSSLContextSocketFactory = dynamicSSLContext.getSocketFactory();
         getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml").run(() -> {
             try {
-                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContextSocketFactory.createSocket(InetAddress.getByName("localhost"), 10001, InetAddress.getByName("localhost"), 12555);
+                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContextSocketFactory.createSocket(InetAddress.getByName("localhost"), 10001, InetAddress.getByName("localhost"), 0);
                 clientSslSocket.setReuseAddress(true);
                 checkOutputIsOK(clientSslSocket);
                 clientSslSocket.close();

@@ -33,6 +33,27 @@
     <name>WildFly Elytron - Security Manager</name>
     <description>WildFly Security Security Manager</description>
     
+    <properties>
+        <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+        <surefire.security.manager.arg></surefire.security.manager.arg>
+    </properties>
+    
+    <profiles>
+        <!-- Enable SecurityManager for Java 21 tests -->
+        <profile>
+            <id>java21-security-manager</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>21</value>
+                </property>
+            </activation>
+            <properties>
+                <surefire.security.manager.arg>-Djava.security.manager=allow</surefire.security.manager.arg>
+            </properties>
+        </profile>
+    </profiles>
+    
     <build>
         <plugins>
             <plugin>
@@ -78,7 +99,24 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin>    
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+                            <argLine>${surefire.security.manager.arg}</argLine>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     

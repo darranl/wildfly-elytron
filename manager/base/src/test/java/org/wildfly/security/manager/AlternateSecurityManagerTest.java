@@ -87,8 +87,11 @@ public class AlternateSecurityManagerTest {
 
     @Before
     public void before() {
-        Assume.assumeTrue("Skipping AlternateSecurityManagerTest suite, tests are not being run on JDK 17 or lower.",
-                Integer.parseInt(System.getProperty("java.specification.version")) <= 17);
+        Assume.assumeTrue("Skipping AlternateSecurityManagerTest suite, tests are not being run on JDK 21 or lower.",
+                Integer.parseInt(System.getProperty("java.specification.version")) <= 21);
+        String javaVendor = System.getProperty("java.vendor", "").toLowerCase();
+        Assume.assumeFalse("Skipping AlternateSecurityManagerTest suite on Semeru (ELY-3037).",
+                javaVendor.contains("ibm") || javaVendor.contains("semeru"));
         AccessControlContext current = AccessController.getContext();
         ProtectionDomain[] domains = getProtectionDomainStack(current);
 
