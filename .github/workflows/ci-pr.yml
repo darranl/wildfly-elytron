@@ -2,7 +2,7 @@ name: CI - Pull Request
 
 on:
   pull_request:
-    branches: [ 2.x ]
+    branches: [ 3.x ]
 
 jobs:
   build-and-test-linux:
@@ -219,7 +219,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 17 (Temurin)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java17-temurin/TEST-*.xml'
@@ -227,7 +227,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 17 (Temurin)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java17-temurin.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java17-temurin.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java17-temurin-linux
@@ -271,7 +271,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 17 (Semeru)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java17-semeru/TEST-*.xml'
@@ -279,7 +279,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 17 (Semeru)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java17-semeru.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java17-semeru.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java17-semeru-linux
@@ -323,7 +323,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 21 (Temurin)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java21-temurin/TEST-*.xml'
@@ -331,7 +331,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 21 (Temurin)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java21-temurin.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java21-temurin.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java21-temurin-linux
@@ -375,7 +375,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 21 (Semeru)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java21-semeru/TEST-*.xml'
@@ -383,7 +383,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 21 (Semeru)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java21-semeru.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java21-semeru.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java21-semeru-linux
@@ -427,7 +427,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 25 (Temurin)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java25-temurin/TEST-*.xml'
@@ -435,7 +435,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 25 (Temurin)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java25-temurin.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java25-temurin.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java25-temurin-linux
@@ -479,7 +479,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 25 (Semeru)
-        if: always() && github.base_ref == '2.x'
+        if: always() && github.base_ref == '3.x'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java25-semeru/TEST-*.xml'
@@ -487,7 +487,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 25 (Semeru)
-        if: failure() && github.base_ref == '2.x' && steps.test-elytron-web-java25-semeru.outcome == 'failure'
+        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java25-semeru.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java25-semeru-linux
