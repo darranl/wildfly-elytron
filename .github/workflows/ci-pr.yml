@@ -169,6 +169,7 @@ jobs:
       
       # 5a. Resolve Elytron version for elytron-web testing
       - name: Resolve Elytron version
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: elytron_version
         shell: bash
         run: |
@@ -176,6 +177,7 @@ jobs:
       
       # 5b. Check out Elytron Web
       - name: Check out Elytron Web
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         uses: actions/checkout@v4
         with:
           repository: wildfly-security/elytron-web
@@ -207,8 +209,9 @@ jobs:
           path: '**/target/surefire-reports-java17-temurin/**'
           retention-days: 30
       
-      # 6a. Run Elytron Web tests with Java 17 (Temurin) - only for 2.x branch
+      # 6a. Run Elytron Web tests with Java 17 (Temurin) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 17 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java17-temurin
 
         working-directory: elytron-web
@@ -219,7 +222,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 17 (Temurin)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java17-temurin/TEST-*.xml'
@@ -227,7 +230,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 17 (Temurin)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java17-temurin.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java17-temurin-linux
@@ -259,8 +262,9 @@ jobs:
           path: '**/target/surefire-reports-java17-semeru/**'
           retention-days: 30
       
-      # 7a. Run Elytron Web tests with Java 17 (Semeru) - only for 2.x branch
+      # 7a. Run Elytron Web tests with Java 17 (Semeru) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 17 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java17-semeru
 
         working-directory: elytron-web
@@ -271,7 +275,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 17 (Semeru)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java17-semeru/TEST-*.xml'
@@ -279,7 +283,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 17 (Semeru)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java17-semeru.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java17-semeru-linux
@@ -311,8 +315,9 @@ jobs:
           path: '**/target/surefire-reports-java21-temurin/**'
           retention-days: 30
       
-      # 8a. Run Elytron Web tests with Java 21 (Temurin) - only for 2.x branch
+      # 8a. Run Elytron Web tests with Java 21 (Temurin) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 21 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java21-temurin
 
         working-directory: elytron-web
@@ -323,7 +328,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 21 (Temurin)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java21-temurin/TEST-*.xml'
@@ -331,7 +336,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 21 (Temurin)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java21-temurin.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java21-temurin-linux
@@ -363,8 +368,9 @@ jobs:
           path: '**/target/surefire-reports-java21-semeru/**'
           retention-days: 30
       
-      # 9a. Run Elytron Web tests with Java 21 (Semeru) - only for 2.x branch
+      # 9a. Run Elytron Web tests with Java 21 (Semeru) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 21 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java21-semeru
 
         working-directory: elytron-web
@@ -375,7 +381,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 21 (Semeru)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java21-semeru/TEST-*.xml'
@@ -383,7 +389,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 21 (Semeru)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java21-semeru.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java21-semeru-linux
@@ -415,8 +421,9 @@ jobs:
           path: '**/target/surefire-reports-java25-temurin/**'
           retention-days: 30
       
-      # 10a. Run Elytron Web tests with Java 25 (Temurin) - only for 2.x branch
+      # 10a. Run Elytron Web tests with Java 25 (Temurin) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 25 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java25-temurin
 
         working-directory: elytron-web
@@ -427,7 +434,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 25 (Temurin)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java25-temurin/TEST-*.xml'
@@ -435,7 +442,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 25 (Temurin)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java25-temurin.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java25-temurin-linux
@@ -467,8 +474,9 @@ jobs:
           path: '**/target/surefire-reports-java25-semeru/**'
           retention-days: 30
       
-      # 11a. Run Elytron Web tests with Java 25 (Semeru) - only for 2.x branch
+      # 11a. Run Elytron Web tests with Java 25 (Semeru) - temporarily disabled on 3.x
       - name: Test Elytron Web with Java 25 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
         id: test-elytron-web-java25-semeru
 
         working-directory: elytron-web
@@ -479,7 +487,7 @@ jobs:
         continue-on-error: true
       
       - name: Publish Elytron Web test results - Java 25 (Semeru)
-        if: always() && github.base_ref == '3.x'
+        if: false
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: 'elytron-web/**/target/surefire-reports-java25-semeru/TEST-*.xml'
@@ -487,7 +495,7 @@ jobs:
           comment_mode: off
       
       - name: Upload Elytron Web test results - Java 25 (Semeru)
-        if: failure() && github.base_ref == '3.x' && steps.test-elytron-web-java25-semeru.outcome == 'failure'
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: elytron-web-test-results-java25-semeru-linux
@@ -533,36 +541,7 @@ jobs:
             FAILED=1
           fi
           
-          # Check Elytron Web tests
-          if [ "${{ steps.test-elytron-web-java17-temurin.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 17 (Temurin) tests failed"
-            FAILED=1
-          fi
-          
-          if [ "${{ steps.test-elytron-web-java17-semeru.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 17 (Semeru) tests failed"
-            FAILED=1
-          fi
-          
-          if [ "${{ steps.test-elytron-web-java21-temurin.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 21 (Temurin) tests failed"
-            FAILED=1
-          fi
-          
-          if [ "${{ steps.test-elytron-web-java21-semeru.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 21 (Semeru) tests failed"
-            FAILED=1
-          fi
-          
-          if [ "${{ steps.test-elytron-web-java25-temurin.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 25 (Temurin) tests failed"
-            FAILED=1
-          fi
-          
-          if [ "${{ steps.test-elytron-web-java25-semeru.outcome }}" != "success" ]; then
-            echo "❌ Elytron Web - Java 25 (Semeru) tests failed"
-            FAILED=1
-          fi
+          # Elytron Web checks intentionally disabled on 3.x until a compatible Elytron Web branch is available
           
           if [ $FAILED -eq 1 ]; then
             echo "::error::One or more test permutations failed"
