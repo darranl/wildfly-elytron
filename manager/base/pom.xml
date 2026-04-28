@@ -33,16 +33,32 @@
     <name>WildFly Elytron - Security Manager</name>
     <description>WildFly Security Security Manager</description>
     
+    <properties>
+        <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+        <surefire.security.manager.arg></surefire.security.manager.arg>
+    </properties>
+    
+    <profiles>
+        <!-- Enable SecurityManager for Java 21 tests -->
+        <profile>
+            <id>java21-security-manager</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>21</value>
+                </property>
+            </activation>
+            <properties>
+                <surefire.security.manager.arg>-Djava.security.manager=allow</surefire.security.manager.arg>
+            </properties>
+        </profile>
+    </profiles>
+    
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0-jboss-1</version>
-                <!-- To retain the ability to have jdk-misc.jar on the compiler classpath
-                    this plugin version and the "release" setting of 8 must be retained.
-                    Classes in jdk-misc.jar have been removed or deprecated in jdk-11+.
-                -->
                 <executions>
                     <execution>
                         <id>default-compile</id>
@@ -51,29 +67,21 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>8</release>
-                            <buildDirectory>${project.build.directory}</buildDirectory>
-                            <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.directory}/jdk-misc.jar</additionalClasspathElement>
-                            </additionalClasspathElements>
+                            <release>17</release>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>compile-java9</id>
+                        <id>compile-java25</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>9</release>
-                            <buildDirectory>${project.build.directory}</buildDirectory>
-                            <compileSourceRoots>${project.basedir}/src/main/java9</compileSourceRoots>
-                            <outputDirectory>${project.build.directory}/classes/META-INF/versions/9</outputDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                            </additionalClasspathElements>
+                            <release>25</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java25</compileSourceRoot>
+                            </compileSourceRoots>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -91,7 +99,24 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin>    
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+                            <argLine>${surefire.security.manager.arg}</argLine>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     

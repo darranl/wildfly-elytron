@@ -45,19 +45,19 @@ abstract class AbstractDelegatingSSLSocket extends SSLSocket {
     }
 
     public String getApplicationProtocol() {
-        return JDKSpecific.getApplicationProtocol(delegate);
+        return delegate.getApplicationProtocol();
     }
 
     public String getHandshakeApplicationProtocol() {
-        return JDKSpecific.getHandshakeApplicationProtocol(delegate);
+        return delegate.getHandshakeApplicationProtocol();
     }
 
     public void setHandshakeApplicationProtocolSelector(BiFunction<SSLSocket, List<String>, String> selector) {
-        JDKSpecific.setHandshakeApplicationProtocolSelector(delegate, selector);
+        delegate.setHandshakeApplicationProtocolSelector(selector);
     }
 
     public BiFunction<SSLSocket, List<String>, String> getHandshakeApplicationProtocolSelector() {
-        return JDKSpecific.getHandshakeApplicationProtocolSelector(delegate);
+        return delegate.getHandshakeApplicationProtocolSelector();
     }
 
     public String[] getSupportedCipherSuites() {

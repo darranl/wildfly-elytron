@@ -1,0 +1,551 @@
+name: CI - Pull Request
+
+on:
+  pull_request:
+    branches: [ 3.x ]
+
+jobs:
+  build-and-test-linux:
+    name: Build and Test - Linux
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # 2. Install all required JDKs and capture paths
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Capture JDK 17 Temurin path
+        shell: bash
+        run: echo "JAVA_HOME_17_TEMURIN=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 17 (Semeru)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'semeru'
+          java-version: '17'
+      
+      - name: Capture JDK 17 Semeru path
+        shell: bash
+        run: echo "JAVA_HOME_17_SEMERU=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      
+      - name: Capture JDK 21 Temurin path
+        shell: bash
+        run: echo "JAVA_HOME_21_TEMURIN=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 21 (Semeru)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'semeru'
+          java-version: '21'
+      
+      - name: Capture JDK 21 Semeru path
+        shell: bash
+        run: echo "JAVA_HOME_21_SEMERU=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 25 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+      
+      - name: Capture JDK 25 Temurin path
+        shell: bash
+        run: echo "JAVA_HOME_25_TEMURIN=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 25 (Semeru)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'semeru'
+          java-version: '25'
+      
+      - name: Capture JDK 25 Semeru path
+        shell: bash
+        run: echo "JAVA_HOME_25_SEMERU=$JAVA_HOME" >> $GITHUB_ENV
+      
+      # 3. Generate toolchains.xml using captured environment variables
+      - name: Generate toolchains.xml
+        shell: bash
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/toolchains.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <toolchains xmlns="http://maven.apache.org/TOOLCHAINS/1.1.0"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="http://maven.apache.org/TOOLCHAINS/1.1.0
+                                          http://maven.apache.org/xsd/toolchains-1.1.0.xsd">
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>17</version>
+                <vendor>temurin</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_17_TEMURIN}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>17</version>
+                <vendor>semeru</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_17_SEMERU}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>21</version>
+                <vendor>temurin</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_21_TEMURIN}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>21</version>
+                <vendor>semeru</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_21_SEMERU}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>25</version>
+                <vendor>temurin</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_25_TEMURIN}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>25</version>
+                <vendor>semeru</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_25_SEMERU}</jdkHome>
+              </configuration>
+            </toolchain>
+          </toolchains>
+          EOF
+      
+      # 4. Update hosts file for networking tests
+      - name: Update hosts file
+        shell: bash
+        run: |
+          cat /etc/hosts
+          sudo bash -c "echo '127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4' > /etc/hosts"
+          sudo bash -c "echo '::1         localhost localhost.localdomain localhost6 localhost6.localdomain6' >> /etc/hosts"
+          sudo sysctl -w fs.file-max=2097152
+      
+      # 5. Build once with Java 25 and install artifacts
+      - name: Build with Java 25 and install artifacts
+        shell: bash
+        run: |
+          export JAVA_HOME="${JAVA_HOME_25_TEMURIN}"
+          mvn -version
+          mvn clean install -DskipTests -B -V
+      
+      # 5a. Resolve Elytron version for elytron-web testing
+      - name: Resolve Elytron version
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: elytron_version
+        shell: bash
+        run: |
+          echo "version=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)" >> "$GITHUB_OUTPUT"
+      
+      # 5b. Check out Elytron Web
+      - name: Check out Elytron Web
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        uses: actions/checkout@v4
+        with:
+          repository: wildfly-security/elytron-web
+          ref: 4.x
+          path: elytron-web
+      
+      # 6. Run tests with Java 17 (Temurin)
+      - name: Test WildFly Elytron with Java 17 (Temurin)
+        id: test-java17-temurin
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=17 -Djdk.test.vendor=temurin -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 17 (Temurin)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java17-temurin/TEST-*.xml'
+          check_name: 'Test Results - Java 17 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 17 (Temurin)
+        if: failure() && steps.test-java17-temurin.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java17-temurin-linux
+          path: '**/target/surefire-reports-java17-temurin/**'
+          retention-days: 30
+      
+      # 6a. Run Elytron Web tests with Java 17 (Temurin) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 17 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java17-temurin
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=17 -Djdk.test.vendor=temurin -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 17 (Temurin)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java17-temurin/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 17 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 17 (Temurin)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java17-temurin-linux
+          path: 'elytron-web/**/target/surefire-reports-java17-temurin/**'
+          retention-days: 30
+      
+      # 7. Run tests with Java 17 (Semeru)
+      - name: Test WildFly Elytron with Java 17 (Semeru)
+        id: test-java17-semeru
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=17 -Djdk.test.vendor=semeru -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 17 (Semeru)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java17-semeru/TEST-*.xml'
+          check_name: 'Test Results - Java 17 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 17 (Semeru)
+        if: failure() && steps.test-java17-semeru.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java17-semeru-linux
+          path: '**/target/surefire-reports-java17-semeru/**'
+          retention-days: 30
+      
+      # 7a. Run Elytron Web tests with Java 17 (Semeru) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 17 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java17-semeru
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=17 -Djdk.test.vendor=semeru -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 17 (Semeru)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java17-semeru/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 17 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 17 (Semeru)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java17-semeru-linux
+          path: 'elytron-web/**/target/surefire-reports-java17-semeru/**'
+          retention-days: 30
+      
+      # 8. Run tests with Java 21 (Temurin)
+      - name: Test WildFly Elytron with Java 21 (Temurin)
+        id: test-java21-temurin
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=21 -Djdk.test.vendor=temurin -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 21 (Temurin)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java21-temurin/TEST-*.xml'
+          check_name: 'Test Results - Java 21 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 21 (Temurin)
+        if: failure() && steps.test-java21-temurin.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java21-temurin-linux
+          path: '**/target/surefire-reports-java21-temurin/**'
+          retention-days: 30
+      
+      # 8a. Run Elytron Web tests with Java 21 (Temurin) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 21 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java21-temurin
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=21 -Djdk.test.vendor=temurin -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 21 (Temurin)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java21-temurin/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 21 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 21 (Temurin)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java21-temurin-linux
+          path: 'elytron-web/**/target/surefire-reports-java21-temurin/**'
+          retention-days: 30
+      
+      # 9. Run tests with Java 21 (Semeru)
+      - name: Test WildFly Elytron with Java 21 (Semeru)
+        id: test-java21-semeru
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=21 -Djdk.test.vendor=semeru -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 21 (Semeru)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java21-semeru/TEST-*.xml'
+          check_name: 'Test Results - Java 21 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 21 (Semeru)
+        if: failure() && steps.test-java21-semeru.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java21-semeru-linux
+          path: '**/target/surefire-reports-java21-semeru/**'
+          retention-days: 30
+      
+      # 9a. Run Elytron Web tests with Java 21 (Semeru) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 21 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java21-semeru
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=21 -Djdk.test.vendor=semeru -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 21 (Semeru)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java21-semeru/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 21 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 21 (Semeru)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java21-semeru-linux
+          path: 'elytron-web/**/target/surefire-reports-java21-semeru/**'
+          retention-days: 30
+      
+      # 10. Run tests with Java 25 (Temurin)
+      - name: Test WildFly Elytron with Java 25 (Temurin)
+        id: test-java25-temurin
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=25 -Djdk.test.vendor=temurin -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 25 (Temurin)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java25-temurin/TEST-*.xml'
+          check_name: 'Test Results - Java 25 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 25 (Temurin)
+        if: failure() && steps.test-java25-temurin.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java25-temurin-linux
+          path: '**/target/surefire-reports-java25-temurin/**'
+          retention-days: 30
+      
+      # 10a. Run Elytron Web tests with Java 25 (Temurin) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 25 (Temurin)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java25-temurin
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=25 -Djdk.test.vendor=temurin -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 25 (Temurin)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java25-temurin/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 25 (Temurin) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 25 (Temurin)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java25-temurin-linux
+          path: 'elytron-web/**/target/surefire-reports-java25-temurin/**'
+          retention-days: 30
+      
+      # 11. Run tests with Java 25 (Semeru)
+      - name: Test WildFly Elytron with Java 25 (Semeru)
+        id: test-java25-semeru
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=25 -Djdk.test.vendor=semeru -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 25 (Semeru)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java25-semeru/TEST-*.xml'
+          check_name: 'Test Results - Java 25 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload test results - Java 25 (Semeru)
+        if: failure() && steps.test-java25-semeru.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-java25-semeru-linux
+          path: '**/target/surefire-reports-java25-semeru/**'
+          retention-days: 30
+      
+      # 11a. Run Elytron Web tests with Java 25 (Semeru) - temporarily disabled on 3.x
+      - name: Test Elytron Web with Java 25 (Semeru)
+        if: false # Temporarily disabled on 3.x until a compatible Elytron Web branch is available
+        id: test-elytron-web-java25-semeru
+
+        working-directory: elytron-web
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          mvn test -Djdk.test.version=25 -Djdk.test.vendor=semeru -Dversion.org.wildfly.security.elytron=${{ steps.elytron_version.outputs.version }} -B
+        continue-on-error: true
+      
+      - name: Publish Elytron Web test results - Java 25 (Semeru)
+        if: false
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'elytron-web/**/target/surefire-reports-java25-semeru/TEST-*.xml'
+          check_name: 'Elytron Web Test Results - Java 25 (Semeru) - Linux'
+          comment_mode: off
+      
+      - name: Upload Elytron Web test results - Java 25 (Semeru)
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: elytron-web-test-results-java25-semeru-linux
+          path: 'elytron-web/**/target/surefire-reports-java25-semeru/**'
+          retention-days: 30
+      
+      # 12. Check test results - fail job if any test permutation failed
+      - name: Check test results
+        if: always()
+        shell: bash
+        run: |
+          echo "Checking test results for all permutations..."
+          FAILED=0
+          
+          # Check WildFly Elytron tests
+          if [ "${{ steps.test-java17-temurin.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 17 (Temurin) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java17-semeru.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 17 (Semeru) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java21-temurin.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 21 (Temurin) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java21-semeru.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 21 (Semeru) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java25-temurin.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 25 (Temurin) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java25-semeru.outcome }}" != "success" ]; then
+            echo "❌ WildFly Elytron - Java 25 (Semeru) tests failed"
+            FAILED=1
+          fi
+          
+          # Elytron Web checks intentionally disabled on 3.x until a compatible Elytron Web branch is available
+          
+          if [ $FAILED -eq 1 ]; then
+            echo "::error::One or more test permutations failed"
+            exit 1
+          fi
+          
+          echo "✅ All test permutations passed"
