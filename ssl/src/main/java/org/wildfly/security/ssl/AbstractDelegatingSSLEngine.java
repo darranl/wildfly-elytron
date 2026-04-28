@@ -163,19 +163,19 @@ abstract class AbstractDelegatingSSLEngine extends SSLEngine {
     }
 
     public String getApplicationProtocol() {
-        return JDKSpecific.getApplicationProtocol(delegate);
+        return delegate.getApplicationProtocol();
     }
 
     public String getHandshakeApplicationProtocol() {
-        return JDKSpecific.getApplicationProtocol(delegate);
+        return delegate.getHandshakeApplicationProtocol();
     }
 
     public void setHandshakeApplicationProtocolSelector(BiFunction<SSLEngine, List<String>, String> selector) {
-        JDKSpecific.setHandshakeApplicationProtocolSelector(delegate, selector);
+        delegate.setHandshakeApplicationProtocolSelector(selector);
     }
 
     public BiFunction<SSLEngine, List<String>, String> getHandshakeApplicationProtocolSelector() {
-        return JDKSpecific.getHandshakeApplicationProtocolSelector(delegate);
+        return delegate.getHandshakeApplicationProtocolSelector();
     }
 
     protected SSLEngine getDelegate() {

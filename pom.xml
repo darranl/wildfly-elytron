@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>50</version>
+        <version>52</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -65,7 +65,14 @@
   </scm>
 
     <properties>
-        <jdk.min.version>17</jdk.min.version>
+        <jdk.min.version>25</jdk.min.version>
+
+        <!-- Testing properties -->
+        <jdk.test.version>25</jdk.test.version>
+        <jdk.test.vendor>temurin</jdk.test.vendor>
+        
+        <!-- Skip JDK 21+ tests when testing with Java 17 -->
+        <skipJdk21Tests>false</skipJdk21Tests>
 
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
@@ -175,7 +182,7 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>11</release>
+                            <release>17</release>
                             <buildDirectory>${project.build.directory}</buildDirectory>
                             <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
@@ -229,27 +236,7 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <trimStackTrace>false</trimStackTrace>
-                    <forkCount>1</forkCount>
-                    <reuseForks>false</reuseForks>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>default-test</id>
-                        <configuration>
-                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
-                            </additionalClasspathElements>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
 
             <plugin>
                 <groupId>com.github.ferstl</groupId>
@@ -1271,8 +1258,6 @@
                 <modular.jdk.args>--add-modules java.sql</modular.jdk.args>
                 <!-- use version of jboss-logging that works much better with JDK9 -->
                 <modular.jdk.props>-Djdk.attach.allowAttachSelf=true</modular.jdk.props>
-                <!-- 2.20.x doesn't start on JDK10-->
-                <version.surefire.plugin>2.19.1</version.surefire.plugin>
             </properties>
         </profile>
 
@@ -1292,78 +1277,7 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>java8-test-profile</id>
-            <activation>
-                <property>
-                    <name>java8.home</name>
-                </property>
-            </activation>
-            <properties>
-                <modular.jdk.args />
-                <modular.jdk.props />
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>java8-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <reportsDirectory>${project.build.directory}/surefire-reports/java8</reportsDirectory>
-                                    <jvm>${java8.home}/bin/java</jvm>
-                                    <additionalClasspathElements>
-                                        <additionalClasspathElement>${java8.home}/lib/tools.jar</additionalClasspathElement>
-                                    </additionalClasspathElements>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>java9-test-profile</id>
-            <activation>
-                <property>
-                    <name>java9.home</name>
-                </property>
-            </activation>
-            <properties>
-                <modular.jdk.args />
-                <modular.jdk.props />
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>java9-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <reportsDirectory>${project.build.directory}/surefire-reports/java9</reportsDirectory>
-                                    <jvm>${java9.home}/bin/java</jvm>
-                                    <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
-                                    <additionalClasspathElements>
-                                        <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                                        <additionalClasspathElement>${java9.home}/lib/tools.jar</additionalClasspathElement>
-                                    </additionalClasspathElements>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+
         <profile>
             <id>jdk21-test-profile</id>
             <activation>
@@ -1373,6 +1287,129 @@
                 <module>tests/jdk21</module>
             </modules>
         </profile>
+        <profile>
+            <id>skip-jdk21-tests</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>17</value>
+                </property>
+            </activation>
+            <properties>
+                <skipJdk21Tests>true</skipJdk21Tests>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>single-version-test</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- Default to Temurin if not specified -->
+                <jdk.test.vendor>temurin</jdk.test.vendor>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <configuration>
+                                    <!-- Enable toolchain support for single-version testing -->
+                                    <jdkToolchain>
+                                        <version>${jdk.test.version}</version>
+                                        <vendor>${jdk.test.vendor}</vendor>
+                                    </jdkToolchain>
+                                    <!-- Use vendor-specific report directory -->
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-java${jdk.test.version}-${jdk.test.vendor}</reportsDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+
+
+        <profile>
+            <id>test-all-versions</id>
+            <properties>
+                <!-- Default to Temurin if not specified -->
+                <jdk.test.vendor>temurin</jdk.test.vendor>
+            </properties>
+            <modules>
+                <!-- Include JDK 21+ test module for multi-version testing -->
+                <module>tests/jdk21</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <!-- Skip default test execution, only run version-specific tests -->
+                            <execution>
+                                <id>default-test</id>
+                                <phase>none</phase>
+                            </execution>
+                            
+                            <!-- Test with Java 17 - skip JDK 21+ specific test modules -->
+                            <execution>
+                                <id>test-java-17</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <jdkToolchain>
+                                        <version>17</version>
+                                        <vendor>${jdk.test.vendor}</vendor>
+                                    </jdkToolchain>
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-java17-${jdk.test.vendor}</reportsDirectory>
+                                </configuration>
+                            </execution>
+                            
+                            <!-- Test with Java 21 (SecurityManager requires -Djava.security.manager=allow) -->
+                            <execution>
+                                <id>test-java-21</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <jdkToolchain>
+                                        <version>21</version>
+                                        <vendor>${jdk.test.vendor}</vendor>
+                                    </jdkToolchain>
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-java21-${jdk.test.vendor}</reportsDirectory>
+                                    <argLine>-Djava.security.manager=allow ${modular.jdk.args} ${modular.jdk.props}</argLine>
+                                </configuration>
+                            </execution>
+                            
+                            <!-- Test with Java 25 -->
+                            <execution>
+                                <id>test-java-25</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <jdkToolchain>
+                                        <version>25</version>
+                                        <vendor>${jdk.test.vendor}</vendor>
+                                    </jdkToolchain>
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-java25-${jdk.test.vendor}</reportsDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>aggregate-javadoc</id>
             <activation>
@@ -1698,6 +1735,7 @@
         <module>auth/util</module>
         <module>auth/client</module>
         <module>base</module>
+
         <module>credential/base</module>
         <module>credential/store</module>
         <module>credential/source/deprecated</module>

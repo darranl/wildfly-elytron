@@ -103,7 +103,22 @@ public class SSLConfiguratorImplTest {
         params.setUseCipherSuitesOrder(true);
         params.setEndpointIdentificationAlgorithm("HTTPS");
 
-        SSLParameters copiedSSLParams = JDKSpecific.setSSLParameters(params);
+        SSLParameters copiedSSLParams = new SSLParameters();
+        copiedSSLParams.setProtocols(params.getProtocols());
+        copiedSSLParams.setCipherSuites(params.getCipherSuites());
+        copiedSSLParams.setUseCipherSuitesOrder(params.getUseCipherSuitesOrder());
+        copiedSSLParams.setServerNames(params.getServerNames());
+        copiedSSLParams.setSNIMatchers(params.getSNIMatchers());
+        copiedSSLParams.setAlgorithmConstraints(params.getAlgorithmConstraints());
+        copiedSSLParams.setEndpointIdentificationAlgorithm(params.getEndpointIdentificationAlgorithm());
+        if (params.getWantClientAuth()) {
+            copiedSSLParams.setWantClientAuth(params.getWantClientAuth());
+        } else if (params.getNeedClientAuth()) {
+            copiedSSLParams.setNeedClientAuth(params.getNeedClientAuth());
+        }
+        copiedSSLParams.setEnableRetransmissions(params.getEnableRetransmissions());
+        copiedSSLParams.setApplicationProtocols(params.getApplicationProtocols());
+        copiedSSLParams.setMaximumPacketSize(params.getMaximumPacketSize());
 
         assertNotSame(copiedSSLParams, params);
         assertTrue(copiedSSLParams.getServerNames() != serverNames && copiedSSLParams.getServerNames().equals(serverNames));

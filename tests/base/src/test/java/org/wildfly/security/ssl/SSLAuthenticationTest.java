@@ -886,6 +886,10 @@ public class SSLAuthenticationTest {
         SSLSocket clientSocket = (SSLSocket) clientContext.getSocketFactory().createSocket("localhost", TESTING_PORT);
         SSLSocket serverSocket = (SSLSocket) listeningSocket.accept();
 
+        // Set socket timeouts to prevent indefinite blocking (especially important on Windows)
+        serverSocket.setSoTimeout(30000); // 30 second timeout
+        clientSocket.setSoTimeout(30000); // 30 second timeout
+
         ExecutorService serverExecutorService = Executors.newSingleThreadExecutor();
         Future<byte[]> serverFuture = serverExecutorService.submit(() -> {
             try {
@@ -943,9 +947,27 @@ public class SSLAuthenticationTest {
                 throw e;
             }
         } finally {
+            // Properly shutdown sockets before closing to avoid abrupt connection termination
+            try {
+                if (serverSocket != null && !serverSocket.isClosed()) {
+                    serverSocket.shutdownInput();
+                    serverSocket.shutdownOutput();
+                }
+            } catch (Exception ignored) {}
+            try {
+                if (clientSocket != null && !clientSocket.isClosed()) {
+                    clientSocket.shutdownInput();
+                    clientSocket.shutdownOutput();
+                }
+            } catch (Exception ignored) {}
+
             safeClose(serverSocket);
             safeClose(clientSocket);
             safeClose(listeningSocket);
+
+            // Shutdown executor services
+            serverExecutorService.shutdown();
+            clientExecutorService.shutdown();
         }
     }
 
