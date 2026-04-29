@@ -70,7 +70,7 @@
         <!-- Testing properties -->
         <jdk.test.version>25</jdk.test.version>
         <jdk.test.vendor>temurin</jdk.test.vendor>
-        
+
         <!-- Skip JDK 21+ tests when testing with Java 17 -->
         <skipJdk21Tests>false</skipJdk21Tests>
 
@@ -1334,7 +1334,7 @@
                 </plugins>
             </build>
         </profile>
-        
+
 
 
         <profile>
@@ -1358,7 +1358,7 @@
                                 <id>default-test</id>
                                 <phase>none</phase>
                             </execution>
-                            
+
                             <!-- Test with Java 17 - skip JDK 21+ specific test modules -->
                             <execution>
                                 <id>test-java-17</id>
@@ -1373,7 +1373,7 @@
                                     <reportsDirectory>${project.build.directory}/surefire-reports-java17-${jdk.test.vendor}</reportsDirectory>
                                 </configuration>
                             </execution>
-                            
+
                             <!-- Test with Java 21 (SecurityManager requires -Djava.security.manager=allow) -->
                             <execution>
                                 <id>test-java-21</id>
@@ -1389,7 +1389,7 @@
                                     <argLine>-Djava.security.manager=allow ${modular.jdk.args} ${modular.jdk.props}</argLine>
                                 </configuration>
                             </execution>
-                            
+
                             <!-- Test with Java 25 -->
                             <execution>
                                 <id>test-java-25</id>
@@ -1735,7 +1735,7 @@
         <module>auth/util</module>
         <module>auth/client</module>
         <module>base</module>
-
+        <module>boms/all</module>
         <module>credential/base</module>
         <module>credential/store</module>
         <module>credential/source/deprecated</module>
