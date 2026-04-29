@@ -117,7 +117,8 @@ public class OidcClientContext {
 
         public void setAuthServerBaseUrl(String authServerBaseUrl) {
             this.authServerBaseUrl = authServerBaseUrl;
-            resolveUrls();
+            OidcClientUriBuilder serverBuilder = OidcClientUriBuilder.fromUri(authServerBaseUrl);
+            resolveUrls(serverBuilder);
         }
 
         public void setProviderUrl(String providerUrl) {
@@ -136,8 +137,8 @@ public class OidcClientContext {
         }
 
         @Override
-        public String getLogoutUrl() {
-            return (this.logoutUrl != null) ? this.logoutUrl : delegate.getLogoutUrl();
+        public String getEndSessionEndpointUrl() {
+            return (this.endSessionEndpointUrl != null) ? this.endSessionEndpointUrl : delegate.getEndSessionEndpointUrl();
         }
 
         @Override

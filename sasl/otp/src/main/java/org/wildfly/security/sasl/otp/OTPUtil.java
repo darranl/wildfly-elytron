@@ -19,8 +19,32 @@
 package org.wildfly.security.sasl.otp;
 
 import static org.wildfly.security.mechanism._private.ElytronMessages.saslOTP;
-import static org.wildfly.security.password.interfaces.OneTimePassword.*;
-import static org.wildfly.security.sasl.otp.OTP.*;
+
+import static org.wildfly.security.sasl.otp.OTP.WORD_RESPONSE;
+import static org.wildfly.security.sasl.otp.OTP.INIT_WORD_RESPONSE;
+import static org.wildfly.security.sasl.otp.OTP.HEX_RESPONSE;
+import static org.wildfly.security.sasl.otp.OTP.INIT_HEX_RESPONSE;
+import static org.wildfly.security.sasl.otp.OTP.PASS_PHRASE;
+import static org.wildfly.security.sasl.otp.OTP.DIRECT_OTP;
+import static org.wildfly.security.sasl.otp.OTP.MD5;
+import static org.wildfly.security.sasl.otp.OTP.SHA1;
+import static org.wildfly.security.sasl.otp.OTP.SHA256;
+import static org.wildfly.security.sasl.otp.OTP.SHA384;
+import static org.wildfly.security.sasl.otp.OTP.SHA512;
+import static org.wildfly.security.sasl.otp.OTP.DICTIONARY_SIZE;
+import static org.wildfly.security.sasl.otp.OTP.MAX_AUTHENTICATION_ID_LENGTH;
+import static org.wildfly.security.sasl.otp.OTP.MAX_AUTHORIZATION_ID_LENGTH;
+import static org.wildfly.security.sasl.otp.OTP.MIN_SEED_LENGTH;
+import static org.wildfly.security.sasl.otp.OTP.MAX_SEED_LENGTH;
+import static org.wildfly.security.sasl.otp.OTP.MIN_PASS_PHRASE_LENGTH;
+import static org.wildfly.security.sasl.otp.OTP.MAX_PASS_PHRASE_LENGTH;
+
+import static org.wildfly.security.password.interfaces.OneTimePassword.OTP_HASH_SIZE;
+import static org.wildfly.security.password.interfaces.OneTimePassword.ALGORITHM_OTP_MD5;
+import static org.wildfly.security.password.interfaces.OneTimePassword.ALGORITHM_OTP_SHA1;
+import static org.wildfly.security.password.interfaces.OneTimePassword.ALGORITHM_OTP_SHA_256;
+import static org.wildfly.security.password.interfaces.OneTimePassword.ALGORITHM_OTP_SHA_384;
+import static org.wildfly.security.password.interfaces.OneTimePassword.ALGORITHM_OTP_SHA_512;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

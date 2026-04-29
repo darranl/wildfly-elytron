@@ -177,6 +177,26 @@ public class AggregateRealmEvidenceTest {
     }
 
     @Test
+    public void testAuthenticationFailsWithPrincipalTransformer() throws Exception {
+        Attributes authenticationAttributes = new MapAttributes();
+        authenticationAttributes.add("team", 0, "One");
+
+        Function<Principal, Principal> principalTransformer = new AggregateRealmEvidenceTest.CaseRewriter().asPrincipalRewriter();
+        X509PeerCertificateChainEvidence evidence = new X509PeerCertificateChainEvidence(populateCertificateChain());
+        evidence.setDecodedPrincipal(new NamePrincipal("invalid_principal"));
+
+        SecurityRealm testRealm = createSecurityRealm(true, authenticationAttributes, principalTransformer, new Attributes[] { null });
+        RealmIdentity identity = testRealm.getRealmIdentity(evidence);
+
+        Assert.assertFalse("Identity should not exist with invalid principal", identity.exists());
+
+        // Assert no authorization attributes exist
+        Attributes identityAttributes = identity.getAuthorizationIdentity().getAttributes();
+        Assert.assertEquals("Expected attribute count.", 0, identityAttributes.size());
+    }
+
+
+    @Test
     public void testAuthorizationOnlyWithPrincipalTransformer() throws Exception {
         Attributes authorizationAttributes = new MapAttributes();
         authorizationAttributes.add("team", 0, "One");
@@ -275,8 +295,7 @@ public class AggregateRealmEvidenceTest {
 
         builder.setSignatureAlgorithmName("SHA256withRSA");
         builder.setPublicKey(keyPair.getPublic());
-        final X509Certificate orderedCertificate = builder.build();
-        return orderedCertificate;
+        return builder.build();
     }
 
     private Path getRootPath(String path, boolean deleteIfExists) throws Exception {

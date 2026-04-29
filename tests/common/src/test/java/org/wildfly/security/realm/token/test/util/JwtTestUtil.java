@@ -4,28 +4,25 @@
  */
 package org.wildfly.security.realm.token.test.util;
 
+import java.math.BigInteger;
+import java.net.URI;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.util.Arrays;
+
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 
 import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonValue;
-
-import java.math.BigInteger;
-import java.net.URI;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.Base64;
-
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -35,21 +32,7 @@ import okhttp3.mockwebserver.RecordedRequest;
  *
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
  */
-public final class JwtTestUtil {
-
-    public static JsonObject jwksToJson(RsaJwk... jwks) {
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        for (int i = 0; i < jwks.length; i++){
-            JsonObjectBuilder jwk = Json.createObjectBuilder()
-                    .add("kty", jwks[i].getKty())
-                    .add("alg", jwks[i].getAlg())
-                    .add("kid", jwks[i].getKid())
-                    .add("n", jwks[i].getN())
-                    .add("e", jwks[i].getE());
-            jab.add(jwk);
-        }
-        return Json.createObjectBuilder().add("keys", jab).build();
-    }
+public final class JwtTestUtil extends JwkTestUtil {
 
     public static String createJwt(KeyPair keyPair, int expirationOffset, int notBeforeOffset) throws Exception {
         return createJwt(keyPair, expirationOffset, notBeforeOffset, null, null);
@@ -109,19 +92,6 @@ public final class JwtTestUtil {
         return claimsBuilder;
     }
 
-    public static RsaJwk createRsaJwk(KeyPair keyPair, String kid) {
-        RSAPublicKey pk = (RSAPublicKey) keyPair.getPublic();
-        RsaJwk jwk = new RsaJwk();
-
-        jwk.setAlg("RS256");
-        jwk.setKid(kid);
-        jwk.setKty("RSA");
-        jwk.setE(Base64.getUrlEncoder().withoutPadding().encodeToString(toBase64urlUInt(pk.getPublicExponent())));
-        jwk.setN(Base64.getUrlEncoder().withoutPadding().encodeToString(toBase64urlUInt(pk.getModulus())));
-
-        return jwk;
-    }
-
     public static Dispatcher createTokenDispatcher(String response) {
         return new Dispatcher() {
             @Override
@@ -146,4 +116,33 @@ public final class JwtTestUtil {
         }
     }
 
+    public static String createHS256Jwt(String secret, int expirationOffset, String issuer, String audience, String subject, String preferredUsername) throws Exception {
+        JWSSigner signer = new MACSigner(secret);
+
+        JsonObjectBuilder claimsBuilder = Json.createObjectBuilder()
+                .add("sub", subject)
+                .add("iss", issuer)
+                .add("aud", audience)
+                .add("exp", (System.currentTimeMillis() / 1000) + expirationOffset)
+                .add("preferred_username", preferredUsername);
+
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
+                .type(new JOSEObjectType("JWT"))
+                .build();
+
+        JWSObject jwsObject = new JWSObject(header, new Payload(claimsBuilder.build().toString()));
+        jwsObject.sign(signer);
+
+        return jwsObject.serialize();
+    }
+
+    public static String createHS256JwtForOAuth2() {
+        String secret = "longenoughsecretthatisstleast256bitslong";
+
+        try {
+            return createHS256Jwt(secret, 600, "auth.server", "for_me", "1234567890", "jdoe");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate JWT token", e);
+        }
+    }
 }

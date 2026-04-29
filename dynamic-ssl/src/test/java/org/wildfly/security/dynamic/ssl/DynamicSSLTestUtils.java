@@ -70,6 +70,21 @@ public class DynamicSSLTestUtils {
     private static String SERVER3_KEYSTORE_FILENAME = "server3.keystore.jks";
     private static String SERVER3_TRUSTSTORE_FILENAME = "server3.truststore.jks";
 
+    private static String CLIENT1_HOST_KEYSTORE_FILENAME =  "client1-host.keystore.jks";
+    private static String CLIENT1_HOST_TRUSTSTORE_FILENAME ="client1-host.truststore.jks";
+    private static String SERVER1_HOST_KEYSTORE_FILENAME = "server1-host.keystore.jks";
+    private static String SERVER1_HOST_TRUSTSTORE_FILENAME = "server1-host.truststore.jks";
+
+    private static String CLIENT2_HOST_KEYSTORE_FILENAME =  "client2-host.keystore.jks";
+    private static String CLIENT2_HOST_TRUSTSTORE_FILENAME ="client2-host.truststore.jks";
+    private static String SERVER2_HOST_KEYSTORE_FILENAME = "server2-host.keystore.jks";
+    private static String SERVER2_HOST_TRUSTSTORE_FILENAME = "server2-host.truststore.jks";
+
+    private static String CLIENT3_HOST_KEYSTORE_FILENAME =  "client3-host.keystore.jks";
+    private static String CLIENT3_HOST_TRUSTSTORE_FILENAME ="client3-host.truststore.jks";
+    private static String SERVER3_HOST_KEYSTORE_FILENAME = "server3-host.keystore.jks";
+    private static String SERVER3_HOST_TRUSTSTORE_FILENAME = "server3-host.truststore.jks";
+
     private static String DEFAULT_CLIENT_KEYSTORE_FILENAME =  "default-client.keystore.jks";
     private static String DEFAULT_CLIENT_TRUSTSTORE_FILENAME ="default-client.truststore.jks";
     private static String DEFAULT_SERVER_KEYSTORE_FILENAME = "default-server.keystore.jks";
@@ -109,14 +124,6 @@ public class DynamicSSLTestUtils {
             KEYSTORES_DIR.mkdirs();
         }
 
-        generateTwoWaySSLKeystoresAndTruststores(CLIENT1_KEYSTORE_FILENAME, SERVER1_KEYSTORE_FILENAME, CLIENT1_TRUSTSTORE_FILENAME, SERVER1_TRUSTSTORE_FILENAME);
-        generateTwoWaySSLKeystoresAndTruststores(CLIENT2_KEYSTORE_FILENAME, SERVER2_KEYSTORE_FILENAME, CLIENT2_TRUSTSTORE_FILENAME, SERVER2_TRUSTSTORE_FILENAME);
-        generateTwoWaySSLKeystoresAndTruststores(CLIENT3_KEYSTORE_FILENAME, SERVER3_KEYSTORE_FILENAME, CLIENT3_TRUSTSTORE_FILENAME, SERVER3_TRUSTSTORE_FILENAME);
-        generateTwoWaySSLKeystoresAndTruststores(DEFAULT_CLIENT_KEYSTORE_FILENAME, DEFAULT_SERVER_KEYSTORE_FILENAME, DEFAULT_CLIENT_TRUSTSTORE_FILENAME, DEFAULT_SERVER_TRUSTSTORE_FILENAME);
-    }
-
-    private static void generateTwoWaySSLKeystoresAndTruststores(String clientKeystoreFilename, String serverKeystoreFilename,
-                                                                 String clientTruststoreFilename, String serverTruststoreFilename) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         CAGenerationTool caGenerationTool = null;
         try {
             caGenerationTool = CAGenerationTool.builder()
@@ -128,6 +135,19 @@ public class DynamicSSLTestUtils {
             Assert.fail();
         }
 
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT1_KEYSTORE_FILENAME, SERVER1_KEYSTORE_FILENAME, CLIENT1_TRUSTSTORE_FILENAME, SERVER1_TRUSTSTORE_FILENAME,LOCALHOST_ALIAS,caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT2_KEYSTORE_FILENAME, SERVER2_KEYSTORE_FILENAME, CLIENT2_TRUSTSTORE_FILENAME, SERVER2_TRUSTSTORE_FILENAME,LOCALHOST_ALIAS,caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT3_KEYSTORE_FILENAME, SERVER3_KEYSTORE_FILENAME, CLIENT3_TRUSTSTORE_FILENAME, SERVER3_TRUSTSTORE_FILENAME,LOCALHOST_ALIAS,caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT1_HOST_KEYSTORE_FILENAME, SERVER1_HOST_KEYSTORE_FILENAME, CLIENT1_HOST_TRUSTSTORE_FILENAME, SERVER1_HOST_TRUSTSTORE_FILENAME,"server1.example.com",caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT2_HOST_KEYSTORE_FILENAME, SERVER2_HOST_KEYSTORE_FILENAME, CLIENT2_HOST_TRUSTSTORE_FILENAME, SERVER2_HOST_TRUSTSTORE_FILENAME,"server2.example.com",caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(CLIENT3_HOST_KEYSTORE_FILENAME, SERVER3_HOST_KEYSTORE_FILENAME, CLIENT3_HOST_TRUSTSTORE_FILENAME, SERVER3_HOST_TRUSTSTORE_FILENAME,"server3.example.com",caGenerationTool);
+        generateTwoWaySSLKeystoresAndTruststores(DEFAULT_CLIENT_KEYSTORE_FILENAME, DEFAULT_SERVER_KEYSTORE_FILENAME, DEFAULT_CLIENT_TRUSTSTORE_FILENAME, DEFAULT_SERVER_TRUSTSTORE_FILENAME,LOCALHOST_ALIAS,caGenerationTool);
+    }
+
+    private static void generateTwoWaySSLKeystoresAndTruststores(String clientKeystoreFilename, String serverKeystoreFilename,
+                                                                 String clientTruststoreFilename, String serverTruststoreFilename , String serverHostName , CAGenerationTool caGenerationTool) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+
+
         // Generates client certificate
         X509Certificate clientCertificate = caGenerationTool.createIdentity(CLIENT_ALIAS,
                 new X500Principal("OU=Elytron"),
@@ -136,7 +156,7 @@ public class DynamicSSLTestUtils {
                 new X509CertificateExtension[]{});
 
         // Generates server certificate
-        X509Certificate serverCertificate = caGenerationTool.createIdentity(LOCALHOST_ALIAS,
+        X509Certificate serverCertificate = caGenerationTool.createIdentity(serverHostName,
                 new X500Principal("OU=Elytron"),
                 serverKeystoreFilename,
                 CAGenerationTool.Identity.CA,
@@ -149,7 +169,7 @@ public class DynamicSSLTestUtils {
         KeyStore serverTrustStore = KeyStore.getInstance(KEYSTORE_TYPE);
         serverTrustStore.load(null, null);
 
-        clientTrustStore.setCertificateEntry(LOCALHOST_ALIAS, serverCertificate);
+        clientTrustStore.setCertificateEntry(serverHostName, serverCertificate);
         serverTrustStore.setCertificateEntry(CLIENT_ALIAS, clientCertificate);
 
         File clientTrustFile = new File(KEYSTORES_DIR, clientTruststoreFilename);
@@ -170,6 +190,12 @@ public class DynamicSSLTestUtils {
         new File(KEYSTORES_DIR, CLIENT2_TRUSTSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, CLIENT3_KEYSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, CLIENT3_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT1_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT1_HOST_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT2_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT2_HOST_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT3_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, CLIENT3_HOST_TRUSTSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, DEFAULT_CLIENT_KEYSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, DEFAULT_CLIENT_TRUSTSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, SERVER1_KEYSTORE_FILENAME).delete();
@@ -178,6 +204,12 @@ public class DynamicSSLTestUtils {
         new File(KEYSTORES_DIR, SERVER2_TRUSTSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, SERVER3_KEYSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, SERVER3_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER1_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER1_HOST_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER2_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER2_HOST_TRUSTSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER3_HOST_KEYSTORE_FILENAME).delete();
+        new File(KEYSTORES_DIR, SERVER3_HOST_TRUSTSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, DEFAULT_SERVER_KEYSTORE_FILENAME).delete();
         new File(KEYSTORES_DIR, DEFAULT_SERVER_TRUSTSTORE_FILENAME).delete();
         KEYSTORES_DIR.delete();

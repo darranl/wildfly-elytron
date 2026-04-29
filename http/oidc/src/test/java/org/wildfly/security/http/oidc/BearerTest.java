@@ -47,10 +47,10 @@ import org.wildfly.common.iteration.CodePointIterator;
 import org.wildfly.security.http.HttpServerAuthenticationMechanism;
 import org.wildfly.security.http.HttpServerAuthenticationMechanismFactory;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.TextPage;
-import com.gargoylesoftware.htmlunit.WebClient;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.TextPage;
+import org.htmlunit.WebClient;
 
 import io.restassured.RestAssured;
 import okhttp3.mockwebserver.Dispatcher;

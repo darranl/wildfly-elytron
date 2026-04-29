@@ -18,17 +18,18 @@
 
 package org.wildfly.security.keystore;
 
-import org.wildfly.common.Assert;
-import org.wildfly.common.function.ExceptionSupplier;
+import java.security.KeyStore;
+import java.security.KeyStoreSpi;
+import java.security.Provider;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.LdapName;
-import java.security.KeyStore;
-import java.security.KeyStoreSpi;
-import java.security.Provider;
+
+import org.wildfly.common.Assert;
+import org.wildfly.common.function.ExceptionSupplier;
 
 /**
  * A LDAP backed {@link KeyStore} implementation.

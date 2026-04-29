@@ -65,7 +65,7 @@ public class TLS13AuthenticationTest {
 
     private static final String CLIENT_CONFIG = "tls13-authentication-config.xml";
     private static final char[] PASSWORD = "Elytron".toCharArray();
-    private static final String CA_JKS_LOCATION = "./target/test-classes/pkcs12";
+    private static final String CA_PKCS_LOCATION = "./target/test-classes/pkcs12";
 
     private static CAGenerationTool caGenerationTool = null;
     private static SecurityDomain securityDomain = null;
@@ -74,7 +74,7 @@ public class TLS13AuthenticationTest {
     public static void setUp() throws Exception{
 
         caGenerationTool = CAGenerationTool.builder()
-                .setBaseDir(CA_JKS_LOCATION)
+                .setBaseDir(CA_PKCS_LOCATION)
                 .setRequestIdentities(Identity.LADYBIRD, Identity.SCARAB)
                 .build();
 
@@ -140,7 +140,7 @@ public class TLS13AuthenticationTest {
     @Test
     public void testClientTLS12Only() throws Exception {
         final String TLS13_CIPHER_SUITE = "TLS_AES_128_GCM_SHA256";
-        final String TLS12_CIPHER_SUITE = "TLS_RSA_WITH_AES_128_CBC_SHA256"; // TLS v1.2
+        final String TLS12_CIPHER_SUITE = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"; // TLS v1.2
 
         DefinedCAIdentity ca = caGenerationTool.getDefinedCAIdentity(Identity.CA);
         DefinedIdentity scarab = caGenerationTool.getDefinedIdentity(Identity.SCARAB);
@@ -163,7 +163,7 @@ public class TLS13AuthenticationTest {
 
     @Test
     public void testServerTLS12Only() throws Exception {
-        final String SERVER_CIPHER_SUITE = "TLS_RSA_WITH_AES_128_CBC_SHA256"; // TLS v1.2
+        final String SERVER_CIPHER_SUITE = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"; // TLS v1.2
 
         DefinedCAIdentity ca = caGenerationTool.getDefinedCAIdentity(Identity.CA);
         DefinedIdentity scarab = caGenerationTool.getDefinedIdentity(Identity.SCARAB);
