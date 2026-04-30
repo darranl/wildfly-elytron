@@ -129,14 +129,18 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
     }
 
     protected static void sendRealmCreationRequest(RealmRepresentation realm) {
+        sendRealmCreationRequest(realm, KEYCLOAK_CONTAINER.getAuthServerUrl());
+    }
+
+    protected static void sendRealmCreationRequest(RealmRepresentation realm, String authServerUrl) {
         try {
             RestAssured
                     .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
+                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(authServerUrl))
                     .contentType("application/json")
                     .body(JsonSerialization.writeValueAsBytes(realm))
                     .when()
-                    .post(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms").then()
+                    .post(authServerUrl + "/admin/realms").then()
                     .statusCode(201);
         } catch (IOException e) {
             throw new RuntimeException(e);
