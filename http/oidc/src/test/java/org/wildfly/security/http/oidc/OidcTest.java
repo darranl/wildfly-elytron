@@ -82,8 +82,6 @@ import javax.security.auth.callback.CallbackHandler;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.TextPage;
 import org.htmlunit.WebClient;
-import io.restassured.RestAssured;
-import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.QueueDispatcher;
 import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
@@ -106,44 +104,16 @@ public class OidcTest extends OidcBaseTest {
     @BeforeClass
     public static void startTestContainers() throws Exception {
         assumeTrue("Docker isn't available, OIDC tests will be skipped", isDockerAvailable());
-        KEYCLOAK_CONTAINER = new KeycloakContainer();
-        KEYCLOAK_CONTAINER.start();
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TEST_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, false));
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TEST_REALM_WITH_SCOPES, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, CONFIGURE_CLIENT_SCOPES));
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TENANT1_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, ACCESS_TOKEN_LIFESPAN, SESSION_MAX_LIFESPAN, false, true));
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TENANT2_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, ACCESS_TOKEN_LIFESPAN, SESSION_MAX_LIFESPAN, false, true));
-        client = new MockWebServer();
-        client.start(CLIENT_PORT);
+        acquireSharedFixture();
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(TEST_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, false));
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(TEST_REALM_WITH_SCOPES, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, CONFIGURE_CLIENT_SCOPES));
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(TENANT1_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, ACCESS_TOKEN_LIFESPAN, SESSION_MAX_LIFESPAN, false, true));
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(TENANT2_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, ACCESS_TOKEN_LIFESPAN, SESSION_MAX_LIFESPAN, false, true));
     }
 
     @AfterClass
     public static void generalCleanup() throws Exception {
-        if (KEYCLOAK_CONTAINER != null) {
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM).then().statusCode(204);
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM_WITH_SCOPES).then().statusCode(204);
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TENANT1_REALM).then().statusCode(204);
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TENANT2_REALM).then().statusCode(204);
-            KEYCLOAK_CONTAINER.stop();
-        }
-        if (client != null) {
-            client.shutdown();
-        }
+        releaseSharedFixture();
     }
 
     @BeforeClass

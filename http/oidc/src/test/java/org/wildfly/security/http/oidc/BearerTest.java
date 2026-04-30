@@ -52,10 +52,8 @@ import org.htmlunit.HttpMethod;
 import org.htmlunit.TextPage;
 import org.htmlunit.WebClient;
 
-import io.restassured.RestAssured;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.QueueDispatcher;
 import okhttp3.mockwebserver.RecordedRequest;
 
@@ -84,13 +82,10 @@ public class BearerTest extends OidcBaseTest {
     @BeforeClass
     public static void startTestContainers() throws Exception {
         assumeTrue("Docker isn't available, OIDC tests will be skipped", isDockerAvailable());
-        KEYCLOAK_CONTAINER = new KeycloakContainer();
-        KEYCLOAK_CONTAINER.start();
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TEST_REALM, CLIENT_ID, CLIENT_SECRET,
+        acquireSharedFixture();
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(TEST_REALM, CLIENT_ID, CLIENT_SECRET,
                 CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, DIRECT_ACCESS_GRANT_ENABLED, BEARER_ONLY_CLIENT_ID,
                 CORS_CLIENT_ID));
-        client = new MockWebServer();
-        client.start(CLIENT_PORT);
     }
 
     private static Dispatcher createAppBearerResponse(HttpServerAuthenticationMechanism mechanism, String clientPageText,
@@ -137,17 +132,7 @@ public class BearerTest extends OidcBaseTest {
 
     @AfterClass
     public static void generalCleanup() throws Exception {
-        if (KEYCLOAK_CONTAINER != null) {
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM).then().statusCode(204);
-            KEYCLOAK_CONTAINER.stop();
-        }
-        if (client != null) {
-            client.shutdown();
-        }
+        releaseSharedFixture();
     }
 
     @Test
