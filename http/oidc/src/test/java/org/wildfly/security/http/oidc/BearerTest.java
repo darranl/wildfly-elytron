@@ -318,46 +318,47 @@ public class BearerTest extends OidcBaseTest {
             }
 
             URI requestUri;
-            WebClient webClient = getWebClient();
-            switch (bearerAuthType) {
-                case QUERY_PARAM:
-                    if (bearerToken == null) {
-                        // obtain a bearer token and then try accessing the endpoint with a query param specified
-                        requestUri = new URI(getClientUrl() + endpoint + "?access_token="
-                                + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
-                                password, CLIENT_ID, CLIENT_SECRET));
-                    } else {
-                        // try accessing the endpoint with the given bearer token specified using a query param
-                        requestUri = new URI(getClientUrl() + endpoint + "?access_token=" + bearerToken);
-                    }
-                    break;
-                case BASIC:
-                    webClient.addRequestHeader("Authorization",
-                            "Basic " + CodePointIterator.ofString(username + ":" + password).asUtf8().base64Encode().drainToString());
-                    requestUri = new URI(getClientUrl() + endpoint);
-                    break;
-                default:
-                    if (bearerToken == null) {
-                        // obtain a bearer token and then try accessing the endpoint with the Authorization header specified
-                        webClient.addRequestHeader("Authorization", "Bearer " + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
-                                password, CLIENT_ID, CLIENT_SECRET));
-                    } else {
-                        // try accessing the endpoint with the given bearer token specified using the Authorization header
-                        webClient.addRequestHeader("Authorization", "Bearer " + bearerToken);
-                    }
-                    requestUri = new URI(getClientUrl() + endpoint);
-            }
+            try (WebClient webClient = getWebClient()) {
+                switch (bearerAuthType) {
+                    case QUERY_PARAM:
+                        if (bearerToken == null) {
+                            // obtain a bearer token and then try accessing the endpoint with a query param specified
+                            requestUri = new URI(getClientUrl() + endpoint + "?access_token="
+                                    + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
+                                    password, CLIENT_ID, CLIENT_SECRET));
+                        } else {
+                            // try accessing the endpoint with the given bearer token specified using a query param
+                            requestUri = new URI(getClientUrl() + endpoint + "?access_token=" + bearerToken);
+                        }
+                        break;
+                    case BASIC:
+                        webClient.addRequestHeader("Authorization",
+                                "Basic " + CodePointIterator.ofString(username + ":" + password).asUtf8().base64Encode().drainToString());
+                        requestUri = new URI(getClientUrl() + endpoint);
+                        break;
+                    default:
+                        if (bearerToken == null) {
+                            // obtain a bearer token and then try accessing the endpoint with the Authorization header specified
+                            webClient.addRequestHeader("Authorization", "Bearer " + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
+                                    password, CLIENT_ID, CLIENT_SECRET));
+                        } else {
+                            // try accessing the endpoint with the given bearer token specified using the Authorization header
+                            webClient.addRequestHeader("Authorization", "Bearer " + bearerToken);
+                        }
+                        requestUri = new URI(getClientUrl() + endpoint);
+                }
 
-            if (bearerToken == null) {
-                TextPage page = webClient.getPage(requestUri.toURL());
-                assertEquals(HttpStatus.SC_OK, page.getWebResponse().getStatusCode());
-                assertTrue(page.getContent().contains(clientPageText));
-            } else {
-                try {
-                    webClient.getPage(requestUri.toURL());
-                    fail("Expected exception not thrown");
-                } catch (FailingHttpStatusCodeException e) {
-                    assertEquals(HttpStatus.SC_UNAUTHORIZED, e.getStatusCode());
+                if (bearerToken == null) {
+                    TextPage page = webClient.getPage(requestUri.toURL());
+                    assertEquals(HttpStatus.SC_OK, page.getWebResponse().getStatusCode());
+                    assertTrue(page.getContent().contains(clientPageText));
+                } else {
+                    try {
+                        webClient.getPage(requestUri.toURL());
+                        fail("Expected exception not thrown");
+                    } catch (FailingHttpStatusCodeException e) {
+                        assertEquals(HttpStatus.SC_UNAUTHORIZED, e.getStatusCode());
+                    }
                 }
             }
         } finally {
@@ -399,29 +400,30 @@ public class BearerTest extends OidcBaseTest {
                     client.setDispatcher(createAppBearerResponse(mechanism, clientPageText, null, originHeader));
                 }
 
-                WebClient webClient = getWebClient();
-                webClient.addRequestHeader(CorsHeaders.ORIGIN, originHeader);
-                if (bearerToken == null) {
-                    webClient.addRequestHeader("Authorization", "Bearer " + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
-                            password, CORS_CLIENT_ID, CLIENT_SECRET));
-                } else {
-                    webClient.addRequestHeader("Authorization", "Bearer " + bearerToken);
-                }
-                if (bearerToken == null) {
-                    try {
-                        TextPage page = webClient.getPage(requestUri.toURL());
-                        assertEquals(HttpStatus.SC_OK, page.getWebResponse().getStatusCode());
-                        assertTrue(page.getContent().contains(clientPageText));
-                    } catch (FailingHttpStatusCodeException e) {
-                        assertFalse(originHeader.equals(ALLOWED_ORIGIN));
-                        assertEquals(HttpStatus.SC_FORBIDDEN, e.getStatusCode());
+                try (WebClient webClient = getWebClient()) {
+                    webClient.addRequestHeader(CorsHeaders.ORIGIN, originHeader);
+                    if (bearerToken == null) {
+                        webClient.addRequestHeader("Authorization", "Bearer " + KeycloakConfiguration.getAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl(), TEST_REALM, username,
+                                password, CORS_CLIENT_ID, CLIENT_SECRET));
+                    } else {
+                        webClient.addRequestHeader("Authorization", "Bearer " + bearerToken);
                     }
-                } else {
-                    try {
-                        webClient.getPage(requestUri.toURL());
-                        fail("Expected exception not thrown");
-                    } catch (FailingHttpStatusCodeException e) {
-                        assertEquals(HttpStatus.SC_UNAUTHORIZED, e.getStatusCode());
+                    if (bearerToken == null) {
+                        try {
+                            TextPage page = webClient.getPage(requestUri.toURL());
+                            assertEquals(HttpStatus.SC_OK, page.getWebResponse().getStatusCode());
+                            assertTrue(page.getContent().contains(clientPageText));
+                        } catch (FailingHttpStatusCodeException e) {
+                            assertFalse(originHeader.equals(ALLOWED_ORIGIN));
+                            assertEquals(HttpStatus.SC_FORBIDDEN, e.getStatusCode());
+                        }
+                    } else {
+                        try {
+                            webClient.getPage(requestUri.toURL());
+                            fail("Expected exception not thrown");
+                        } catch (FailingHttpStatusCodeException e) {
+                            assertEquals(HttpStatus.SC_UNAUTHORIZED, e.getStatusCode());
+                        }
                     }
                 }
             } else {
@@ -482,9 +484,11 @@ public class BearerTest extends OidcBaseTest {
             try {
                 // browser login should succeed
                 client.setDispatcher(createAppResponse(mechanism, HttpStatus.SC_MOVED_TEMPORARILY, getClientUrl(), CLIENT_PAGE_TEXT));
-                TextPage page = loginToKeycloak(KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, response.getLocation(),
-                        response.getCookies()).click();
-                assertTrue(page.getContent().contains(CLIENT_PAGE_TEXT));
+                try (WebClient webClient = getWebClient()) {
+                    TextPage page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, response.getLocation(),
+                            response.getCookies()).click();
+                    assertTrue(page.getContent().contains(CLIENT_PAGE_TEXT));
+                }
             } finally {
                 client.setDispatcher(new QueueDispatcher());
             }

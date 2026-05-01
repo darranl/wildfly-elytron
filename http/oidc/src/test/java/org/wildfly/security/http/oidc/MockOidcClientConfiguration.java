@@ -19,6 +19,7 @@
 package org.wildfly.security.http.oidc;
 
 import org.htmlunit.TextPage;
+import org.htmlunit.WebClient;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
@@ -112,9 +113,11 @@ public class MockOidcClientConfiguration extends OidcBaseTest {
 
         client.setDispatcher(createAppResponse(mechanism, HttpStatus.SC_MOVED_TEMPORARILY, getClientUrl(), CLIENT_PAGE_TEXT));
 
-        TextPage page = loginToKeycloak(ALICE, ALICE_PASSWORD, requestUri, response.getLocation(),
-                response.getCookies()).click();
-        assertTrue(page.getContent().contains(CLIENT_PAGE_TEXT));
+        try (WebClient webClient = getWebClient()) {
+            TextPage page = loginToKeycloak(webClient, ALICE, ALICE_PASSWORD, requestUri, response.getLocation(),
+                    response.getCookies()).click();
+            assertTrue(page.getContent().contains(CLIENT_PAGE_TEXT));
+        }
     }
 
 

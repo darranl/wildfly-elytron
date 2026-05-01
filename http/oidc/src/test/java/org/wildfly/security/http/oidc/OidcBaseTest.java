@@ -392,10 +392,12 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
                             assertEquals(Status.NO_AUTH, request.getResult());
                             assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
                             assertTrue(response.getLocation().contains(KEYCLOAK_CONTAINER.getAuthServerUrl()));
-                            HtmlPage keycloakLoginPage = getWebClient().getPage(response.getLocation());
-                            HtmlForm loginForm = keycloakLoginPage.getForms().get(0);
-                            assertNotNull(loginForm.getInputByName(KEYCLOAK_USERNAME));
-                            assertNotNull(loginForm.getInputByName(KEYCLOAK_PASSWORD));
+                            try (WebClient webClient = getWebClient()) {
+                                HtmlPage keycloakLoginPage = webClient.getPage(response.getLocation());
+                                HtmlForm loginForm = keycloakLoginPage.getForms().get(0);
+                                assertNotNull(loginForm.getInputByName(KEYCLOAK_USERNAME));
+                                assertNotNull(loginForm.getInputByName(KEYCLOAK_PASSWORD));
+                            }
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -587,18 +589,19 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
                 client.setDispatcher(createAppResponse(mechanism, expectedDispatcherStatusCode,
                         expectedLocation, clientPageText, tmpCookies));
 
-                if (checkInvalidScopeError) {
-                    WebClient webClient = getWebClient();
-                    TextPage keycloakLoginPage = webClient.getPage(response.getLocation());
-                    assertTrue(keycloakLoginPage.getWebResponse().getWebRequest().toString().contains("error_description=Invalid+scopes"));
-                } else {
-                    if (clientExists) {
-                        TextPage page = loginToKeycloak(username, password, requestUri, response.getLocation(),
-                                response.getCookies(), clientExists).click();
-                        assertTrue(page.getContent().contains(clientPageText));
+                try (WebClient webClient = getWebClient()) {
+                    if (checkInvalidScopeError) {
+                        TextPage keycloakLoginPage = webClient.getPage(response.getLocation());
+                        assertTrue(keycloakLoginPage.getWebResponse().getWebRequest().toString().contains("error_description=Invalid+scopes"));
                     } else {
-                        assertNull(loginToKeycloak(username, password, requestUri, response.getLocation(),
-                                response.getCookies(), clientExists));
+                        if (clientExists) {
+                            TextPage page = loginToKeycloak(webClient, username, password, requestUri, response.getLocation(),
+                                    response.getCookies(), clientExists).click();
+                            assertTrue(page.getContent().contains(clientPageText));
+                        } else {
+                            assertNull(loginToKeycloak(webClient, username, password, requestUri, response.getLocation(),
+                                    response.getCookies(), clientExists));
+                        }
                     }
                 }
             }

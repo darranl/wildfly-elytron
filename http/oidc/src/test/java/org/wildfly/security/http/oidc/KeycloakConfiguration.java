@@ -262,9 +262,11 @@ public class KeycloakConfiguration {
             client.setRedirectUris(Arrays.asList("/" + clientApp + "/*"));
         } else if (multiTenancyApp) {
             client.setRedirectUris(Arrays.asList("http://" + clientHostName + ":" + clientPort + "/" + clientApp,
-                    "http://" + clientHostName + ":" + clientPort + "/" + clientApp + "/*"));
+                    "http://" + clientHostName + ":" + clientPort + "/" + clientApp + "/*",
+                    "http://" + clientHostName + ":" + clientPort + "/" + clientApp + "?*"));
         } else {
-            client.setRedirectUris(Arrays.asList("http://" + clientHostName + ":" + clientPort + "/" + clientApp));
+            client.setRedirectUris(Arrays.asList("http://" + clientHostName + ":" + clientPort + "/" + clientApp,
+                    "http://" + clientHostName + ":" + clientPort + "/" + clientApp + "?*"));
         }
         client.setEnabled(true);
         client.setDirectAccessGrantsEnabled(directAccessGrantEnabled);
