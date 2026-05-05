@@ -57,23 +57,25 @@ public class FrontChannelLogoutAbsoluteUrlTest extends AbstractLogoutTest {
     @Test
     public void testRPInitiatedLogout() throws Exception {
         URI requestUri = new URI(getClientUrl());
-        WebClient webClient = getWebClient();
-        webClient.getPage(getClientUrl());
-        TestingHttpServerResponse response = getCurrentResponse();
-        assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
-        assertEquals(Status.NO_AUTH, getCurrentRequest().getResult());
+        try (WebClient webClient = getWebClient()) {
+            webClient.getPage(getClientUrl());
+            TestingHttpServerResponse response = getCurrentResponse();
+            assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
+            assertEquals(Status.NO_AUTH, getCurrentRequest().getResult());
 
-        webClient = getWebClient();
-        Page page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
-                requestUri, response.getLocation(),
-                response.getCookies())
-                .click();
-        assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
+            try (WebClient webClient2 = getWebClient()) {
+                Page page = loginToKeycloak(webClient2, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
+                        requestUri, response.getLocation(),
+                        response.getCookies())
+                        .click();
+                assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
 
-        // logged out after finishing the redirections during frontchannel logout
-        assertUserAuthenticated();
-        webClient.getPage(getClientUrl() + getClientConfig().getLogoutPath());
-        assertUserNotAuthenticated();
+                // logged out after finishing the redirections during frontchannel logout
+                assertUserAuthenticated();
+                webClient2.getPage(getClientUrl() + getClientConfig().getLogoutPath());
+                assertUserNotAuthenticated();
+            }
+        }
     }
 
     @Test
@@ -92,37 +94,39 @@ public class FrontChannelLogoutAbsoluteUrlTest extends AbstractLogoutTest {
         });
 
         URI requestUri = new URI(getClientUrl());
-        WebClient webClient = getWebClient();
-        webClient.getOptions().setJavaScriptEnabled(false);
-        webClient.getPage(getClientUrl());
-        TestingHttpServerResponse response = getCurrentResponse();
-        Page page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, response.getLocation(),
-                response.getCookies()).click();
-        assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
+        try (WebClient webClient = getWebClient()) {
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getPage(getClientUrl());
+            TestingHttpServerResponse response = getCurrentResponse();
+            Page page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, response.getLocation(),
+                    response.getCookies()).click();
+            assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
 
-        assertUserAuthenticated();
-        HtmlPage continueLogout = webClient.getPage(getClientUrl() + getClientConfig().getLogoutPath());
-        page = continueLogout.getElementById("continue").click();
-        assertUserNotAuthenticated();
-        assertTrue(page.getWebResponse().getContentAsString().contains("you are logged out from app"));
+            assertUserAuthenticated();
+            HtmlPage continueLogout = webClient.getPage(getClientUrl() + getClientConfig().getLogoutPath());
+            page = continueLogout.getElementById("continue").click();
+            assertUserNotAuthenticated();
+            assertTrue(page.getWebResponse().getContentAsString().contains("you are logged out from app"));
+        }
     }
 
     @Test
     public void testFrontChannelLogout() throws Exception {
         try {
             URI requestUri = new URI(getClientUrl());
-            WebClient webClient = getWebClient();
-            webClient.getOptions().setJavaScriptEnabled(false);
-            webClient.getPage(getClientUrl());
-            TextPage page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, getCurrentResponse().getLocation(),
-                    getCurrentResponse().getCookies()).click();
-            assertTrue(page.getContent().contains("Welcome, authenticated user"));
+            try (WebClient webClient = getWebClient()) {
+                webClient.getOptions().setJavaScriptEnabled(false);
+                webClient.getPage(getClientUrl());
+                TextPage page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD, requestUri, getCurrentResponse().getLocation(),
+                        getCurrentResponse().getCookies()).click();
+                assertTrue(page.getContent().contains("Welcome, authenticated user"));
 
-            HtmlPage logoutPage = webClient.getPage(getClientConfig().getEndSessionEndpointUrl() + "?client_id=" + CLIENT_ID);
-            HtmlForm form = logoutPage.getForms().get(0);
-            assertUserAuthenticated();
-            form.getInputByName("confirmLogout").click();
-            assertUserNotAuthenticated();
+                HtmlPage logoutPage = webClient.getPage(getClientConfig().getEndSessionEndpointUrl() + "?client_id=" + CLIENT_ID);
+                HtmlForm form = logoutPage.getForms().get(0);
+                assertUserAuthenticated();
+                form.getInputByName("confirmLogout").click();
+                assertUserNotAuthenticated();
+            }
         } finally {
             client.setDispatcher(new QueueDispatcher());
         }

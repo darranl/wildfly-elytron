@@ -107,10 +107,8 @@ public class OidcRequestAuthenticator {
 
     private int NONCE_SIZE = 36;
 
-    static final boolean ALLOW_QUERY_PARAMS_PROPERTY;
-
-    static {
-        ALLOW_QUERY_PARAMS_PROPERTY = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+    static boolean isQueryParamsAllowed() {
+        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
             @Override
             public Boolean run() {
                 return Boolean.parseBoolean(System.getProperty(ALLOW_QUERY_PARAMS_PROPERTY_NAME, "false"));
@@ -508,7 +506,7 @@ public class OidcRequestAuthenticator {
 
     private String rewrittenRedirectUri(String originalUri) {
         Map<String, String> rewriteRules = deployment.getRedirectRewriteRules();
-        if (ALLOW_QUERY_PARAMS_PROPERTY && (rewriteRules == null || rewriteRules.isEmpty())) {
+        if (isQueryParamsAllowed() && (rewriteRules == null || rewriteRules.isEmpty())) {
             return originalUri;
         }
         try {

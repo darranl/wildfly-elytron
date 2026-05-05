@@ -34,6 +34,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     private static final int KEYCLOAK_PORT_HTTP = 8080;
     private static final int KEYCLOAK_PORT_HTTPS = 8443;
     private String relativeUrl;
+    private Integer fixedPort;
 
     private boolean useHttps;
 
@@ -47,10 +48,29 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
         this.relativeUrl = relativeUrl;
     }
 
+    public KeycloakContainer(String relativeUrl, Integer fixedPort) {
+        super(KEYCLOAK_IMAGE);
+        this.useHttps = false;
+        this.relativeUrl = relativeUrl;
+        this.fixedPort = fixedPort;
+    }
+
     public KeycloakContainer(final boolean useHttps) {
         super(KEYCLOAK_IMAGE);
         this.useHttps = useHttps;
 
+    }
+
+    /**
+     * Sets a fixed port for the Keycloak container.
+     * This allows the container to be accessible at a predictable port.
+     *
+     * @param hostPort the port on the host machine
+     * @return this container instance
+     */
+    public KeycloakContainer withFixedPort(int hostPort) {
+        this.fixedPort = hostPort;
+        return this;
     }
 
     @Override
@@ -59,7 +79,14 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
             withEnv("KC_HTTP_RELATIVE_PATH", relativeUrl);
         }
         waitingFor(Wait.forLogMessage(".*Running the server in development mode. DO NOT use this configuration in production.*", 1));
-        withExposedPorts(KEYCLOAK_PORT_HTTP, KEYCLOAK_PORT_HTTPS);
+
+        // Use fixed port if specified, otherwise use dynamic port
+        if (fixedPort != null) {
+            addFixedExposedPort(fixedPort, KEYCLOAK_PORT_HTTP);
+        } else {
+            withExposedPorts(KEYCLOAK_PORT_HTTP, KEYCLOAK_PORT_HTTPS);
+        }
+
         withEnv("KEYCLOAK_ADMIN", KEYCLOAK_ADMIN_USER);
         withEnv("KEYCLOAK_ADMIN_PASSWORD", KEYCLOAK_ADMIN_PASSWORD);
         withCommand("start-dev");
@@ -69,7 +96,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
 
     public String getAuthServerUrl() {
         String host = getHost();
-        int port = getMappedPort(useHttps ? KEYCLOAK_PORT_HTTPS : KEYCLOAK_PORT_HTTP);
+        int port = (fixedPort != null) ? fixedPort : getMappedPort(useHttps ? KEYCLOAK_PORT_HTTPS : KEYCLOAK_PORT_HTTP);
         String url;
         if (relativeUrl != null) {
             url = String.format("http://%s:%s/%s", host, port, relativeUrl);
