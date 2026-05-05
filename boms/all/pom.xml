@@ -44,7 +44,7 @@
                             <bomDescription>Dependency Management with all Elytron modules</bomDescription>
                             <inheritExclusions>ALL</inheritExclusions>
                             <includeTransitives>false</includeTransitives>
-                            <bomWithDependencies>false</bomWithDependencies>
+                            <bomWithDependencies>true</bomWithDependencies>
                             <includeDependencies>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
