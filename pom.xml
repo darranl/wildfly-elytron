@@ -77,7 +77,7 @@
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
         <autoVersionSubmodules>true</autoVersionSubmodules>
-        <preparationProfiles>central-release,gpg-sign</preparationProfiles>
+        <preparationProfiles>central-release</preparationProfiles>
         <signTag>true</signTag>
         <tagNameFormat>@{project.version}</tagNameFormat>
         <arguments>-DskipTests</arguments>
@@ -1236,6 +1236,18 @@
                                 <id>attach-javadocs</id>
                                 <goals>
                                     <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>gpg-sign</id>
+                                <goals>
+                                    <goal>sign</goal>
                                 </goals>
                             </execution>
                         </executions>
