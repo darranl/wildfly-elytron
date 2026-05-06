@@ -64,10 +64,6 @@
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
-                                    <artifactId>wildfly-elytron-auth-server-deprecated</artifactId>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-auth-server-http</artifactId>
                                 </dependency>
                                 <dependency>
@@ -89,10 +85,6 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-credential</artifactId>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.wildfly.security</groupId>
-                                    <artifactId>wildfly-elytron-credential-source-deprecated</artifactId>
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
@@ -125,10 +117,6 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-http-cert</artifactId>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.wildfly.security</groupId>
-                                    <artifactId>wildfly-elytron-http-deprecated</artifactId>
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
@@ -236,10 +224,6 @@
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
-                                    <artifactId>wildfly-elytron-sasl-deprecated</artifactId>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-sasl-digest</artifactId>
                                 </dependency>
                                 <dependency>
@@ -313,10 +297,6 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-x500-cert-util</artifactId>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.wildfly.security</groupId>
-                                    <artifactId>wildfly-elytron-x500-deprecated</artifactId>
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
