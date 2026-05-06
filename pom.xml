@@ -127,6 +127,7 @@
         <version.org.wildfly.client.config>1.0.1.Final</version.org.wildfly.client.config>
         <version.org.wildfly.common>2.0.1</version.org.wildfly.common>
         <version.org.wildfly.plugins.wildfly-bom-builder-plugin>2.0.10.Final</version.org.wildfly.plugins.wildfly-bom-builder-plugin>
+        <version.org.wildfly.wildfly-maven-gpg-plugin>3.2.8.SP1</version.org.wildfly.wildfly-maven-gpg-plugin>
         <version.commons-io.commons-io>2.16.1</version.commons-io.commons-io>
         <version.org.mock-server.mockserver-netty>5.4.1</version.org.mock-server.mockserver-netty>
         <version.org.xipki.pki.ocsp-server>3.0.0</version.org.xipki.pki.ocsp-server>
@@ -244,7 +245,7 @@
                 <artifactId>depgraph-maven-plugin</artifactId>
                 <version>3.2.2</version>
             </plugin>
-        </plugins>
+         </plugins>
 
         <pluginManagement>
             <plugins>
@@ -367,6 +368,18 @@
                     <version>${version.org.wildfly.plugins.wildfly-bom-builder-plugin}</version>
                 </plugin>
 
+                <plugin>
+                   <groupId>org.wildfly</groupId>
+                    <artifactId>wildfly-maven-gpg-plugin</artifactId>
+                    <version>${version.org.wildfly.wildfly-maven-gpg-plugin}</version>
+                    <configuration>
+                        <useAgent>true</useAgent>
+                        <gpgArguments>
+                            <arg>--pinentry-mode</arg>
+                            <arg>${gpg.pinEntryMode}</arg>
+                        </gpgArguments>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
