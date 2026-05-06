@@ -70,14 +70,14 @@
         <!-- Testing properties -->
         <jdk.test.version>25</jdk.test.version>
         <jdk.test.vendor>temurin</jdk.test.vendor>
-        
+
         <!-- Skip JDK 21+ tests when testing with Java 17 -->
         <skipJdk21Tests>false</skipJdk21Tests>
 
         <!-- Release Plugin Settings -->
         <!-- Prepare -->
         <autoVersionSubmodules>true</autoVersionSubmodules>
-        <preparationProfiles>central-release,gpg-sign</preparationProfiles>
+        <preparationProfiles>central-release</preparationProfiles>
         <signTag>true</signTag>
         <tagNameFormat>@{project.version}</tagNameFormat>
         <arguments>-DskipTests</arguments>
@@ -128,6 +128,8 @@
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.client.config>1.0.1.Final</version.org.wildfly.client.config>
         <version.org.wildfly.common>2.0.1</version.org.wildfly.common>
+        <version.org.wildfly.plugins.wildfly-bom-builder-plugin>2.0.10.Final</version.org.wildfly.plugins.wildfly-bom-builder-plugin>
+        <version.org.wildfly.wildfly-maven-gpg-plugin>3.2.8.SP1</version.org.wildfly.wildfly-maven-gpg-plugin>
         <version.commons-io.commons-io>2.16.1</version.commons-io.commons-io>
         <version.org.mock-server.mockserver-netty>5.4.1</version.org.mock-server.mockserver-netty>
         <version.org.xipki.pki.ocsp-server>3.0.0</version.org.xipki.pki.ocsp-server>
@@ -245,7 +247,7 @@
                 <artifactId>depgraph-maven-plugin</artifactId>
                 <version>3.2.2</version>
             </plugin>
-        </plugins>
+         </plugins>
 
         <pluginManagement>
             <plugins>
@@ -362,6 +364,24 @@
                     </configuration>
                 </plugin>
 
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-bom-builder-plugin</artifactId>
+                    <version>${version.org.wildfly.plugins.wildfly-bom-builder-plugin}</version>
+                </plugin>
+
+                <plugin>
+                   <groupId>org.wildfly</groupId>
+                    <artifactId>wildfly-maven-gpg-plugin</artifactId>
+                    <version>${version.org.wildfly.wildfly-maven-gpg-plugin}</version>
+                    <configuration>
+                        <useAgent>true</useAgent>
+                        <gpgArguments>
+                            <arg>--pinentry-mode</arg>
+                            <arg>${gpg.pinEntryMode}</arg>
+                        </gpgArguments>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -1211,6 +1231,18 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>gpg-sign</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <version>${version.central.publishing.maven.plugin}</version>
@@ -1311,7 +1343,7 @@
                 </plugins>
             </build>
         </profile>
-        
+
 
 
         <profile>
@@ -1335,7 +1367,7 @@
                                 <id>default-test</id>
                                 <phase>none</phase>
                             </execution>
-                            
+
                             <!-- Test with Java 17 - skip JDK 21+ specific test modules -->
                             <execution>
                                 <id>test-java-17</id>
@@ -1350,7 +1382,7 @@
                                     <reportsDirectory>${project.build.directory}/surefire-reports-java17-${jdk.test.vendor}</reportsDirectory>
                                 </configuration>
                             </execution>
-                            
+
                             <!-- Test with Java 21 (SecurityManager requires -Djava.security.manager=allow) -->
                             <execution>
                                 <id>test-java-21</id>
@@ -1366,7 +1398,7 @@
                                     <argLine>-Djava.security.manager=allow ${modular.jdk.args} ${modular.jdk.props}</argLine>
                                 </configuration>
                             </execution>
-                            
+
                             <!-- Test with Java 25 -->
                             <execution>
                                 <id>test-java-25</id>
@@ -1707,7 +1739,7 @@
         <module>auth/util</module>
         <module>auth/client</module>
         <module>base</module>
-
+        <module>boms/all</module>
         <module>credential/base</module>
         <module>credential/store</module>
         <module>credential/source/impl</module>

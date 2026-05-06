@@ -31,10 +31,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.security.auth.callback.Callback;
@@ -104,6 +106,8 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
     public static final Boolean CONFIGURE_CLIENT_SCOPES = true; // to simulate the application being secured
     public static final String TENANT1_ENDPOINT = "tenant1";
     public static final String TENANT2_ENDPOINT = "tenant2";
+    private static final Set<String> MANAGED_REALMS = new HashSet<>();
+    private static int sharedFixtureUsers;
     protected HttpServerAuthenticationMechanismFactory oidcFactory;
 
     public enum RequestObjectErrorType {
@@ -115,28 +119,95 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
 
     @AfterClass
     public static void generalCleanup() throws Exception {
-        if (KEYCLOAK_CONTAINER != null) {
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM).then().statusCode(204);
-            KEYCLOAK_CONTAINER.stop();
+        releaseSharedFixture();
+    }
+
+    protected static synchronized void acquireSharedFixture() throws Exception {
+        if (sharedFixtureUsers == 0) {
+            KEYCLOAK_CONTAINER = new KeycloakContainer();
+            KEYCLOAK_CONTAINER.start();
+            client = new MockWebServer();
+            client.start(CLIENT_PORT);
         }
-        if (client != null) {
-            client.shutdown();
+        sharedFixtureUsers++;
+    }
+
+    protected static synchronized void releaseSharedFixture() throws Exception {
+        if (sharedFixtureUsers == 0) {
+            return;
+        }
+
+        sharedFixtureUsers--;
+        if (sharedFixtureUsers > 0) {
+            return;
+        }
+
+        try {
+            deleteManagedRealms();
+        } finally {
+            MANAGED_REALMS.clear();
+            if (KEYCLOAK_CONTAINER != null) {
+                KEYCLOAK_CONTAINER.stop();
+                KEYCLOAK_CONTAINER = null;
+            }
+            if (client != null) {
+                client.shutdown();
+                client = null;
+            }
         }
     }
 
+    protected static synchronized void ensureRealmCreated(RealmRepresentation realm) {
+        ensureRealmCreated(realm, realm.getRealm());
+    }
+
+    protected static synchronized void ensureRealmCreated(RealmRepresentation realm, String realmName) {
+        deleteRealmIfExists(realmName);
+        sendRealmCreationRequest(realm);
+        MANAGED_REALMS.add(realmName);
+    }
+
+    protected static synchronized void deleteManagedRealms() {
+        for (String realmName : new HashSet<>(MANAGED_REALMS)) {
+            deleteRealmIfExists(realmName);
+        }
+    }
+
+    protected static synchronized void deleteRealmIfExists(String realmName) {
+        if (KEYCLOAK_CONTAINER == null) {
+            MANAGED_REALMS.remove(realmName);
+            return;
+        }
+
+        int statusCode = RestAssured
+                .given()
+                .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
+                .when()
+                .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + realmName)
+                .then()
+                .extract()
+                .statusCode();
+
+        if (statusCode != 204 && statusCode != 404) {
+            throw new AssertionError("Unexpected status code deleting realm " + realmName + ": " + statusCode);
+        }
+
+        MANAGED_REALMS.remove(realmName);
+    }
+
     protected static void sendRealmCreationRequest(RealmRepresentation realm) {
+        sendRealmCreationRequest(realm, KEYCLOAK_CONTAINER.getAuthServerUrl());
+    }
+
+    protected static void sendRealmCreationRequest(RealmRepresentation realm, String authServerUrl) {
         try {
             RestAssured
                     .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
+                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(authServerUrl))
                     .contentType("application/json")
                     .body(JsonSerialization.writeValueAsBytes(realm))
                     .when()
-                    .post(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms").then()
+                    .post(authServerUrl + "/admin/realms").then()
                     .statusCode(201);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -321,10 +392,12 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
                             assertEquals(Status.NO_AUTH, request.getResult());
                             assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
                             assertTrue(response.getLocation().contains(KEYCLOAK_CONTAINER.getAuthServerUrl()));
-                            HtmlPage keycloakLoginPage = getWebClient().getPage(response.getLocation());
-                            HtmlForm loginForm = keycloakLoginPage.getForms().get(0);
-                            assertNotNull(loginForm.getInputByName(KEYCLOAK_USERNAME));
-                            assertNotNull(loginForm.getInputByName(KEYCLOAK_PASSWORD));
+                            try (WebClient webClient = getWebClient()) {
+                                HtmlPage keycloakLoginPage = webClient.getPage(response.getLocation());
+                                HtmlForm loginForm = keycloakLoginPage.getForms().get(0);
+                                assertNotNull(loginForm.getInputByName(KEYCLOAK_USERNAME));
+                                assertNotNull(loginForm.getInputByName(KEYCLOAK_PASSWORD));
+                            }
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -516,18 +589,19 @@ public class OidcBaseTest extends AbstractBaseHttpTest {
                 client.setDispatcher(createAppResponse(mechanism, expectedDispatcherStatusCode,
                         expectedLocation, clientPageText, tmpCookies));
 
-                if (checkInvalidScopeError) {
-                    WebClient webClient = getWebClient();
-                    TextPage keycloakLoginPage = webClient.getPage(response.getLocation());
-                    assertTrue(keycloakLoginPage.getWebResponse().getWebRequest().toString().contains("error_description=Invalid+scopes"));
-                } else {
-                    if (clientExists) {
-                        TextPage page = loginToKeycloak(username, password, requestUri, response.getLocation(),
-                                response.getCookies(), clientExists).click();
-                        assertTrue(page.getContent().contains(clientPageText));
+                try (WebClient webClient = getWebClient()) {
+                    if (checkInvalidScopeError) {
+                        TextPage keycloakLoginPage = webClient.getPage(response.getLocation());
+                        assertTrue(keycloakLoginPage.getWebResponse().getWebRequest().toString().contains("error_description=Invalid+scopes"));
                     } else {
-                        assertNull(loginToKeycloak(username, password, requestUri, response.getLocation(),
-                                response.getCookies(), clientExists));
+                        if (clientExists) {
+                            TextPage page = loginToKeycloak(webClient, username, password, requestUri, response.getLocation(),
+                                    response.getCookies(), clientExists).click();
+                            assertTrue(page.getContent().contains(clientPageText));
+                        } else {
+                            assertNull(loginToKeycloak(webClient, username, password, requestUri, response.getLocation(),
+                                    response.getCookies(), clientExists));
+                        }
                     }
                 }
             }

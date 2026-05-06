@@ -127,7 +127,11 @@ public class DefaultSSLContextProviderJavaSecurityStaticConfigurationTest {
         String content = Files.readString(configFile);
 
         // Update keystore path to absolute path
-        String keystorePath = TEST_OUTPUT_PATH.resolve("client.keystore").toAbsolutePath().toString();
+        // Convert to forward slashes for cross-platform compatibility (Windows backslashes cause issues in XML)
+        String keystorePath = TEST_OUTPUT_PATH.resolve("client.keystore")
+            .toAbsolutePath()
+            .toString()
+            .replace('\\', '/');
 
         // Replace the keystore file path
         content = content.replace(

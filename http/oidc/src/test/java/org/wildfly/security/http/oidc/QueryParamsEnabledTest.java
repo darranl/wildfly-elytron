@@ -61,28 +61,42 @@ public class QueryParamsEnabledTest extends QueryParamsBaseTest {
     }
 
     /**
-     * Test successfully logging in with query params included in the URL.
-     * The query params should be present upon redirect.
+     * Test successfully logging in with a single query param included in the URL.
+     * The query param should be present upon redirect.
      */
     @Test
-    public void testSuccessfulAuthenticationWithQueryParamsWithSystemPropertyEnabled() throws Exception {
+    public void testSuccessfulAuthenticationWithSingleQueryParam() throws Exception {
         String queryParams = "?myparam=abc";
         String originalUrl = getClientUrl() + queryParams;
         String expectedUrlAfterRedirect = originalUrl;
         performAuthentication(getOidcConfigurationInputStreamWithProviderUrl(), KeycloakConfiguration.ALICE,
                 KeycloakConfiguration.ALICE_PASSWORD, true, HttpStatus.SC_MOVED_TEMPORARILY, originalUrl,
                 expectedUrlAfterRedirect, CLIENT_PAGE_TEXT);
+    }
 
-        queryParams = "?one=abc&two=def&three=ghi";
-        originalUrl = getClientUrl() + queryParams;
-        expectedUrlAfterRedirect = originalUrl;
+    /**
+     * Test successfully logging in with multiple query params included in the URL.
+     * The query params should be present upon redirect.
+     */
+    @Test
+    public void testSuccessfulAuthenticationWithMultipleQueryParams() throws Exception {
+        String queryParams = "?one=abc&two=def&three=ghi";
+        String originalUrl = getClientUrl() + queryParams;
+        String expectedUrlAfterRedirect = originalUrl;
         performAuthentication(getOidcConfigurationInputStreamWithProviderUrl(), KeycloakConfiguration.ALICE,
                 KeycloakConfiguration.ALICE_PASSWORD, true, HttpStatus.SC_MOVED_TEMPORARILY, originalUrl,
                 expectedUrlAfterRedirect, CLIENT_PAGE_TEXT);
+    }
 
-        queryParams = "?url=http%3A%2F%2Flocalhost%2F%3Fone%3Dabc%26two%3Ddef&three=ghi";
-        originalUrl = getClientUrl() + queryParams;
-        expectedUrlAfterRedirect = originalUrl;
+    /**
+     * Test successfully logging in with an encoded URL as a query param.
+     * The query params should be present upon redirect.
+     */
+    @Test
+    public void testSuccessfulAuthenticationWithEncodedUrlQueryParam() throws Exception {
+        String queryParams = "?url=http%3A%2F%2Flocalhost%2F%3Fone%3Dabc%26two%3Ddef&three=ghi";
+        String originalUrl = getClientUrl() + queryParams;
+        String expectedUrlAfterRedirect = originalUrl;
         performAuthentication(getOidcConfigurationInputStreamWithProviderUrl(), KeycloakConfiguration.ALICE,
                 KeycloakConfiguration.ALICE_PASSWORD, true, HttpStatus.SC_MOVED_TEMPORARILY, originalUrl,
                 expectedUrlAfterRedirect, CLIENT_PAGE_TEXT);
