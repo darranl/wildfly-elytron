@@ -94,6 +94,10 @@
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
+                                    <artifactId>wildfly-elytron-credential-source-impl</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-credential-store</artifactId>
                                 </dependency>
                                 <dependency>
@@ -154,6 +158,10 @@
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
+                                    <artifactId>wildfly-elytron-http-stateful-basic</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-http-util</artifactId>
                                 </dependency>
                                 <dependency>
@@ -203,6 +211,10 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-permission</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.wildfly.security</groupId>
+                                    <artifactId>wildfly-elytron-provider-util</artifactId>
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
@@ -291,6 +303,10 @@
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
                                     <artifactId>wildfly-elytron-ssh-util</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.wildfly.security</groupId>
+                                    <artifactId>wildfly-elytron-tool</artifactId>
                                 </dependency>
                                 <dependency>
                                     <groupId>org.wildfly.security</groupId>
