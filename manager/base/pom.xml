@@ -36,8 +36,10 @@
     <properties>
         <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
         <surefire.security.manager.arg />
+        <!-- Default to the base classes; overridden to the java25 multi-release directory when testing on Java 25 -->
+        <surefire.classes.directory>${project.build.directory}/classes</surefire.classes.directory>
     </properties>
-    
+
     <profiles>
         <!-- Enable SecurityManager for Java 21 tests -->
         <profile>
@@ -50,6 +52,19 @@
             </activation>
             <properties>
                 <surefire.security.manager.arg>-Djava.security.manager=allow</surefire.security.manager.arg>
+            </properties>
+        </profile>
+        <!-- Use the Java 25 multi-release classes when testing on Java 25 -->
+        <profile>
+            <id>java25-classes</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>25</value>
+                </property>
+            </activation>
+            <properties>
+                <surefire.classes.directory>${project.build.directory}/classes/META-INF/versions/25</surefire.classes.directory>
             </properties>
         </profile>
     </profiles>
@@ -81,7 +96,8 @@
                             <compileSourceRoots>
                                 <compileSourceRoot>${project.basedir}/src/main/java25</compileSourceRoot>
                             </compileSourceRoots>
-                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                            <proc>none</proc>
                         </configuration>
                     </execution>
                 </executions>
@@ -107,7 +123,7 @@
                     <execution>
                         <id>default-test</id>
                         <configuration>
-                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
+                            <classesDirectory>${surefire.classes.directory}</classesDirectory>
                             <additionalClasspathElements>
                                 <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
                             </additionalClasspathElements>
