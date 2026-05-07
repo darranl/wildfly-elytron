@@ -81,7 +81,8 @@
                             <compileSourceRoots>
                                 <compileSourceRoot>${project.basedir}/src/main/java25</compileSourceRoot>
                             </compileSourceRoots>
-                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                            <proc>none</proc>
                         </configuration>
                     </execution>
                 </executions>
@@ -107,7 +108,7 @@
                     <execution>
                         <id>default-test</id>
                         <configuration>
-                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/9</classesDirectory>
+                            <classesDirectory>${project.build.directory}/classes/META-INF/versions/25</classesDirectory>
                             <additionalClasspathElements>
                                 <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
                             </additionalClasspathElements>
