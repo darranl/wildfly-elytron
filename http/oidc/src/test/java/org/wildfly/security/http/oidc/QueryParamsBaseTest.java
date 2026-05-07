@@ -20,11 +20,12 @@ package org.wildfly.security.http.oidc;
 
 import static org.junit.Assume.assumeTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import io.restassured.RestAssured;
-import okhttp3.mockwebserver.MockWebServer;
 
 /**
  * Tests for the {@code wildfly.elytron.oidc.allow.query.params} system property.
@@ -33,29 +34,32 @@ import okhttp3.mockwebserver.MockWebServer;
  */
 public class QueryParamsBaseTest extends OidcBaseTest {
 
+    public static final String QUERY_PARAMS_TEST_REALM = "WildFlyQueryParams";
+
     @BeforeClass
     public static void startTestContainers() throws Exception {
         assumeTrue("Docker isn't available, OIDC tests will be skipped", isDockerAvailable());
-        KEYCLOAK_CONTAINER = new KeycloakContainer();
-        KEYCLOAK_CONTAINER.start();
-        sendRealmCreationRequest(KeycloakConfiguration.getRealmRepresentation(TEST_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, 3, 3, false, true));
-        client = new MockWebServer();
-        client.start(CLIENT_PORT);
+        acquireSharedFixture();
+        ensureRealmCreated(KeycloakConfiguration.getRealmRepresentation(QUERY_PARAMS_TEST_REALM, CLIENT_ID, CLIENT_SECRET, CLIENT_HOST_NAME, CLIENT_PORT, CLIENT_APP, 3, 3, false, true));
     }
 
     @AfterClass
     public static void generalCleanup() throws Exception {
-        if (KEYCLOAK_CONTAINER != null) {
-            RestAssured
-                    .given()
-                    .auth().oauth2(KeycloakConfiguration.getAdminAccessToken(KEYCLOAK_CONTAINER.getAuthServerUrl()))
-                    .when()
-                    .delete(KEYCLOAK_CONTAINER.getAuthServerUrl() + "/admin/realms/" + TEST_REALM).then().statusCode(204);
-            KEYCLOAK_CONTAINER.stop();
-        }
-        if (client != null) {
-            client.shutdown();
-        }
+        releaseSharedFixture();
+    }
+
+    @Override
+    protected InputStream getOidcConfigurationInputStreamWithProviderUrl() {
+        String oidcConfig = "{\n" +
+                "    \"" + Oidc.RESOURCE + "\" : \"" + CLIENT_ID + "\",\n" +
+                "    \"" + Oidc.PUBLIC_CLIENT + "\" : \"false\",\n" +
+                "    \"" + Oidc.PROVIDER_URL + "\" : \"" + KEYCLOAK_CONTAINER.getAuthServerUrl() + "/realms/" + QUERY_PARAMS_TEST_REALM + "\",\n" +
+                "    \"" + Oidc.SSL_REQUIRED + "\" : \"EXTERNAL\",\n" +
+                "    \"" + Oidc.CREDENTIALS + "\" : {\n" +
+                "        \"" + Oidc.ClientCredentialsProviderType.SECRET.getValue() + "\" : \"" + CLIENT_SECRET + "\"\n" +
+                "    }\n" +
+                "}";
+        return new ByteArrayInputStream(oidcConfig.getBytes(StandardCharsets.UTF_8));
     }
 
 }

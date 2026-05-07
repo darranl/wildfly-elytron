@@ -53,26 +53,27 @@ public class BackChannelLogoutTest extends AbstractLogoutTest {
     @Test
     public void testBackChannelLogout() throws Exception {
         URI requestUri = new URI(getClientUrl());
-        WebClient webClient = getWebClient();
+        try (WebClient webClient = getWebClient()) {
+            webClient.getPage(getClientUrl());
+            TestingHttpServerResponse response = getCurrentResponse();
+            assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
+            assertEquals(Status.NO_AUTH, getCurrentRequest().getResult());
 
-        webClient.getPage(getClientUrl());
-        TestingHttpServerResponse response = getCurrentResponse();
-        assertEquals(HttpStatus.SC_MOVED_TEMPORARILY, response.getStatusCode());
-        assertEquals(Status.NO_AUTH, getCurrentRequest().getResult());
+            try (WebClient webClient2 = getWebClient()) {
+                Page page = loginToKeycloak(webClient2, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
+                        requestUri, response.getLocation(),
+                        response.getCookies())
+                        .click();
+                assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
 
-        webClient = getWebClient();
-        Page page = loginToKeycloak(webClient, KeycloakConfiguration.ALICE, KeycloakConfiguration.ALICE_PASSWORD,
-                requestUri, response.getLocation(),
-                response.getCookies())
-                .click();
-        assertTrue(page.getWebResponse().getContentAsString().contains("Welcome, authenticated user"));
-
-        // logged out after finishing the redirections during logout
-        assertUserAuthenticated();
-        // Increase timeout to allow time for Keycloak to complete the backchannel logout callback
-        // The backchannel logout requires Keycloak to POST to the callback URL before responding to the browser
-        webClient.getOptions().setTimeout(60000); // 60 seconds
-        webClient.getPage(getClientUrl() + getClientConfig().getLogoutPath());
-        assertUserNotAuthenticated();
+                // logged out after finishing the redirections during logout
+                assertUserAuthenticated();
+                // Increase timeout to allow time for Keycloak to complete the backchannel logout callback
+                // The backchannel logout requires Keycloak to POST to the callback URL before responding to the browser
+                webClient2.getOptions().setTimeout(60000); // 60 seconds
+                webClient2.getPage(getClientUrl() + getClientConfig().getLogoutPath());
+                assertUserNotAuthenticated();
+            }
+        }
     }
 }

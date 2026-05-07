@@ -206,6 +206,14 @@
                     <environmentVariables>
                         <OIDC_PROVIDER_URL_ENV>/realms/WildFly</OIDC_PROVIDER_URL_ENV>
                     </environmentVariables>
+                    <excludes>
+                        <!-- These tests are run as part of OidcTestSuite to share Keycloak container -->
+                        <exclude>**/OidcTest.java</exclude>
+                        <exclude>**/BearerTest.java</exclude>
+                        <exclude>**/QueryParamsEnabledTest.java</exclude>
+                        <exclude>**/QueryParamsDisabledTest.java</exclude>
+                        <exclude>**/MockOidcClientConfiguration.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,0 +1,182 @@
+name: CI - Non-LTS (Java 26) (3.x)
+
+on:
+  schedule:
+    # Run at 3 AM UTC every day
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-and-test:
+    name: Build and Test - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      # 1. Checkout code from 3.x branch
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 3.x
+      
+      # 2. Install all required JDKs and capture paths
+      - name: Set up JDK 26 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '26'
+          cache: 'maven'
+      
+      - name: Capture JDK 26 Temurin path
+        shell: bash
+        run: echo "JAVA_HOME_26_TEMURIN=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Set up JDK 26 (Semeru)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'semeru'
+          java-version: '26'
+      
+      - name: Capture JDK 26 Semeru path
+        shell: bash
+        run: echo "JAVA_HOME_26_SEMERU=$JAVA_HOME" >> $GITHUB_ENV
+      
+      # 3. Generate toolchains.xml using captured environment variables
+      - name: Generate toolchains.xml
+        shell: bash
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/toolchains.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <toolchains xmlns="http://maven.apache.org/TOOLCHAINS/1.1.0"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="http://maven.apache.org/TOOLCHAINS/1.1.0
+                                          http://maven.apache.org/xsd/toolchains-1.1.0.xsd">
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>26</version>
+                <vendor>temurin</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_26_TEMURIN}</jdkHome>
+              </configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides>
+                <version>26</version>
+                <vendor>semeru</vendor>
+              </provides>
+              <configuration>
+                <jdkHome>${JAVA_HOME_26_SEMERU}</jdkHome>
+              </configuration>
+            </toolchain>
+          </toolchains>
+          EOF
+      
+      # 4. Update hosts file for networking tests (Linux)
+      - name: Update hosts file - Linux
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          cat /etc/hosts
+          sudo bash -c "echo '127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4' > /etc/hosts"
+          sudo bash -c "echo '::1         localhost localhost.localdomain localhost6 localhost6.localdomain6' >> /etc/hosts"
+          sudo sysctl -w fs.file-max=2097152
+      
+      # 4a. Update hosts file for networking tests (Windows)
+      - name: Update hosts file - Windows
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          type %SystemRoot%\System32\drivers\etc\hosts
+          echo 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4 > %SystemRoot%\System32\drivers\etc\hosts
+          echo ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6 >> %SystemRoot%\System32\drivers\etc\hosts
+      
+      # 5. Build once with Java 26 and install artifacts
+      - name: Build with Java 26 and install artifacts
+        shell: bash
+        run: |
+          export JAVA_HOME="${JAVA_HOME_26_TEMURIN}"
+          mvn -version
+          mvn clean install -DskipTests -B -V
+      
+      # 6. Run tests with Java 26 (Temurin)
+      - name: Test with Java 26 (Temurin)
+        id: test-java26-temurin
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=26 -Djdk.test.vendor=temurin -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 26 (Temurin) - ${{ matrix.os }}
+        if: always() && matrix.os == 'ubuntu-latest'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java26-temurin/TEST-*.xml'
+          check_name: 'Test Results (3.x) - Java 26 (Temurin) - ${{ matrix.os }}'
+          comment_mode: off
+      
+      - name: Upload test results - Java 26 (Temurin) - ${{ matrix.os }}
+        if: failure() && steps.test-java26-temurin.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-3x-java26-temurin-${{ matrix.os }}
+          path: '**/target/surefire-reports-java26-temurin/**'
+          retention-days: 30
+      
+      # 7. Run tests with Java 26 (Semeru)
+      - name: Test with Java 26 (Semeru)
+        id: test-java26-semeru
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          mvn test -Djdk.test.version=26 -Djdk.test.vendor=semeru -B
+        continue-on-error: true
+      
+      - name: Publish test results - Java 26 (Semeru) - ${{ matrix.os }}
+        if: always() && matrix.os == 'ubuntu-latest'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports-java26-semeru/TEST-*.xml'
+          check_name: 'Test Results (3.x) - Java 26 (Semeru) - ${{ matrix.os }}'
+          comment_mode: off
+      
+      - name: Upload test results - Java 26 (Semeru) - ${{ matrix.os }}
+        if: failure() && steps.test-java26-semeru.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-3x-java26-semeru-${{ matrix.os }}
+          path: '**/target/surefire-reports-java26-semeru/**'
+          retention-days: 30
+      
+      # 8. Check test results - fail job if any test permutation failed
+      - name: Check test results
+        if: always()
+        shell: bash
+        run: |
+          echo "Checking test results for all permutations..."
+          FAILED=0
+          
+          if [ "${{ steps.test-java26-temurin.outcome }}" != "success" ]; then
+            echo "❌ Java 26 (Temurin) tests failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ steps.test-java26-semeru.outcome }}" != "success" ]; then
+            echo "❌ Java 26 (Semeru) tests failed"
+            FAILED=1
+          fi
+          
+          if [ $FAILED -eq 1 ]; then
+            echo "::error::One or more test permutations failed"
+            exit 1
+          fi
+          
+          echo "✅ All test permutations passed"
