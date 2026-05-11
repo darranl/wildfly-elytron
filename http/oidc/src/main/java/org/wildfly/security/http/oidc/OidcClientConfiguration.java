@@ -236,33 +236,35 @@ public class OidcClientConfiguration {
     protected void resolveUrls() {
         if (authUrl == null) {
             synchronized (this) {
-                String discoveryUrl = getDiscoveryUrl();
-                try {
-                    log.debug("Loading OpenID provider metadata from " + discoveryUrl);
+                if (authUrl == null) {
+                    String discoveryUrl = getDiscoveryUrl();
+                    try {
+                        log.debug("Loading OpenID provider metadata from " + discoveryUrl);
 
-                    OidcProviderMetadata config = getOidcProviderMetadata(discoveryUrl);
+                        OidcProviderMetadata config = getOidcProviderMetadata(discoveryUrl);
 
-                    authUrl = config.getAuthorizationEndpoint();
-                    issuerUrl = config.getIssuer();
-                    tokenUrl = config.getTokenEndpoint();
-                    endSessionEndpointUrl = config.getLogoutEndpoint();
-                    jwksUrl = config.getJwksUri();
-                    requestParameterSupported = config.getRequestParameterSupported();
-                    requestObjectSigningAlgValuesSupported = config.getRequestObjectSigningAlgValuesSupported();
-                    requestObjectEncryptionEncValuesSupported = config.getRequestObjectEncryptionEncValuesSupported();
-                    requestObjectEncryptionAlgValuesSupported = config.getRequestObjectEncryptionAlgValuesSupported();
-                    requestUriParameterSupported = config.getRequestUriParameterSupported();
-                    pushedAuthorizationRequestEndpoint = config.getPushedAuthorizationRequestEndpoint();
+                        authUrl = config.getAuthorizationEndpoint();
+                        issuerUrl = config.getIssuer();
+                        tokenUrl = config.getTokenEndpoint();
+                        endSessionEndpointUrl = config.getLogoutEndpoint();
+                        jwksUrl = config.getJwksUri();
+                        requestParameterSupported = config.getRequestParameterSupported();
+                        requestObjectSigningAlgValuesSupported = config.getRequestObjectSigningAlgValuesSupported();
+                        requestObjectEncryptionEncValuesSupported = config.getRequestObjectEncryptionEncValuesSupported();
+                        requestObjectEncryptionAlgValuesSupported = config.getRequestObjectEncryptionAlgValuesSupported();
+                        requestUriParameterSupported = config.getRequestUriParameterSupported();
+                        pushedAuthorizationRequestEndpoint = config.getPushedAuthorizationRequestEndpoint();
 
-                    if (authServerBaseUrl != null) {
-                        // keycloak-specific properties
-                        accountUrl = getUrl(issuerUrl, ACCOUNT_PATH);
-                        registerNodeUrl = getUrl(authServerBaseUrl, KEYCLOAK_REALMS_PATH + getRealm(), CLIENTS_MANAGEMENT_REGISTER_NODE_PATH);
-                        unregisterNodeUrl = getUrl(authServerBaseUrl, KEYCLOAK_REALMS_PATH + getRealm(), CLIENTS_MANAGEMENT_UNREGISTER_NODE_PATH);
+                        if (authServerBaseUrl != null) {
+                            // keycloak-specific properties
+                            accountUrl = getUrl(issuerUrl, ACCOUNT_PATH);
+                            registerNodeUrl = getUrl(authServerBaseUrl, KEYCLOAK_REALMS_PATH + getRealm(), CLIENTS_MANAGEMENT_REGISTER_NODE_PATH);
+                            unregisterNodeUrl = getUrl(authServerBaseUrl, KEYCLOAK_REALMS_PATH + getRealm(), CLIENTS_MANAGEMENT_UNREGISTER_NODE_PATH);
+                        }
+                        log.loadedOpenIdProviderMetadata(discoveryUrl);
+                    } catch (Exception e) {
+                        log.unableToLoadOpenIdProviderMetadata(discoveryUrl);
                     }
-                    log.loadedOpenIdProviderMetadata(discoveryUrl);
-                } catch (Exception e) {
-                    log.unableToLoadOpenIdProviderMetadata(discoveryUrl);
                 }
             }
         }
