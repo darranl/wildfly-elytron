@@ -67,6 +67,23 @@ final class LogoutHandler {
     });
 
     boolean tryLogout(OidcHttpFacade facade) {
+        if (isLogoutCallbackPath(facade)) {
+            log.trace("isLogoutCallbackPath");
+            if (isFrontChannel(facade)) {
+                log.trace("isFrontChannel");
+                handleFrontChannelLogoutRequest(facade);
+                return true;
+            }
+            RefreshableOidcSecurityContext activeSession = (RefreshableOidcSecurityContext) facade.getSecurityContext();
+            if (activeSession != null) {
+                // we have an active session, should have received a GET logout request
+                facade.getResponse().setStatus(HttpStatus.SC_METHOD_NOT_ALLOWED);
+                facade.authenticationFailed();
+                return true;
+            }
+            return false;
+        }
+
         RefreshableOidcSecurityContext securityContext = getSecurityContext(facade);
         if (securityContext == null) {
             // no active session
@@ -78,19 +95,6 @@ final class LogoutHandler {
             log.trace("isRpInitiatedLogoutPath");
             redirectEndSessionEndpoint(facade);
             return true;
-        }
-
-        if (isLogoutCallbackPath(facade)) {
-            log.trace("isLogoutCallbackPath");
-            if (isFrontChannel(facade)) {
-                log.trace("isFrontChannel");
-                handleFrontChannelLogoutRequest(facade);
-                return true;
-            } else {
-                // we have an active session, should have received a GET logout request
-                facade.getResponse().setStatus(HttpStatus.SC_METHOD_NOT_ALLOWED);
-                facade.authenticationFailed();
-            }
         }
         return false;
     }
@@ -141,6 +145,9 @@ final class LogoutHandler {
             throw log.unableToCreateEndSessionEndpointRequest(
                     clientConfiguration.getEndSessionEndpointUrl(), e.getMessage());
         }
+
+        log.debugf("Invalidating local session during RP-initiated logout");
+        facade.getTokenStore().logout(false);
 
         log.debugf("Sending redirect to the end_session_endpoint: %s", logoutUri);
         facade.getResponse().setStatus(HttpStatus.SC_MOVED_TEMPORARILY);
@@ -235,6 +242,9 @@ final class LogoutHandler {
             }
 
             RefreshableOidcSecurityContext context = getSecurityContext(facade);
+            if (context == null) {
+                return;
+            }
             IDToken idToken = context.getIDToken();
             String issuer = request.getQueryParamValue(ISS);
 
