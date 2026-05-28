@@ -238,7 +238,11 @@ final class LogoutHandler {
             IDToken idToken = context.getIDToken();
             String issuer = request.getQueryParamValue(ISS);
 
-            if (idToken == null || !sessionId.equals(idToken.getNonce()) || !idToken.getIssuer().equals(issuer)) {
+            String tokenSid = idToken != null ? idToken.getSid() : null;
+            String tokenIssuer = idToken != null ? idToken.getIssuer() : null;
+            if (idToken == null || tokenSid == null || !sessionId.equals(tokenSid)
+                    || issuer == null || tokenIssuer == null || !tokenIssuer.equals(issuer)) {
+                log.debugf("Front-channel logout validation failed for sid [%s] and iss [%s]", sessionId, issuer);
                 facade.getResponse().setStatus(HttpStatus.SC_BAD_REQUEST);
                 facade.authenticationFailed();
                 return;
