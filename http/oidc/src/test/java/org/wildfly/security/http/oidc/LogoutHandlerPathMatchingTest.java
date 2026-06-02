@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**
- * Tests for {@link LogoutHandler} logout callback path matching.
+ * Tests for {@link LogoutHandler} logout path matching.
  */
 public class LogoutHandlerPathMatchingTest {
 
@@ -104,31 +104,31 @@ public class LogoutHandlerPathMatchingTest {
 
     @Test
     public void testMatchesLogoutPath() {
-        assertTrue(LogoutHandler.matchesLogoutPath(LOGOUT_PATH, LOGOUT_PATH));
+        assertTrue(LogoutHandler.matchesLogoutPath("/logout", "/logout"));
     }
 
     @Test
     public void testDoesNotMatchLogoutPathBySuffixOnly() {
-        assertFalse(LogoutHandler.matchesLogoutPath("/prefix" + LOGOUT_PATH, LOGOUT_PATH));
+        assertFalse(LogoutHandler.matchesLogoutPath("/prefix/logout", "/logout"));
     }
 
     @Test
     public void testDoesNotMatchLogoutPathWhenConfiguredPathIsSuffixOfRequest() {
-        assertFalse(LogoutHandler.matchesLogoutPath(LOGOUT_PATH, "/out"));
+        assertFalse(LogoutHandler.matchesLogoutPath("/logout", "/out"));
     }
 
     @Test
     public void testDoesNotMatchLogoutPathWhenConfiguredPathIsNull() {
-        assertFalse(LogoutHandler.matchesLogoutPath(LOGOUT_PATH, null));
+        assertFalse(LogoutHandler.matchesLogoutPath("/logout", null));
     }
 
     @Test
     public void testDoesNotMatchLogoutPathWhenRequestPathIsNull() {
-        assertFalse(LogoutHandler.matchesLogoutPath(null, LOGOUT_PATH));
+        assertFalse(LogoutHandler.matchesLogoutPath(null, "/logout"));
     }
 
     @Test
     public void testDoesNotMatchLogoutPathWhenRequestPathIsEmpty() {
-        assertFalse(LogoutHandler.matchesLogoutPath("", LOGOUT_PATH));
+        assertFalse(LogoutHandler.matchesLogoutPath("", "/logout"));
     }
 }

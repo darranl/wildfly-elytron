@@ -305,12 +305,19 @@ final class LogoutHandler {
     }
 
     private boolean isRpInitiatedLogoutPath(OidcHttpFacade facade) {
-        String path = facade.getRequest().getRelativePath();
-        String logoutPath = getLogoutPath(facade);
-        if (path == null || logoutPath == null) {
+        return matchesLogoutPath(facade.getRequest().getRelativePath(), getLogoutPath(facade));
+    }
+
+    /**
+     * Returns whether the incoming request path matches the configured RP-initiated logout path.
+     */
+    static boolean matchesLogoutPath(String requestRelativePath, String configuredLogoutPath) {
+        String requestPath = toComparablePath(requestRelativePath);
+        String configuredPath = toComparablePath(configuredLogoutPath);
+        if (configuredPath == null || requestPath == null) {
             return false;
         }
-        return path.endsWith(logoutPath);
+        return configuredPath.equals(requestPath);
     }
 
     private boolean isLogoutSessionRequired(OidcHttpFacade facade) {
