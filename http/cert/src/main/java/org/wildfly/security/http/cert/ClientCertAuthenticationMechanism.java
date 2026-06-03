@@ -58,6 +58,9 @@ import org.wildfly.security.x500.X500;
  */
 final class ClientCertAuthenticationMechanism implements HttpServerAuthenticationMechanism {
 
+    private static final String IDENTITY_CACHE_KEY = "org.wildfly.elytron.identity-cache";
+    private static final String IDENTITY_CACHE_CERTS_KEY = "org.wildfly.elytron.identity-cache-certs";
+
     private final CallbackHandler callbackHandler;
     private final boolean skipVerification;
 
@@ -206,31 +209,105 @@ final class ClientCertAuthenticationMechanism implements HttpServerAuthenticatio
     }
 
     private Function<SecurityDomain, IdentityCache> createIdentityCacheFunction(HttpServerRequest request) {
-        HttpScope scope = request.getScope(Scope.SSL_SESSION);
-        return scope == null ? null : securityDomain -> new IdentityCache() {
+        final HttpScope sslSessionScope = resolveScope(request, Scope.SSL_SESSION);
+        final HttpScope connectionScope = resolveScope(request, Scope.CONNECTION);
 
-            final Map<SecurityDomain, CachedIdentity> identities = MechanismUtil.computeIfAbsent(scope,
-                    "org.wildfly.elytron.identity-cache", key -> new ConcurrentHashMap<>());
+        if (sslSessionScope == null && connectionScope == null) {
+            return null;
+        }
+
+        return securityDomain -> new IdentityCache() {
 
             @Override
             public void put(SecurityIdentity identity) {
                 CachedIdentity cachedIdentity = new CachedIdentity(CLIENT_CERT_NAME, false, identity);
                 httpClientCert.tracef("storing into cache: %s", cachedIdentity);
-                identities.putIfAbsent(securityDomain, cachedIdentity);
+                if (sslSessionScope != null) {
+                    identityMap(sslSessionScope).putIfAbsent(securityDomain, cachedIdentity);
+                }
+                if (connectionScope != null) {
+                    identityMap(connectionScope).putIfAbsent(securityDomain, cachedIdentity);
+                    Certificate[] peerCertificates = request.getPeerCertificates();
+                    if (peerCertificates != null) {
+                        certMap(connectionScope).putIfAbsent(securityDomain, X500.asX509CertificateArray(peerCertificates));
+                    }
+                }
             }
 
             @Override
             public CachedIdentity get() {
-                CachedIdentity cachedIdentity = identities.get(securityDomain);
-                httpClientCert.tracef("loading from cache: %s", cachedIdentity);
-                return cachedIdentity;
+                if (sslSessionScope != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<SecurityDomain, CachedIdentity> identities = (Map<SecurityDomain, CachedIdentity>) sslSessionScope.getAttachment(IDENTITY_CACHE_KEY);
+                    if (identities != null) {
+                        CachedIdentity cached = identities.get(securityDomain);
+                        if (cached != null) {
+                            httpClientCert.tracef("loading from SSL_SESSION cache: %s", cached);
+                            return cached;
+                        }
+                    }
+                }
+                if (connectionScope != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<SecurityDomain, CachedIdentity> identities = (Map<SecurityDomain, CachedIdentity>) connectionScope.getAttachment(IDENTITY_CACHE_KEY);
+                    if (identities != null) {
+                        CachedIdentity cached = identities.get(securityDomain);
+                        if (cached != null && verifyConnectionCerts(securityDomain)) {
+                            httpClientCert.tracef("loading from CONNECTION cache: %s", cached);
+                            return cached;
+                        }
+                    }
+                }
+                httpClientCert.tracef("loading from cache: null");
+                return null;
             }
 
             @Override
             public CachedIdentity remove() {
                 httpClientCert.tracef("clearing identity cache");
-                return identities.remove(securityDomain);
+                CachedIdentity result = null;
+                if (sslSessionScope != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<SecurityDomain, CachedIdentity> identities = (Map<SecurityDomain, CachedIdentity>) sslSessionScope.getAttachment(IDENTITY_CACHE_KEY);
+                    if (identities != null) result = identities.remove(securityDomain);
+                }
+                if (connectionScope != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<SecurityDomain, CachedIdentity> identities = (Map<SecurityDomain, CachedIdentity>) connectionScope.getAttachment(IDENTITY_CACHE_KEY);
+                    if (identities != null) {
+                        CachedIdentity removed = identities.remove(securityDomain);
+                        if (result == null) result = removed;
+                    }
+                    @SuppressWarnings("unchecked")
+                    Map<SecurityDomain, X509Certificate[]> certs = (Map<SecurityDomain, X509Certificate[]>) connectionScope.getAttachment(IDENTITY_CACHE_CERTS_KEY);
+                    if (certs != null) certs.remove(securityDomain);
+                }
+                return result;
+            }
+
+            private boolean verifyConnectionCerts(SecurityDomain domain) {
+                @SuppressWarnings("unchecked")
+                Map<SecurityDomain, X509Certificate[]> certs = (Map<SecurityDomain, X509Certificate[]>) connectionScope.getAttachment(IDENTITY_CACHE_CERTS_KEY);
+                if (certs == null) return false;
+                X509Certificate[] stored = certs.get(domain);
+                if (stored == null) return false;
+                Certificate[] current = request.getPeerCertificates();
+                if (current == null) return false;
+                return Arrays.equals(stored, X500.asX509CertificateArray(current));
             }
         };
+    }
+
+    private static HttpScope resolveScope(HttpServerRequest request, Scope scope) {
+        HttpScope httpScope = request.getScope(scope);
+        return (httpScope != null && httpScope.supportsAttachments()) ? httpScope : null;
+    }
+
+    private static Map<SecurityDomain, CachedIdentity> identityMap(HttpScope scope) {
+        return MechanismUtil.computeIfAbsent(scope, IDENTITY_CACHE_KEY, key -> new ConcurrentHashMap<>());
+    }
+
+    private static Map<SecurityDomain, X509Certificate[]> certMap(HttpScope scope) {
+        return MechanismUtil.computeIfAbsent(scope, IDENTITY_CACHE_CERTS_KEY, key -> new ConcurrentHashMap<>());
     }
 }
