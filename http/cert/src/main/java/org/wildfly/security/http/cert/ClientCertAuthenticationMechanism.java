@@ -223,6 +223,9 @@ final class ClientCertAuthenticationMechanism implements HttpServerAuthenticatio
 
             @Override
             public void put(SecurityIdentity identity) {
+                if (securityDomain == null) {
+                    return;
+                }
                 Function<X509Certificate[], CachedIdentity> entry =
                         createCacheEntry(new CachedIdentity(CLIENT_CERT_NAME, false, identity), peerCertificates);
                 httpClientCert.tracef("storing into cache: %s", identity);
@@ -237,6 +240,9 @@ final class ClientCertAuthenticationMechanism implements HttpServerAuthenticatio
 
             @Override
             public CachedIdentity get() {
+                if (securityDomain == null) {
+                    return null;
+                }
                 if (sslSessionScope != null && sslSessionScope.exists()) {
                     CachedIdentity cached = getCachedOrEvict(sslSessionScope, peerCertificates);
                     if (cached != null) {
@@ -257,6 +263,9 @@ final class ClientCertAuthenticationMechanism implements HttpServerAuthenticatio
 
             @Override
             public CachedIdentity remove() {
+                if (securityDomain == null) {
+                    return null;
+                }
                 httpClientCert.tracef("clearing identity cache");
                 removeFromScope(sslSessionScope);
                 removeFromScope(connectionScope);
