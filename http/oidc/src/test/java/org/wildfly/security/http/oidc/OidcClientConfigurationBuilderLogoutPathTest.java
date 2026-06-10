@@ -111,12 +111,15 @@ public class OidcClientConfigurationBuilderLogoutPathTest {
         assertEquals("http://localhost:8090/app/", built.getPostLogoutRedirectUri());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testLogoutCallbackPathRequiredWhenOnlyLogoutPathSet() {
+    @Test
+    public void testLogoutCallbackPathOptionalWhenOnlyLogoutPathSet() {
         OidcJsonConfiguration config = baseConfiguration();
         config.setLogoutPath("/custom-logout");
 
-        OidcClientConfigurationBuilder.build(config);
+        OidcClientConfiguration built = OidcClientConfigurationBuilder.build(config);
+
+        assertEquals("/custom-logout", built.getLogoutPath());
+        assertNull(built.getLogoutCallbackPath());
     }
 
     @Test
@@ -129,11 +132,16 @@ public class OidcClientConfigurationBuilderLogoutPathTest {
         assertEquals("/logout/callback", built.getLogoutCallbackPath());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testLogoutCallbackPathRequiredWhenOnlyPostLogoutRedirectUriSet() {
+    @Test
+    public void testLogoutCallbackPathOptionalWhenOnlyPostLogoutRedirectUriSet() {
         OidcJsonConfiguration config = baseConfiguration();
         config.setPostLogoutRedirectUri("http://localhost:8090/app/");
-        OidcClientConfigurationBuilder.build(config);
+
+        OidcClientConfiguration built = OidcClientConfigurationBuilder.build(config);
+
+        assertNull(built.getLogoutPath());
+        assertNull(built.getLogoutCallbackPath());
+        assertEquals("http://localhost:8090/app/", built.getPostLogoutRedirectUri());
     }
 
     private static OidcJsonConfiguration logoutConfiguration() {

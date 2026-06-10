@@ -249,8 +249,6 @@ public class OidcClientConfigurationBuilder {
             return;
         }
 
-        requireLogoutAttribute(oidcJsonConfiguration.getLogoutCallbackPath(), LOGOUT_CALLBACK_PATH);
-
         String logoutPath = oidcJsonConfiguration.getLogoutPath();
         if (logoutPath != null && !logoutPath.trim().isEmpty()) {
             String tmpLogoutPath = logoutPath.trim();
@@ -262,14 +260,17 @@ public class OidcClientConfigurationBuilder {
             }
         }
 
-        String tmpLogoutCallbackPath = oidcJsonConfiguration.getLogoutCallbackPath().trim();
-        log.debugf("LOGOUT_CALLBACK_PATH: " + tmpLogoutCallbackPath);
-        if (isValidAbsoluteUri(tmpLogoutCallbackPath)) {
-            oidcClientConfiguration.setLogoutCallbackPath(tmpLogoutCallbackPath);
-        } else if (isValidRelativePath(tmpLogoutCallbackPath)) {
-            oidcClientConfiguration.setLogoutCallbackPath(tmpLogoutCallbackPath);
-        } else {
-            throw log.invalidLogoutCallbackPathOrUri(tmpLogoutCallbackPath, LOGOUT_CALLBACK_PATH);
+        String logoutCallbackPath = oidcJsonConfiguration.getLogoutCallbackPath();
+        if (logoutCallbackPath != null && !logoutCallbackPath.trim().isEmpty()) {
+            String tmpLogoutCallbackPath = logoutCallbackPath.trim();
+            log.debugf("LOGOUT_CALLBACK_PATH: " + tmpLogoutCallbackPath);
+            if (isValidAbsoluteUri(tmpLogoutCallbackPath)) {
+                oidcClientConfiguration.setLogoutCallbackPath(tmpLogoutCallbackPath);
+            } else if (isValidRelativePath(tmpLogoutCallbackPath)) {
+                oidcClientConfiguration.setLogoutCallbackPath(tmpLogoutCallbackPath);
+            } else {
+                throw log.invalidLogoutCallbackPathOrUri(tmpLogoutCallbackPath, LOGOUT_CALLBACK_PATH);
+            }
         }
 
         String tmpPostLogoutUri = oidcJsonConfiguration.getPostLogoutRedirectUri();
@@ -287,12 +288,6 @@ public class OidcClientConfigurationBuilder {
         return oidcJsonConfiguration.getLogoutPath() != null
                 || oidcJsonConfiguration.getLogoutCallbackPath() != null
                 || oidcJsonConfiguration.getPostLogoutRedirectUri() != null;
-    }
-
-    private static void requireLogoutAttribute(String value, String attributeName) {
-        if (value == null || value.trim().isEmpty()) {
-            throw log.missingLogoutConfiguration(attributeName);
-        }
     }
 
     static boolean isValidRelativePath(String path) {

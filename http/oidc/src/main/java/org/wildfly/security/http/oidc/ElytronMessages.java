@@ -332,8 +332,5 @@ interface ElytronMessages extends BasicLogger {
 
     @Message(id = 23088, value = "Required logout claim, %s, is missing")
     String requiredLogoutClaimIsMissing(String e);
-
-    @Message(id = 23089, value = "Logout configuration attribute '%s' must be set explicitly when logout is enabled")
-    IllegalArgumentException missingLogoutConfiguration(String attributeName);
 }
 
