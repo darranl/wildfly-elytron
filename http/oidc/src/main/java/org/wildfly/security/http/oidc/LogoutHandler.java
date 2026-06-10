@@ -248,11 +248,24 @@ final class LogoutHandler {
             IDToken idToken = context.getIDToken();
             String issuer = request.getQueryParamValue(ISS);
 
-            String tokenSid = idToken != null ? idToken.getSid() : null;
-            String tokenIssuer = idToken != null ? idToken.getIssuer() : null;
-            if (idToken == null || tokenSid == null || !sessionId.equals(tokenSid)
-                    || issuer == null || tokenIssuer == null || !tokenIssuer.equals(issuer)) {
-                log.debugf("Front-channel logout validation failed for sid [%s] and iss [%s]", sessionId, issuer);
+            String validationFailure = null;
+            if (idToken == null) {
+                validationFailure = "ID token is missing";
+            } else if (idToken.getSid() == null) {
+                validationFailure = "ID token sid claim is missing";
+            } else if (!sessionId.equals(idToken.getSid())) {
+                validationFailure = String.format("request sid [%s] does not match ID token sid [%s]",
+                        sessionId, idToken.getSid());
+            } else if (issuer == null) {
+                validationFailure = "iss query parameter is missing";
+            } else if (idToken.getIssuer() == null) {
+                validationFailure = "ID token issuer claim is missing";
+            } else if (!idToken.getIssuer().equals(issuer)) {
+                validationFailure = String.format("request iss [%s] does not match ID token issuer [%s]",
+                        issuer, idToken.getIssuer());
+            }
+            if (validationFailure != null) {
+                log.debugf("Front-channel logout validation failed: %s", validationFailure);
                 facade.getResponse().setStatus(HttpStatus.SC_BAD_REQUEST);
                 facade.authenticationFailed();
                 return;
@@ -292,7 +305,7 @@ final class LogoutHandler {
             if (OidcClientConfigurationBuilder.isValidRelativePath(trimmed)) {
                 return toComparablePath(trimmed);
             }
-            log.warnf("Ignoring invalid logout-callback-path: %s", configuredLogoutCallbackPath);
+            // Ignoring invalid logout-callback-path
             return null;
         }
     }

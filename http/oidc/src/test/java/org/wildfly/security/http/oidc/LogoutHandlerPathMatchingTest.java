@@ -31,7 +31,6 @@ import org.junit.Test;
 public class LogoutHandlerPathMatchingTest {
 
     private static final String REQUEST_PATH = "/simple-webapp-oidc/more/myCallback";
-    private static final String LOGOUT_PATH = "/logout";
 
     @Test
     public void testMatchesAbsoluteLogoutCallbackUri() {
