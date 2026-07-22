@@ -64,6 +64,9 @@ public class DynamicSSLContextTest {
     private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10001;
     private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10002;
     private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10003;
+    private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10005;
+    private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10006;
+    private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10007;
     private static org.wildfly.security.dynamic.ssl.SSLServerSocketTestInstance sslServerSocketTestInstancePort10000Default;
 
     @BeforeClass
@@ -72,11 +75,17 @@ public class DynamicSSLContextTest {
         sslServerSocketTestInstancePort10001 = new SSLServerSocketTestInstance(RESOURCES + "server1.keystore.jks", RESOURCES + "server1.truststore.jks", 10001);
         sslServerSocketTestInstancePort10002 = new SSLServerSocketTestInstance(RESOURCES + "server2.keystore.jks", RESOURCES + "server2.truststore.jks", 10002);
         sslServerSocketTestInstancePort10003 = new SSLServerSocketTestInstance(RESOURCES + "server3.keystore.jks", RESOURCES + "server3.truststore.jks", 10003);
+        sslServerSocketTestInstancePort10005 = new SSLServerSocketTestInstance(RESOURCES + "server1-host.keystore.jks", RESOURCES + "server1-host.truststore.jks", 10005);
+        sslServerSocketTestInstancePort10006 = new SSLServerSocketTestInstance(RESOURCES + "server2-host.keystore.jks", RESOURCES + "server2-host.truststore.jks", 10006);
+        sslServerSocketTestInstancePort10007 = new SSLServerSocketTestInstance(RESOURCES + "server3-host.keystore.jks", RESOURCES + "server3-host.truststore.jks", 10007);
         sslServerSocketTestInstancePort10000Default = new SSLServerSocketTestInstance(RESOURCES + "default-server.keystore.jks", RESOURCES + "default-server.truststore.jks", 10000);
 
         sslServerSocketTestInstancePort10001.run();
         sslServerSocketTestInstancePort10002.run();
         sslServerSocketTestInstancePort10003.run();
+        sslServerSocketTestInstancePort10005.run();
+        sslServerSocketTestInstancePort10006.run();
+        sslServerSocketTestInstancePort10007.run();
         sslServerSocketTestInstancePort10000Default.run();
     }
 
@@ -85,6 +94,9 @@ public class DynamicSSLContextTest {
         sslServerSocketTestInstancePort10001.stop();
         sslServerSocketTestInstancePort10002.stop();
         sslServerSocketTestInstancePort10003.stop();
+        sslServerSocketTestInstancePort10005.stop();
+        sslServerSocketTestInstancePort10006.stop();
+        sslServerSocketTestInstancePort10007.stop();
         sslServerSocketTestInstancePort10000Default.stop();
         org.wildfly.security.dynamic.ssl.DynamicSSLTestUtils.deleteKeystores();
     }
@@ -200,7 +212,7 @@ public class DynamicSSLContextTest {
         SSLSocketFactory dynamicSSLContextSocketFactory = dynamicSSLContext.getSocketFactory();
         getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml").run(() -> {
             try {
-                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContextSocketFactory.createSocket(InetAddress.getByName("localhost"), 10001, InetAddress.getByName("localhost"), 12555);
+                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContextSocketFactory.createSocket(InetAddress.getByName("localhost"), 10001, InetAddress.getByName("localhost"), 0);
                 clientSslSocket.setReuseAddress(true);
                 checkOutputIsOK(clientSslSocket);
                 clientSslSocket.close();
@@ -255,15 +267,15 @@ public class DynamicSSLContextTest {
         context.run(() -> {
             try {
                 DynamicSSLSocketFactory dynamicSSLContextSocketFactory = (DynamicSSLSocketFactory) dynamicSSLContext.getSocketFactory();
-                dynamicSSLContext.getDefaultSSLParameters().setCipherSuites(new String[]{"TLS_RSA_WITH_AES_128_CBC_SHA256"});
+                dynamicSSLContext.getDefaultSSLParameters().setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
                 SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContextSocketFactory.createSocket();
                 SSLParameters sslParameters = clientSslSocket.getSSLParameters();
-                sslParameters.setCipherSuites(new String[]{"TLS_RSA_WITH_AES_128_CBC_SHA256"});
+                sslParameters.setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
                 clientSslSocket.setSSLParameters(sslParameters);
-                dynamicSSLContext.getDefaultSSLParameters().setCipherSuites(new String[]{"TLS_RSA_WITH_AES_128_CBC_SHA256"});
+                dynamicSSLContext.getDefaultSSLParameters().setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
                 clientSslSocket.connect(new InetSocketAddress("localhost", 10000));
                 clientSslSocket.startHandshake();
-                Assert.assertEquals("TLS_RSA_WITH_AES_128_CBC_SHA256", clientSslSocket.getSession().getCipherSuite());
+                Assert.assertEquals("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", clientSslSocket.getSession().getCipherSuite());
                 checkOutputIsOK(clientSslSocket);
                 clientSslSocket.close();
             } catch (Exception e) {
@@ -304,24 +316,28 @@ public class DynamicSSLContextTest {
         DynamicSSLContext dynamicSSLContext = new DynamicSSLContext();
         SSLServerSocketTestInstance testSSLServerSingleCipherSuite =
                 new SSLServerSocketTestInstance(RESOURCES + "default-server.keystore.jks", RESOURCES + "default-server.truststore.jks", 10004);
-        testSSLServerSingleCipherSuite.setConfiguredEnabledCipherSuites(new String[]{"TLS_RSA_WITH_AES_128_CBC_SHA256", "TLS_RSA_WITH_AES_256_CBC_SHA256"});
+        testSSLServerSingleCipherSuite.setConfiguredEnabledCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_RSA_WITH_AES_256_CBC_SHA256"});
         testSSLServerSingleCipherSuite.run();
-        AuthenticationContext context = getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml");
-        context.run(() -> {
-            try {
-                SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContext.getSocketFactory().createSocket();
-                SSLParameters sslParameters = clientSslSocket.getSSLParameters();
-                sslParameters.setCipherSuites(new String[]{"TLS_RSA_WITH_AES_256_CBC_SHA256"});
-                clientSslSocket.setSSLParameters(sslParameters);
-                clientSslSocket.connect(new InetSocketAddress("localhost", 10000));
-                clientSslSocket.startHandshake();
-                Assert.assertEquals("TLS_RSA_WITH_AES_256_CBC_SHA256", clientSslSocket.getSession().getCipherSuite());
-                checkOutputIsOK(clientSslSocket);
-                clientSslSocket.close();
-            } catch (Exception e) {
-                Assert.assertEquals("fine", e.getMessage());
-            }
-        });
+        try {
+            AuthenticationContext context = getAuthenticationContext("wildfly-config-dynamic-ssl-test.xml");
+            context.run(() -> {
+                try {
+                    SSLSocket clientSslSocket = (SSLSocket) dynamicSSLContext.getSocketFactory().createSocket();
+                    SSLParameters sslParameters = clientSslSocket.getSSLParameters();
+                    sslParameters.setCipherSuites(new String[]{"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"});
+                    clientSslSocket.setSSLParameters(sslParameters);
+                    clientSslSocket.connect(new InetSocketAddress("localhost", 10004));
+                    clientSslSocket.startHandshake();
+                    Assert.assertEquals("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", clientSslSocket.getSession().getCipherSuite());
+                    checkOutputIsOK(clientSslSocket);
+                    clientSslSocket.close();
+                } catch (Exception e) {
+                    Assert.assertEquals("fine", e.getMessage());
+                }
+            });
+        } finally {
+            testSSLServerSingleCipherSuite.stop();
+        }
     }
 
     @Test
@@ -431,12 +447,16 @@ public class DynamicSSLContextTest {
     }
 
     private void checkOutputIsOK(SSLSocket clientSslSocket) throws IOException {
+        clientSslSocket.setSoTimeout(10000);
         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(clientSslSocket.getOutputStream()));
         printWriter.println("Client Hello");
         printWriter.flush();
         InputStream inputStream = clientSslSocket.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        String line = bufferedReader.readLine().trim();
+        String line = bufferedReader.readLine();
+        if (line != null) {
+            line = line.trim();
+        }
         Assert.assertEquals(STATUS_OK, line);
     }
 
@@ -451,4 +471,61 @@ public class DynamicSSLContextTest {
             }
         });
     }
+
+    @Test
+    public void testChangingAuthenticationContextsWithHostnameMatching() throws NoSuchAlgorithmException {
+
+        DynamicSSLContext dynamicSSLContext = new DynamicSSLContext();
+        SSLSocketFactory socketFactory = dynamicSSLContext.getSocketFactory();
+
+        AuthenticationContext.empty().withSsl(MatchRule.ALL.matchHost("server1.example.com"),
+                () -> DynamicSSLTestUtils.createSSLContext(RESOURCES + "client1-host.keystore.jks", RESOURCES + "client1-host.truststore.jks", "Elytron")).run(() -> {
+            try {
+                Socket plainSocket = new Socket();
+                plainSocket.connect(new InetSocketAddress("localhost", 10005));
+                SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(plainSocket, "server1.example.com", 10005, true);
+                sslSocket.setReuseAddress(true);
+                checkOutputIsOK(sslSocket);
+                sslSocket.close();
+            } catch (Exception e) {
+                Assert.assertEquals("fine", e.getMessage());
+            }
+        });
+
+
+        AuthenticationContext.empty().withSsl(MatchRule.ALL.matchHost("server2.example.com"),
+                () -> DynamicSSLTestUtils.createSSLContext(RESOURCES + "client2-host.keystore.jks", RESOURCES + "client2-host.truststore.jks", "Elytron")).run(() -> {
+            try {
+                Socket plainSocket = new Socket();
+                plainSocket.connect(new InetSocketAddress("localhost", 10006));
+                SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(plainSocket, "server2.example.com", 10006, true);
+                sslSocket.setReuseAddress(true);
+                checkOutputIsOK(sslSocket);
+                sslSocket.close();
+            } catch (Exception e) {
+                Assert.assertEquals("fine", e.getMessage());
+            }
+        });
+
+
+        AuthenticationContext.empty().withSsl(MatchRule.ALL.matchHost("server3.example.com"),
+                () -> DynamicSSLTestUtils.createSSLContext(RESOURCES + "client3-host.keystore.jks", RESOURCES + "client3-host.truststore.jks", "Elytron")).run(() -> {
+            try {
+                Socket plainSocket = new Socket();
+                plainSocket.connect(new InetSocketAddress("localhost", 10007));
+                SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(plainSocket, "server3.example.com", 10007, true);
+                sslSocket.setReuseAddress(true);
+                checkOutputIsOK(sslSocket);
+                sslSocket.close();
+            } catch (Exception e) {
+                Assert.assertEquals("fine", e.getMessage());
+            }
+        });
+
+
+    }
+
+
+
+
 }

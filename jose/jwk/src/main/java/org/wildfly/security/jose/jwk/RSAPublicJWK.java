@@ -21,9 +21,9 @@ package org.wildfly.security.jose.jwk;
 import static org.wildfly.security.jose.jwk.ElytronMessages.log;
 import static org.wildfly.security.jose.jwk.JWKUtil.generateThumbprint;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.security.NoSuchAlgorithmException;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>

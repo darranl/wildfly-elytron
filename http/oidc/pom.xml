@@ -17,14 +17,12 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
         <artifactId>wildfly-elytron-parent</artifactId>
-        <version>2.7.0.CR1-SNAPSHOT</version>
+        <version>2.10.0.CR1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -40,10 +38,10 @@
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-auth-server</artifactId>
         </dependency>
-        <dependency>        
+        <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-credential</artifactId>
-        </dependency>    
+        </dependency>
         <dependency>
             <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-http</artifactId>
@@ -63,7 +61,7 @@
 
         <dependency>
             <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging-processor</artifactId>
+            <artifactId>jboss-logging-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -71,7 +69,7 @@
             <artifactId>metainf-services</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.wildfly.common</groupId>
             <artifactId>wildfly-common</artifactId>
@@ -149,7 +147,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.htmlunit</groupId>
+            <groupId>org.htmlunit</groupId>
             <artifactId>htmlunit</artifactId>
             <scope>test</scope>
         </dependency>
@@ -190,6 +188,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.testcontainers/nginx -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>nginx</artifactId>
+            <version>${version.org.testcontainers.nginx}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -201,6 +206,14 @@
                     <environmentVariables>
                         <OIDC_PROVIDER_URL_ENV>/realms/WildFly</OIDC_PROVIDER_URL_ENV>
                     </environmentVariables>
+                    <excludes>
+                        <!-- These tests are run as part of OidcTestSuite to share Keycloak container -->
+                        <exclude>**/OidcTest.java</exclude>
+                        <exclude>**/BearerTest.java</exclude>
+                        <exclude>**/QueryParamsEnabledTest.java</exclude>
+                        <exclude>**/QueryParamsDisabledTest.java</exclude>
+                        <exclude>**/MockOidcClientConfiguration.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

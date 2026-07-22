@@ -18,7 +18,8 @@
 
 package org.wildfly.security.ssl;
 
-import static org.wildfly.security.ssl.TLSServerEndPointChannelBinding.*;
+import static org.wildfly.security.ssl.TLSServerEndPointChannelBinding.TLS_SERVER_ENDPOINT;
+import static org.wildfly.security.ssl.TLSServerEndPointChannelBinding.getChannelBindingData;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;

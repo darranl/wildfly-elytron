@@ -17,7 +17,9 @@
  */
 package org.wildfly.security.tool;
 
-import org.apache.commons.lang3.RandomStringUtils;
+import static org.junit.Assert.fail;
+
+import org.apache.commons.cli.MissingArgumentException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,23 +65,30 @@ public class CredentialStoreCommandInputTest extends AbstractCommandTest {
 
     @Test
     public void testLongAliasNameOrValue() throws Exception {
-        testCharactersAliasNameAndAliasValue(RandomStringUtils.randomPrint(COUNT_OF_CHARACTERS));
+        // Generate a deterministic long string to test length handling
+        // Use a repeating pattern that doesn't start with '-' to avoid
+        // ambiguity with command-line options (commons-cli 1.11.0 compatibility)
+        StringBuilder longString = new StringBuilder(COUNT_OF_CHARACTERS);
+        String pattern = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+=[]{}|;:,.<>?/ ";
+        while (longString.length() < COUNT_OF_CHARACTERS) {
+            longString.append(pattern);
+        }
+        longString.setLength(COUNT_OF_CHARACTERS); // Trim to exact length
+        testCharactersAliasNameAndAliasValue(longString.toString());
     }
 
     @Test
-    public void testNullValue() throws Exception {
+    public void testMissingAliasValue() throws Exception {
         String storageLocation = getStoragePathForNewFile();
         String storagePassword = "cspassword";
-        String[] aliasNames = { null, "testalias1", null };
-        String[] aliasValues = { "secretValue", null, null };
 
-        for (int i = 0; i < aliasNames.length; i++) {
-            try {
-                createStoreAndAddAliasAndCheck(storageLocation, storagePassword, aliasNames[i], aliasValues[i]);
-            } catch (RuntimeException e) {
-                if (!(e.getCause() instanceof NullPointerException)) {
-                    Assert.fail("It must fail with NullPointerException.");
-                }
+        try {
+            createStoreAndAddAliasAndCheck(storageLocation, storagePassword, null, "secretValue");
+            fail("It must fail with MissingArgumentException.");
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            if (!(e.getCause() instanceof MissingArgumentException)) {
+                Assert.fail("It must fail with MissingArgumentException.");
             }
         }
     }

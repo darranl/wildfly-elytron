@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2017 Red Hat, Inc., and individual contributors
+ * Copyright 2024 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,6 +51,8 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.x500.X500Principal;
 import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.RealmCallback;
+
+import okhttp3.mockwebserver.RecordedRequest;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
@@ -84,6 +86,7 @@ import org.wildfly.security.http.cert.ClientCertMechanismFactory;
 import org.wildfly.security.http.digest.DigestMechanismFactory;
 import org.wildfly.security.http.digest.NonceManager;
 import org.wildfly.security.http.external.ExternalMechanismFactory;
+import org.wildfly.security.http.form.FormMechanismFactory;
 import org.wildfly.security.password.Password;
 import org.wildfly.security.password.PasswordFactory;
 import org.wildfly.security.password.interfaces.ClearPassword;
@@ -100,6 +103,7 @@ import mockit.MockUp;
 public class AbstractBaseHttpTest {
 
     protected HttpServerAuthenticationMechanismFactory basicFactory = new BasicMechanismFactory(ELYTRON_PASSWORD_PROVIDERS.get());
+    protected HttpServerAuthenticationMechanismFactory formFactory = new FormMechanismFactory(ELYTRON_PASSWORD_PROVIDERS.get());
     protected HttpServerAuthenticationMechanismFactory digestFactory = new DigestMechanismFactory(ELYTRON_PASSWORD_PROVIDERS.get());
     protected final HttpServerAuthenticationMechanismFactory externalFactory = new ExternalMechanismFactory(ELYTRON_PASSWORD_PROVIDERS.get());
     protected final HttpServerAuthenticationMechanismFactory bearerFactory = new BearerMechanismFactory(ELYTRON_PASSWORD_PROVIDERS.get());
@@ -144,6 +148,8 @@ public class AbstractBaseHttpTest {
 
     protected static class TestingHttpServerRequest implements HttpServerRequest {
 
+        private String contentType;
+        private String body;
         private Status result;
         private HttpServerMechanismsResponder responder;
         private String remoteUser;
@@ -153,6 +159,8 @@ public class AbstractBaseHttpTest {
         private Map<String, List<String>> requestHeaders = new HashMap<>();
         private X500Principal testPrincipal = null;
         private Map<String, Object> sessionScopeAttachments = new HashMap<>();
+        private Map<Scope, HttpScope> scopes = new HashMap<>();
+        private HttpScope sessionScope;
 
         public TestingHttpServerRequest(String[] authorization) {
             if (authorization != null) {
@@ -188,6 +196,17 @@ public class AbstractBaseHttpTest {
             this.requestURI = requestURI;
             this.cookies = new ArrayList<>();
             this.sessionScopeAttachments = sessionScopeAttachments;
+        }
+
+        public TestingHttpServerRequest(String requestMethod, String[] authorization, URI requestURI) {
+
+            if (authorization != null) {
+                requestHeaders.put(AUTHORIZATION, Arrays.asList(authorization));
+            }
+            this.remoteUser = null;
+            this.requestURI = requestURI;
+            this.cookies = new ArrayList<>();
+            this.requestMethod = requestMethod;
         }
 
         public TestingHttpServerRequest(String[] authorization, URI requestURI, List<HttpServerCookie> cookies) {
@@ -228,6 +247,14 @@ public class AbstractBaseHttpTest {
                     }
                 }
             }
+        }
+
+        public TestingHttpServerRequest(RecordedRequest request, HttpScope sessionScope) {
+            this(new String[0], request.getRequestUrl().uri(), request.getHeader("Cookie"));
+            this.requestMethod = request.getMethod();
+            this.body = request.getBody().readUtf8();
+            this.contentType = request.getHeader("Content-Type");
+            this.sessionScope = sessionScope;
         }
 
         public Status getResult() {
@@ -301,7 +328,7 @@ public class AbstractBaseHttpTest {
         }
 
         public String getRequestPath() {
-            throw new IllegalStateException();
+            return requestURI.getPath();
         }
 
         public Map<String, List<String>> getParameters() {
@@ -317,6 +344,14 @@ public class AbstractBaseHttpTest {
         }
 
         public String getFirstParameterValue(String name) {
+
+            List<String> key = requestHeaders.get("Authorization");
+            if (name == "j_username"){
+                return key.get(0);
+            }
+            if (name == "j_password"){
+                return key.get(1);
+            }
             throw new IllegalStateException();
         }
 
@@ -343,46 +378,47 @@ public class AbstractBaseHttpTest {
         public HttpScope getScope(Scope scope) {
             if (scope.equals(Scope.SSL_SESSION)) {
                 return null;
-            } else {
-                return new HttpScope() {
-
-                    @Override
-                    public boolean exists() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean create() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean supportsAttachments() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean supportsInvalidation() {
-                        return false;
-                    }
-
-                    @Override
-                    public void setAttachment(String key, Object value) {
-                        if (scope.equals(Scope.SESSION)) {
-                            sessionScopeAttachments.put(key, value);
-                        }
-                    }
-
-                    @Override
-                    public Object getAttachment(String key) {
-                        if (scope.equals(Scope.SESSION)) {
-                            return sessionScopeAttachments.get(key);
-                        } else {
-                            return null;
-                        }
-                    }
-                };
+            } else if (sessionScope != null) {
+                return sessionScope;
             }
+            return new HttpScope() {
+
+                @Override
+                public boolean exists() {
+                    return true;
+                }
+
+                @Override
+                public boolean create() {
+                    return false;
+                }
+
+                @Override
+                public boolean supportsAttachments() {
+                    return true;
+                }
+
+                @Override
+                public boolean supportsInvalidation() {
+                    return false;
+                }
+
+                @Override
+                public void setAttachment(String key, Object value) {
+                    if (scope.equals(Scope.SESSION)) {
+                        sessionScopeAttachments.put(key, value);
+                    }
+                }
+
+                @Override
+                public Object getAttachment(String key) {
+                    if (scope.equals(Scope.SESSION)) {
+                        return sessionScopeAttachments.get(key);
+                    } else {
+                        return null;
+                    }
+                }
+            };
         }
 
         public Collection<String> getScopeIds(Scope scope) {
@@ -456,7 +492,7 @@ public class AbstractBaseHttpTest {
         }
 
         public boolean forward(String path) {
-            throw new IllegalStateException();
+            return false;
         }
     }
 
@@ -684,7 +720,7 @@ public class AbstractBaseHttpTest {
         }
 
         public HttpScope getScope(Scope scope) {
-            throw new IllegalStateException();
+            return null;
         }
 
         public Collection<String> getScopeIds(Scope scope) {

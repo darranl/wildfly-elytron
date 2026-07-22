@@ -17,14 +17,12 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.wildfly.security</groupId>
         <artifactId>wildfly-elytron-parent</artifactId>
-        <version>2.7.0.CR1-SNAPSHOT</version>
+        <version>2.10.0.CR1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -35,12 +33,47 @@
     <name>WildFly Elytron - Security Manager</name>
     <description>WildFly Security Security Manager</description>
     
+    <properties>
+        <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+        <surefire.security.manager.arg />
+        <!-- Default to the base classes; overridden to the java25 multi-release directory when testing on Java 25 -->
+        <surefire.classes.directory>${project.build.directory}/classes</surefire.classes.directory>
+    </properties>
+
+    <profiles>
+        <!-- Enable SecurityManager for Java 21 tests -->
+        <profile>
+            <id>java21-security-manager</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>21</value>
+                </property>
+            </activation>
+            <properties>
+                <surefire.security.manager.arg>-Djava.security.manager=allow</surefire.security.manager.arg>
+            </properties>
+        </profile>
+        <!-- Use the Java 25 multi-release classes when testing on Java 25 -->
+        <profile>
+            <id>java25-classes</id>
+            <activation>
+                <property>
+                    <name>jdk.test.version</name>
+                    <value>25</value>
+                </property>
+            </activation>
+            <properties>
+                <surefire.classes.directory>${project.build.directory}/classes/META-INF/versions/25</surefire.classes.directory>
+            </properties>
+        </profile>
+    </profiles>
+    
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0-jboss-1</version>
                 <executions>
                     <execution>
                         <id>default-compile</id>
@@ -49,29 +82,22 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>8</release>
-                            <buildDirectory>${project.build.directory}</buildDirectory>
-                            <compileSourceRoots>${project.compileSourceRoots}</compileSourceRoots>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.directory}/jdk-misc.jar</additionalClasspathElement>
-                            </additionalClasspathElements>
+                            <release>17</release>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>compile-java9</id>
+                        <id>compile-java25</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <release>9</release>
-                            <buildDirectory>${project.build.directory}</buildDirectory>
-                            <compileSourceRoots>${project.basedir}/src/main/java9</compileSourceRoots>
-                            <outputDirectory>${project.build.directory}/classes/META-INF/versions/9</outputDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                            </additionalClasspathElements>
+                            <release>25</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java25</compileSourceRoot>
+                            </compileSourceRoots>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                            <proc>none</proc>
                         </configuration>
                     </execution>
                 </executions>
@@ -89,7 +115,24 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin>    
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <classesDirectory>${surefire.classes.directory}</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.directory}/classes</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <!-- Java 21 requires -Djava.security.manager=allow for SecurityManager tests -->
+                            <argLine>${surefire.security.manager.arg}</argLine>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     
@@ -131,11 +174,6 @@
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging-annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging-processor</artifactId>
             <scope>provided</scope>
         </dependency>
 

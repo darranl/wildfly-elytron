@@ -102,7 +102,7 @@ public class ServerRequest {
 
     public static void invokeLogout(OidcClientConfiguration deployment, String refreshToken) throws IOException, HttpFailure {
         HttpClient client = deployment.getClient();
-        String uri = deployment.getLogoutUrl();
+        String uri = deployment.getEndSessionEndpointUrl();
         List<NameValuePair> formparams = new ArrayList<>();
 
         formparams.add(new BasicNameValuePair(Oidc.REFRESH_TOKEN, refreshToken));
@@ -125,10 +125,18 @@ public class ServerRequest {
     }
 
     public static AccessAndIDTokenResponse invokeAccessCodeToToken(OidcClientConfiguration deployment, String code, String redirectUri) throws IOException, HttpFailure {
+        return invokeAccessCodeToToken(deployment, code, redirectUri, null);
+    }
+
+    public static AccessAndIDTokenResponse invokeAccessCodeToToken(OidcClientConfiguration deployment, String code, String redirectUri, String codeVerifier) throws IOException, HttpFailure {
         List<NameValuePair> formparams = new ArrayList<>();
         formparams.add(new BasicNameValuePair(GRANT_TYPE, AUTHORIZATION_CODE));
         formparams.add(new BasicNameValuePair(CODE, code));
         formparams.add(new BasicNameValuePair(REDIRECT_URI, redirectUri));
+
+        if (codeVerifier != null) {
+            formparams.add(new BasicNameValuePair(Oidc.CODE_VERIFIER, codeVerifier));
+        }
 
         HttpPost post = new HttpPost(deployment.getTokenUrl());
         ClientCredentialsProviderUtils.setClientCredentials(deployment, post, formparams);

@@ -20,20 +20,6 @@ package org.wildfly.security.keystore;
 
 import static org.wildfly.security.keystore.ElytronMessages.log;
 
-import org.wildfly.common.function.ExceptionSupplier;
-import org.wildfly.security.util.LdapUtil;
-
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttribute;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.ModificationItem;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,6 +44,22 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.ModificationItem;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+
+
+import org.wildfly.common.function.ExceptionSupplier;
+import org.wildfly.security.util.LdapUtil;
 
 /**
  * A LDAP backed {@link KeyStore} implementation.

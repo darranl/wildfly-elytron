@@ -157,7 +157,22 @@ final class SSLConfiguratorImpl implements SSLConfigurator {
     }
 
     private SSLParameters redefine(SSLParameters original) {
-        SSLParameters params = JDKSpecific.setSSLParameters(original);
+        SSLParameters params = new SSLParameters();
+        params.setProtocols(original.getProtocols());
+        params.setCipherSuites(original.getCipherSuites());
+        params.setUseCipherSuitesOrder(original.getUseCipherSuitesOrder());
+        params.setServerNames(original.getServerNames());
+        params.setSNIMatchers(original.getSNIMatchers());
+        params.setAlgorithmConstraints(original.getAlgorithmConstraints());
+        params.setEndpointIdentificationAlgorithm(original.getEndpointIdentificationAlgorithm());
+        if (original.getWantClientAuth()) {
+            params.setWantClientAuth(original.getWantClientAuth());
+        } else if (original.getNeedClientAuth()) {
+            params.setNeedClientAuth(original.getNeedClientAuth());
+        }
+        params.setEnableRetransmissions(original.getEnableRetransmissions());
+        params.setApplicationProtocols(original.getApplicationProtocols());
+        params.setMaximumPacketSize(original.getMaximumPacketSize());
         params.setProtocols(protocolSelector.evaluate(params.getProtocols()));
         params.setCipherSuites(cipherSuiteSelector.evaluate(params.getCipherSuites()));
         return params;

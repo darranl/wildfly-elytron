@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2026 Red Hat, Inc., and individual contributors
+  ~ as indicated by the @author tags.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.wildfly.security</groupId>
+        <artifactId>wildfly-elytron-parent</artifactId>
+        <version>2.10.0.CR1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>wildfly-elytron-tests-jdk21</artifactId>
+
+    <name>WildFly Elytron - Tests JDK 21</name>
+    <description>Test suite for JDK 21 specific tests</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.compiler.plugin}</version>
+                <configuration>
+                    <release>21</release>
+                    <testRelease>21</testRelease>
+                    <!-- Skip compilation if tests will be skipped -->
+                    <skipMain>${skipJdk21Tests}</skipMain>
+                    <skip>${skipJdk21Tests}</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.surefire.plugin}</version>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <trimStackTrace>false</trimStackTrace>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*TestSuite.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Skip tests if JDK version is less than 21 -->
+                            <skip>${skipJdk21Tests}</skip>
+                        </configuration>
+                    </execution>
+                    <!-- Skip Java 17 tests - bytecode is Java 21 -->
+                    <execution>
+                        <id>test-java-17</id>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${version.jar.plugin}</version>
+                <executions>
+                    <execution>
+                        <id>create-empty-source-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>sources</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-empty-javadoc-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-ssl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-realm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500-principal</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-tests-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <!--
+                     The wildfly-bom-builder-maven-plugin generates POM files for the BOM's. These files are added to
+                     the project via the plugin. However, with the central-publishing-maven-plugin these are not
+                     discovered and therefore do not get the checksum files required. To handle this, scan the staging
+                     directory and add checksum's for any POM files that are missing them.
+
+                     This is executed here as it's the last sub-project/module to be built for releasing.
+                     -->
+                    <plugin>
+                        <groupId>dev.jbang</groupId>
+                        <artifactId>jbang-maven-plugin</artifactId>
+                        <version>0.0.8</version>
+                        <executions>
+                            <execution>
+                                <id>add-missing-checksums</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <script>${maven.multiModuleProjectDirectory}/ChecksumUpdater.java</script>
+                                    <args>
+                                        <arg>${maven.multiModuleProjectDirectory}/target/central-staging/</arg>
+                                    </args>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

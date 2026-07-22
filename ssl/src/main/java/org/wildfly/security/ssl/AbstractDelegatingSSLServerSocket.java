@@ -64,7 +64,7 @@ abstract class AbstractDelegatingSSLServerSocket extends SSLServerSocket {
         return delegate.accept();
     }
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         delegate.close();
     }
 
@@ -76,15 +76,15 @@ abstract class AbstractDelegatingSSLServerSocket extends SSLServerSocket {
         return delegate.isBound();
     }
 
-    public boolean isClosed() {
+    public synchronized boolean isClosed() {
         return delegate.isClosed();
     }
 
-    public void setSoTimeout(final int timeout) throws SocketException {
+    public synchronized void setSoTimeout(final int timeout) throws SocketException {
         delegate.setSoTimeout(timeout);
     }
 
-    public int getSoTimeout() throws IOException {
+    public synchronized int getSoTimeout() throws IOException {
         return delegate.getSoTimeout();
     }
 
@@ -100,15 +100,15 @@ abstract class AbstractDelegatingSSLServerSocket extends SSLServerSocket {
         return delegate.toString();
     }
 
-    public static void setSocketFactory(final SocketImplFactory fac) throws IOException {
+    public static synchronized void setSocketFactory(final SocketImplFactory fac) throws IOException {
         ServerSocket.setSocketFactory(fac);
     }
 
-    public void setReceiveBufferSize(final int size) throws SocketException {
+    public synchronized void setReceiveBufferSize(final int size) throws SocketException {
         delegate.setReceiveBufferSize(size);
     }
 
-    public int getReceiveBufferSize() throws SocketException {
+    public synchronized int getReceiveBufferSize() throws SocketException {
         return delegate.getReceiveBufferSize();
     }
 

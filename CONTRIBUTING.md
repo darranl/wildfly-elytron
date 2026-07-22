@@ -87,6 +87,14 @@ mvn clean install -Dtest=TestClassName
 ```
 Note: Some tests will fail if `localhost` is not listed first in `/etc/hosts` file for the loopback addresses (IPv4 and IPv6).
 
+To generate a report on test coverage, use:
+
+```bash
+mvn -Ptest-coverage clean org.openclover:clover-maven-plugin:setup install  org.openclover:clover-maven-plugin:aggregate org.openclover:clover-maven-plugin:clover
+```
+The generated report is at `target/site/clover` and to access it start by opening `index.html` in the directory with a browser of choice.
+
+
 For more information, including details on how WildFly Elytron is integrated in WildFly Core and WildFly, check out our [developer guide](https://wildfly-security.github.io/wildfly-elytron/getting-started-for-developers/).
 
 
@@ -132,3 +140,16 @@ merge the maintenance branch to the upstream branch to ensure changes are kept i
 
 ## Community
 For more information on how to get involved with WildFly Elytron, check out our [community](https://wildfly-security.github.io/wildfly-elytron/community/) page.
+
+## Legal
+
+All contributions to this repository are licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), version 2.0 or later, or, if another license is specified as governing the file or directory being modified, such other license.
+
+All contributions are subject to the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
+The DCO text is also included verbatim in the [dco.txt](https://github.com/wildfly-security/.github/blob/main/dco.txt) file in the .github repository of the wildfly-security organization.
+
+## Compliance with Laws and Regulations
+
+All contributions must comply with applicable laws and regulations, including U.S. export control and sanctions restrictions.
+For background, see the Linux Foundation’s guidance:
+[Navigating Global Regulations and Open Source: US OFAC Sanctions](https://www.linuxfoundation.org/blog/navigating-global-regulations-and-open-source-us-ofac-sanctions).

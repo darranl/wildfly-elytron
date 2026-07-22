@@ -429,7 +429,7 @@ public abstract class SaslMechanismSelector {
                                         }
                                         cp = i.next();
                                         if (! isNameChar(cp)) {
-                                            switch (nextStringVal = string.substring((int) start, (int) i.getIndex() - 1)) {}
+                                            nextStringVal = string.substring((int) start, (int) i.getIndex() - 1);
                                             i.previous();
                                             this.offs = offs;
                                             next = TOK_NAME;
