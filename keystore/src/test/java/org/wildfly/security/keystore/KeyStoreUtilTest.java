@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.wildfly.common.bytes.ByteStringBuilder;
+import org.wildfly.common.iteration.ByteIterator;
 import org.wildfly.security.WildFlyElytronProvider;
 import org.wildfly.security.asn1.ASN1Encodable;
 import org.wildfly.security.pem.Pem;
@@ -179,6 +180,39 @@ public class KeyStoreUtilTest {
         Assert.assertNotNull(loadedStoreFromFileInputStream);
         Assert.assertEquals(ca.getSelfSignedCertificate(), loadedStoreFromFileInputStream.getCertificate(ca.getSelfSignedCertificate().getSubjectX500Principal().getName()));
         Assert.assertEquals(subjectCertificate, loadedStoreFromFileInputStream.getCertificate(subjectCertificate.getSubjectX500Principal().getName()));
+    }
+
+    @Test
+    public void testKubernetesTlsSecretPemAsKeyStore() throws Exception {
+        SelfSignedX509CertificateAndSigningKey ca = SelfSignedX509CertificateAndSigningKey.builder()
+                .setDn(new X500Principal("CN=Test CA"))
+                .setKeyAlgorithmName("RSA")
+                .setSignatureAlgorithmName("SHA256withRSA")
+                .addExtension(false, "BasicConstraints", "CA:true,pathlen:2147483647")
+                .build();
+        KeyPair keyPair = keyGen.generateKeyPair();
+        X509Certificate certificate = new X509CertificateBuilder()
+                .setIssuerDn(ca.getSelfSignedCertificate().getSubjectX500Principal())
+                .setSubjectDn(new X500Principal("CN=service.default.svc"))
+                .setSignatureAlgorithmName("SHA256withRSA")
+                .setSigningKey(ca.getSigningKey())
+                .setPublicKey(keyPair.getPublic())
+                .build();
+        ByteStringBuilder tlsKeyAndCertificate = new ByteStringBuilder();
+        Pem.generatePemContent(tlsKeyAndCertificate, "PRIVATE KEY", ByteIterator.ofBytes(keyPair.getPrivate().getEncoded()));
+        Pem.generatePemX509Certificate(tlsKeyAndCertificate, certificate);
+        Pem.generatePemX509Certificate(tlsKeyAndCertificate, ca.getSelfSignedCertificate());
+
+        KeyStore keyStore = KeyStoreUtil.loadPemAsKeyStore(new ByteArrayInputStream(tlsKeyAndCertificate.toArray()), new char[0]);
+        String alias = certificate.getSubjectX500Principal().getName();
+
+        Assert.assertNotNull(keyStore);
+        Assert.assertEquals(1, keyStore.size());
+        Assert.assertTrue(keyStore.isKeyEntry(alias));
+        Assert.assertArrayEquals(keyPair.getPrivate().getEncoded(), keyStore.getKey(alias, new char[0]).getEncoded());
+        Assert.assertEquals(2, keyStore.getCertificateChain(alias).length);
+        Assert.assertEquals(certificate, keyStore.getCertificateChain(alias)[0]);
+        Assert.assertEquals(ca.getSelfSignedCertificate(), keyStore.getCertificateChain(alias)[1]);
     }
 
 
