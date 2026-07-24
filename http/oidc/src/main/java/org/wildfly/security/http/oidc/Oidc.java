@@ -144,6 +144,9 @@ public class Oidc {
     static final String RS256 = "SHA256withRSA";
     static final String RS384 = "SHA384withRSA";
     static final String RS512 = "SHA512withRSA";
+    static final String PS256 = "SHA256withRSAandMGF1";
+    static final String PS384 = "SHA384withRSAandMGF1";
+    static final String PS512 = "SHA512withRSAandMGF1";
     static final String HS256 = "HMACSHA256";
     static final String HS384 = "HMACSHA384";
     static final String HS512 = "HMACSHA512";
@@ -364,6 +367,12 @@ public class Oidc {
                 return RS384;
             case AlgorithmIdentifiers.RSA_USING_SHA512:
                 return RS512;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA256:
+                return PS256;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA384:
+                return PS384;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA512:
+                return PS512;
             case AlgorithmIdentifiers.HMAC_SHA256:
                 return HS256;
             case AlgorithmIdentifiers.HMAC_SHA384:
@@ -388,6 +397,12 @@ public class Oidc {
             case AlgorithmIdentifiers.RSA_USING_SHA384:
                 return SHA384;
             case AlgorithmIdentifiers.RSA_USING_SHA512:
+                return SHA512;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA256:
+                return SHA256;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA384:
+                return SHA384;
+            case AlgorithmIdentifiers.RSA_PSS_USING_SHA512:
                 return SHA512;
             case AlgorithmIdentifiers.HMAC_SHA256:
                 return SHA256;
