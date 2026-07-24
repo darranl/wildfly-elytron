@@ -103,7 +103,7 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
     @Override
     public void evaluateRequest(final HttpServerRequest request) throws HttpAuthenticationException {
         // Is current request an authentication attempt?
-        if (POST.equals(request.getRequestMethod()) && isAuthenticationRequest(request.getRequestURI().getPath())) {
+        if (POST.equals(request.getRequestMethod()) && request.getRequestURI() != null && isAuthenticationRequest(request.getRequestURI().getPath())) {
             attemptAuthentication(request);
             return;
         }
@@ -330,7 +330,7 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
         // Save the current request.
         URI requestURI = request.getRequestURI();
         HttpScope session = getSessionScope(request, true);
-        if (session != null && session.supportsAttachments()) {
+        if (session != null && session.supportsAttachments() && requestURI != null) {
             StringBuilder sb = new StringBuilder();
             String scheme = requestURI.getScheme();
             sb.append(scheme);
