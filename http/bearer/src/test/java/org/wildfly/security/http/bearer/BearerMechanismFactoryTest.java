@@ -31,6 +31,8 @@ import java.util.Map;
 
 import static org.wildfly.security.http.HttpConstants.BASIC_NAME;
 import static org.wildfly.security.http.HttpConstants.BEARER_TOKEN;
+import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_ENABLE_COOKIE_FALLBACK;
+import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_TOKEN_COOKIE_NAME;
 
 /**
  * This test class contains unit tests for the {@link BearerMechanismFactory}.
@@ -147,7 +149,7 @@ public class BearerMechanismFactoryTest {
     @Test
     public void testCreateMechanismWithCookieFallbackEnabled() throws HttpAuthenticationException {
         Map<String, String> properties = new HashMap<>();
-        properties.put("enableCookieFallback", "true");
+        properties.put(CONFIG_BEARER_ENABLE_COOKIE_FALLBACK, "true");
         HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
         Assert.assertNotNull(mechanism);
         Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
@@ -160,7 +162,7 @@ public class BearerMechanismFactoryTest {
     @Test
     public void testCreateMechanismWithCookieFallbackDisabled() throws HttpAuthenticationException {
         Map<String, String> properties = new HashMap<>();
-        properties.put("enableCookieFallback", "false");
+        properties.put(CONFIG_BEARER_ENABLE_COOKIE_FALLBACK, "false");
         HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
         Assert.assertNotNull(mechanism);
         Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
@@ -187,7 +189,7 @@ public class BearerMechanismFactoryTest {
     @Test
     public void testCustomCookieNameExtraction() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
         Map<String, String> properties = new HashMap<>();
-        properties.put("token-cookie-name", "CUSTOM_AUTH");
+        properties.put(CONFIG_BEARER_TOKEN_COOKIE_NAME, "CUSTOM_AUTH");
         HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
         Assert.assertNotNull(mechanism);
         // Use reflection to verify internal value

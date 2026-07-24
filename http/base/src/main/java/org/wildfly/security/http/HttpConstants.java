@@ -109,6 +109,18 @@ public class HttpConstants {
      */
     public static final String DISABLE_SESSION_ID_CHANGE = CONFIG_BASE + ".unsafe.disable-session-change-id";
 
+    /**
+     * If set to {@code true}, the BEARER_TOKEN mechanism will read the token from a cookie
+     * when no {@code Authorization} header is present in the request.
+     */
+    public static final String CONFIG_BEARER_ENABLE_COOKIE_FALLBACK = CONFIG_BASE + ".bearer.enable-cookie-fallback";
+
+    /**
+     * The name of the cookie from which the BEARER_TOKEN mechanism reads the token when cookie fallback is enabled.
+     * Defaults to {@code "Authorization"} when not set.
+     */
+    public static final String CONFIG_BEARER_TOKEN_COOKIE_NAME = CONFIG_BASE + ".bearer.token-cookie-name";
+
     /*
      * Header Fields
      */
