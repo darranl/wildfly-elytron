@@ -17,6 +17,11 @@
  */
 package org.wildfly.security.sasl.test;
 
+import static org.junit.Assert.assertNull;
+
+import java.security.Provider;
+import java.security.Security;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,9 +29,6 @@ import org.wildfly.security.auth.server.MechanismConfigurationSelector;
 import org.wildfly.security.sasl.digest.DigestServerFactory;
 import org.wildfly.security.sasl.digest.WildFlyElytronSaslDigestProvider;
 import org.wildfly.security.sasl.util.SaslMechanismInformation;
-
-import java.security.Provider;
-import java.security.Security;
 
 // has dependency on wildfly-elytron-client
 public class SaslAvailableRealmsCallbackTest {
@@ -50,8 +52,8 @@ public class SaslAvailableRealmsCallbackTest {
         new SaslServerBuilder(DigestServerFactory.class, DIGEST).setMechanismConfigurationSelectorSupplier(() -> null).build();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testNullMechanismConfiguration() throws Exception {
-        new SaslServerBuilder(DigestServerFactory.class, DIGEST).setDontAssertBuiltServer().setMechanismConfigurationSelectorSupplier(() -> MechanismConfigurationSelector.constantSelector(null)).build();
+        assertNull(new SaslServerBuilder(DigestServerFactory.class, DIGEST).setDontAssertBuiltServer().setMechanismConfigurationSelectorSupplier(() -> MechanismConfigurationSelector.constantSelector(null)).build());
     }
 }
