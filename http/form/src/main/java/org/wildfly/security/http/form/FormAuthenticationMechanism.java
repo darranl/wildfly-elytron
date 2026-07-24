@@ -102,9 +102,11 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
      */
     @Override
     public void evaluateRequest(final HttpServerRequest request) throws HttpAuthenticationException {
+        URI requestURI = request.getRequestURI();
+
         // Is current request an authentication attempt?
-        if (POST.equals(request.getRequestMethod()) && request.getRequestURI() != null && isAuthenticationRequest(request.getRequestURI().getPath())) {
-            attemptAuthentication(request);
+        if (requestURI != null && POST.equals(request.getRequestMethod()) && isAuthenticationRequest(requestURI.getPath())) {
+            attemptAuthentication(request, requestURI);
             return;
         }
 
@@ -115,7 +117,12 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
 
         // Register challenger
         if (loginPage != null) {
-            request.noAuthenticationInProgress((response) -> sendLogin(request, response));
+            if (requestURI == null) {
+                httpForm.tracef("Request URI is null, unable to send FORM login challenge");
+                request.noAuthenticationInProgress();
+            } else {
+                request.noAuthenticationInProgress((response) -> sendLogin(request, response, requestURI));
+            }
         }
     }
 
@@ -190,16 +197,16 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
         }
     }
 
-    private void error(String message, HttpServerRequest request) {
-        request.authenticationFailed(message, (response) -> sendPage(errorPage, request, response));
+    private void error(String message, HttpServerRequest request, URI requestURI) {
+        request.authenticationFailed(message, (response) -> sendPage(errorPage, request, response, requestURI));
     }
 
-    private void attemptAuthentication(HttpServerRequest request) throws HttpAuthenticationException {
+    private void attemptAuthentication(HttpServerRequest request, URI requestURI) throws HttpAuthenticationException {
         String username = request.getFirstParameterValue(USERNAME);
         String password = request.getFirstParameterValue(PASSWORD);
 
         if (username == null || username.length() == 0 || password == null) {
-            error(httpForm.usernameOrPasswordMissing(), request);
+            error(httpForm.usernameOrPasswordMissing(), request, requestURI);
             return;
         }
 
@@ -221,15 +228,14 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
                             postAuthenticationPath = originalPath;
                             httpForm.tracef("User redirected to original path [%s]", postAuthenticationPath);
                         } else {
-                            URI requestUri = request.getRequestURI();
-                            String currentPath = requestUri.getPath();
+                            String currentPath = requestURI.getPath();
 
                             StringBuilder sb = new StringBuilder();
-                            String scheme = requestUri.getScheme();
+                            String scheme = requestURI.getScheme();
                             sb.append(scheme);
                             sb.append("://");
-                            sb.append(requestUri.getHost());
-                            int port = requestUri.getPort();
+                            sb.append(requestURI.getHost());
+                            int port = requestURI.getPort();
                             if (appendPort(scheme, port)) {
                                 sb.append(':').append(port);
                             }
@@ -247,13 +253,13 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
                     return;
                 } else {
                     httpForm.debugf("User [%s] authorization failed", username);
-                    failAndRedirectToErrorPage(request, username);
+                    failAndRedirectToErrorPage(request, username, requestURI);
                     return;
                 }
 
             } else {
                 httpForm.debugf("User [%s] authentication failed", username);
-                failAndRedirectToErrorPage(request, username);
+                failAndRedirectToErrorPage(request, username, requestURI);
                 return;
             }
         } catch (IOException | UnsupportedCallbackException e) {
@@ -312,25 +318,24 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
         return false;
     }
 
-    private void failAndRedirectToErrorPage(HttpServerRequest request, String username) throws IOException, UnsupportedCallbackException {
+    private void failAndRedirectToErrorPage(HttpServerRequest request, String username, URI requestURI) throws IOException, UnsupportedCallbackException {
         IdentityCache identityCache = createIdentityCache(request);
         if (identityCache != null) {
             identityCache.remove();
         }
         fail();
-        error(httpForm.authorizationFailed(username), request);
+        error(httpForm.authorizationFailed(username), request, requestURI);
     }
 
-    private void sendLogin(HttpServerRequest request, HttpServerResponse response) throws HttpAuthenticationException {
+    private void sendLogin(HttpServerRequest request, HttpServerResponse response, URI requestURI) throws HttpAuthenticationException {
         if (request.getRequestPath().isEmpty() && !contextPath.isEmpty()) {
-            sendRedirect(response, getCompleteRedirectLocation(request, "/"));
+            sendRedirect(response, getCompleteRedirectLocation(requestURI, "/"));
             return;
         }
 
         // Save the current request.
-        URI requestURI = request.getRequestURI();
         HttpScope session = getSessionScope(request, true);
-        if (session != null && session.supportsAttachments() && requestURI != null) {
+        if (session != null && session.supportsAttachments()) {
             StringBuilder sb = new StringBuilder();
             String scheme = requestURI.getScheme();
             sb.append(scheme);
@@ -355,10 +360,10 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
             request.suspendRequest();
         }
 
-        sendPage(loginPage, request, response);
+        sendPage(loginPage, request, response, requestURI);
     }
 
-    private void sendPage(String page, HttpServerRequest request, HttpServerResponse response) throws HttpAuthenticationException {
+    private void sendPage(String page, HttpServerRequest request, HttpServerResponse response, URI requestURI) throws HttpAuthenticationException {
         if (response.forward(page)) {
             return;
         }
@@ -383,11 +388,10 @@ final class FormAuthenticationMechanism extends UsernamePasswordAuthenticationMe
             }
         }
 
-        sendRedirect(response, getCompleteRedirectLocation(request, page));
+        sendRedirect(response, getCompleteRedirectLocation(requestURI, page));
     }
 
-    private String getCompleteRedirectLocation(HttpServerRequest request, String location) {
-        URI requestURI = request.getRequestURI();
+    private String getCompleteRedirectLocation(URI requestURI, String location) {
         StringBuilder sb = new StringBuilder();
         String scheme = requestURI.getScheme();
         sb.append(scheme);
