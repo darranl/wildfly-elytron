@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2014 Red Hat, Inc., and individual contributors
+ * Copyright 2025 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@ package org.wildfly.security.sasl.test;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.wildfly.security.auth.server.MechanismConfigurationSelector;
 import org.wildfly.security.sasl.digest.DigestServerFactory;
@@ -28,8 +27,6 @@ import org.wildfly.security.sasl.util.SaslMechanismInformation;
 
 import java.security.Provider;
 import java.security.Security;
-
-import static org.junit.Assert.fail;
 
 // has dependency on wildfly-elytron-client
 public class SaslAvailableRealmsCallbackTest {
@@ -48,24 +45,13 @@ public class SaslAvailableRealmsCallbackTest {
         Security.removeProvider(providers.getName());
     }
 
-    @Ignore("ELY-1745")
     @Test
     public void testNullMechanismConfigurationSelector() throws Exception {
-        // fixme: ELY-1745
         new SaslServerBuilder(DigestServerFactory.class, DIGEST).setMechanismConfigurationSelectorSupplier(() -> null).build();
     }
 
-    @Test
-    public void testNullMechanismConfiguration()  {
-        try {
-            new SaslServerBuilder(DigestServerFactory.class, DIGEST).setDontAssertBuiltServer().setMechanismConfigurationSelectorSupplier(() -> MechanismConfigurationSelector.constantSelector(null)).build();
-            fail("Expected exception to be thrown");
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+    @Test(expected = IllegalStateException.class)
+    public void testNullMechanismConfiguration() throws Exception {
+        new SaslServerBuilder(DigestServerFactory.class, DIGEST).setDontAssertBuiltServer().setMechanismConfigurationSelectorSupplier(() -> MechanismConfigurationSelector.constantSelector(null)).build();
     }
-
-
-
-
 }
