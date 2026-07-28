@@ -112,6 +112,11 @@ public class HttpConstants {
     /**
      * If set to {@code true}, the BEARER_TOKEN mechanism will read the token from a cookie
      * when no {@code Authorization} header is present in the request.
+     *
+     * <b>Security consideration:</b> Unlike an {@code Authorization} header, a cookie is sent automatically by the
+     * browser on every matching request, risking token leakage. The cookie should be configured with
+     * {@code SameSite=Strict} or {@code Lax}, a minimal {@code Domain}/{@code Path}, and the {@code Secure} and
+     * {@code HttpOnly} attributes.
      */
     public static final String CONFIG_BEARER_ENABLE_COOKIE_FALLBACK = CONFIG_BASE + ".bearer.enable-cookie-fallback";
 

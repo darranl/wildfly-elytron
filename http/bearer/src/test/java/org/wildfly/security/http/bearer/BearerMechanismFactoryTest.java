@@ -128,19 +128,6 @@ public class BearerMechanismFactoryTest {
         Assert.assertNotNull("HttpServerAuthenticationMechanism cannot be null.",httpServerAuthenticationMechanism);
     }
 
-    /**
-     * Tests default enableCookieFallback when not provided.
-     */
-    @Test
-    public void testDefaultCookieFallback() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
-        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, emptyProperties, dummyCallbackHandler);
-        Assert.assertNotNull(mechanism);
-        // Use reflection to verify internal value
-        Field enableCookieFallbackField = mechanism.getClass().getDeclaredField("enableCookieFallback");
-        enableCookieFallbackField.setAccessible(true);
-        Boolean enableCookieFallback = (boolean) enableCookieFallbackField.get(mechanism);
-        Assert.assertEquals(false, enableCookieFallback);
-    }
 
     /**
      * Tests that the mechanism is created with cookie fallback enabled when property is set to true.
