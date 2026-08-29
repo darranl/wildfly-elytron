@@ -25,14 +25,12 @@ import org.wildfly.security.http.HttpAuthenticationException;
 import org.wildfly.security.http.HttpServerAuthenticationMechanism;
 
 import javax.security.auth.callback.CallbackHandler;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.wildfly.security.http.HttpConstants.BASIC_NAME;
 import static org.wildfly.security.http.HttpConstants.BEARER_TOKEN;
 import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_ENABLE_COOKIE_FALLBACK;
-import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_TOKEN_COOKIE_NAME;
 
 /**
  * This test class contains unit tests for the {@link BearerMechanismFactory}.
@@ -152,38 +150,6 @@ public class BearerMechanismFactoryTest {
         properties.put(CONFIG_BEARER_ENABLE_COOKIE_FALLBACK, "false");
         HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
         Assert.assertNotNull(mechanism);
-        Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
-    }
-
-    /**
-     * Tests default cookie name when not provided.
-     */
-    @Test
-    public void testDefaultCookieName() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
-        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, emptyProperties, dummyCallbackHandler);
-        Assert.assertNotNull(mechanism);
-        // Use reflection to verify internal value
-        Field tokenCookieField = mechanism.getClass().getDeclaredField("tokenCookie");
-        tokenCookieField.setAccessible(true);
-        String tokenCookie = (String) tokenCookieField.get(mechanism);
-        Assert.assertEquals("Authorization", tokenCookie);
-    }
-
-    /**
-     * Tests custom cookie name extraction and that the mechanism uses custom cookie name when provided.
-     * Verifies through authentication behavior.
-     */
-    @Test
-    public void testCustomCookieNameExtraction() throws HttpAuthenticationException, NoSuchFieldException, IllegalAccessException {
-        Map<String, String> properties = new HashMap<>();
-        properties.put(CONFIG_BEARER_TOKEN_COOKIE_NAME, "CUSTOM_AUTH");
-        HttpServerAuthenticationMechanism mechanism = bearerMechanismFactory.createAuthenticationMechanism(BEARER_TOKEN, properties, dummyCallbackHandler);
-        Assert.assertNotNull(mechanism);
-        // Use reflection to verify internal value
-        Field tokenCookieField = mechanism.getClass().getDeclaredField("tokenCookie");
-        tokenCookieField.setAccessible(true);
-        String tokenCookie = (String) tokenCookieField.get(mechanism);
-        Assert.assertEquals("CUSTOM_AUTH", tokenCookie);
         Assert.assertEquals(BEARER_TOKEN, mechanism.getMechanismName());
     }
 

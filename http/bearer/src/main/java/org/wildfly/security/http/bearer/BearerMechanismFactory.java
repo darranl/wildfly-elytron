@@ -23,6 +23,7 @@ import static org.wildfly.security.http.HttpConstants.AUTHORIZATION;
 import static org.wildfly.security.http.HttpConstants.BEARER_TOKEN;
 import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_ENABLE_COOKIE_FALLBACK;
 import static org.wildfly.security.http.HttpConstants.CONFIG_BEARER_TOKEN_COOKIE_NAME;
+import static org.wildfly.security.mechanism._private.ElytronMessages.httpBearer;
 
 import java.security.Provider;
 import java.util.Map;
@@ -71,9 +72,10 @@ public class BearerMechanismFactory implements HttpServerAuthenticationMechanism
         checkNotNullParam("callbackHandler", callbackHandler);
 
         if (BEARER_TOKEN.equals(mechanismName)) {
-            boolean enableCookieFallback = Boolean.parseBoolean((String) properties.get(CONFIG_BEARER_ENABLE_COOKIE_FALLBACK));
+            boolean enableCookieFallback = Boolean.parseBoolean(String.valueOf(properties.get(CONFIG_BEARER_ENABLE_COOKIE_FALLBACK)));
             Object tokenCookieNameProp = properties.get(CONFIG_BEARER_TOKEN_COOKIE_NAME);
-            String tokenCookieName = tokenCookieNameProp != null ? tokenCookieNameProp.toString() : AUTHORIZATION;
+            String tokenCookieName = (tokenCookieNameProp != null && !tokenCookieNameProp.toString().isEmpty()) ? tokenCookieNameProp.toString() : AUTHORIZATION;
+            httpBearer.tracef("Bearer mechanism configuration: enableCookieFallback=%s, tokenCookieName=%s", enableCookieFallback, tokenCookieName);
             return new BearerTokenAuthenticationMechanism(callbackHandler, enableCookieFallback, tokenCookieName);
         }
 

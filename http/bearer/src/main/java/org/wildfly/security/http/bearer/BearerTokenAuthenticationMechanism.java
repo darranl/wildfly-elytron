@@ -26,7 +26,6 @@ import static org.wildfly.security.http.HttpConstants.WWW_AUTHENTICATE;
 import static org.wildfly.security.mechanism._private.ElytronMessages.httpBearer;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,51 +85,61 @@ final class BearerTokenAuthenticationMechanism implements HttpServerAuthenticati
 
     @Override
     public void evaluateRequest(HttpServerRequest request) throws HttpAuthenticationException {
-        List<String> authorizationValues = request.getRequestHeaderValues(HttpConstants.AUTHORIZATION);
+        String bearerToken = null;
 
-        // Fallback: read token from cookies, if no authorization-header present
-        if (enableCookieFallback && (authorizationValues == null || authorizationValues.isEmpty())) {
-            List<HttpServerCookie> cookies = request.getCookies(); // Cookie handling
+        List<String> authorizationValues = request.getRequestHeaderValues(HttpConstants.AUTHORIZATION);
+        if (authorizationValues != null) {
+            for (String current : authorizationValues) {
+                Matcher matcher = BEARER_TOKEN_PATTERN.matcher(current);
+                if (matcher.matches()) {
+                    bearerToken = matcher.group(1);
+                    httpBearer.tracef("Bearer token resolved from Authorization header.");
+                    break;
+                }
+            }
+        }
+
+        if (bearerToken == null && enableCookieFallback) {
+            List<HttpServerCookie> cookies = request.getCookies();
             if (cookies != null) {
                 for (HttpServerCookie cookie : cookies) {
                     if (tokenCookie.equals(cookie.getName())) {
-                        authorizationValues = Collections.singletonList("Bearer " + cookie.getValue());
+                        String cookieValue = cookie.getValue();
+                        if (cookieValue != null) {
+                            bearerToken = cookieValue;
+                            httpBearer.tracef("Bearer token resolved from cookie [%s].", tokenCookie);
+                        }
                         break;
                     }
                 }
             }
         }
 
-        if (authorizationValues != null) {
-            Matcher matcher;
-            for (String current : authorizationValues) {
-                if ((matcher = BEARER_TOKEN_PATTERN.matcher(current)).matches()) {
-                    BearerTokenEvidence tokenEvidence = new BearerTokenEvidence(matcher.group(1));
-                    EvidenceVerifyCallback verifyCallback = new EvidenceVerifyCallback(tokenEvidence);
+        if (bearerToken != null) {
+            BearerTokenEvidence tokenEvidence = new BearerTokenEvidence(bearerToken);
+            EvidenceVerifyCallback verifyCallback = new EvidenceVerifyCallback(tokenEvidence);
 
-                    handleCallback(verifyCallback);
+            handleCallback(verifyCallback);
 
-                    if (verifyCallback.isVerified()) {
-                        AuthorizeCallback authorizeCallback = new AuthorizeCallback(null, null);
+            if (verifyCallback.isVerified()) {
+                AuthorizeCallback authorizeCallback = new AuthorizeCallback(null, null);
 
-                        handleCallback(authorizeCallback);
+                handleCallback(authorizeCallback);
 
-                        if (authorizeCallback.isAuthorized()) {
-                            httpBearer.debugf("Token authentication successful.");
-                            handleCallback(new IdentityCredentialCallback(new BearerTokenCredential(tokenEvidence.getToken()), true));
-                            handleCallback(AuthenticationCompleteCallback.SUCCEEDED);
-                            request.authenticationComplete();
-                        } else {
-                            httpBearer.debugf("Token authorization failed.");
-                            request.authenticationFailed("Authorization failed.", response -> response.setStatusCode(FORBIDDEN));
-                        }
-                    } else {
-                        httpBearer.debugf("Token authentication failed.");
-                        request.authenticationFailed(httpBearer.authenticationFailed(), this::unauthorizedResponse);
-                    }
-                    return;
+                if (authorizeCallback.isAuthorized()) {
+                    httpBearer.debugf("Token authentication successful.");
+                    handleCallback(new IdentityCredentialCallback(new BearerTokenCredential(tokenEvidence.getToken()), true));
+                    handleCallback(AuthenticationCompleteCallback.SUCCEEDED);
+                    request.authenticationComplete();
+                } else {
+                    httpBearer.debugf("Token authorization failed.");
+                    request.authenticationFailed("Authorization failed.", response -> response.setStatusCode(FORBIDDEN));
                 }
+            } else {
+                httpBearer.debugf("Token authentication failed.");
+                request.authenticationFailed(httpBearer.authenticationFailed(), this::unauthorizedResponse);
             }
+            return;
         }
 
         request.noAuthenticationInProgress(this::unauthorizedResponse);
